@@ -7,6 +7,7 @@ import { useProject } from '../state'
 import { P, KIND_LABEL } from '../api'
 import { IdLink, Linkified } from '../components/common'
 import { Sheet, type Col } from '../components/Sheet'
+import { TeamDeliverables } from './Pdp'
 
 const TABS = ['Overview', 'Subsystem', 'Focus', 'Work', 'Records', 'Risk & tests', 'Handoffs', 'Activity']
 
@@ -37,6 +38,7 @@ export function TeamPage() {
       <div className="kpis">
         <Kpi label="Open work items" v={k.open_work_items} to={`/p/${pid}/team/${tid}`} /><Kpi label="Overdue" v={k.overdue} bad={k.overdue > 0} /><Kpi label="Open findings" v={k.open_findings} bad={k.critical_findings > 0} /><Kpi label="Handoffs waiting on us" v={k.handoffs_waiting_on_us} bad={k.handoffs_waiting_on_us > 0} /><Kpi label="We wait for" v={k.handoffs_we_wait_for} /><Kpi label="Tests passed" v={k.tests_passed} /><Kpi label="High-AP on our parts" v={k.high_ap_on_our_parts} bad={k.high_ap_without_test > 0} /><Kpi label="Open risks" v={k.open_risks} />{k.req_coverage && <Kpi label="Requirements with a test" v={k.req_coverage} bad={k.req_coverage[0] < k.req_coverage[1]} />}{k.boundary_interfaces !== undefined && <Kpi label="Boundary interfaces" v={k.boundary_interfaces} />}
       </div>
+      <TeamDeliverables tid={tid} />
       <div className="grid2">
         <div className="card"><h4>Due next</h4>{w.due_soon.length ? <div className="list due">{w.due_soon.map((x: any) => <div key={x.id} className="li" onClick={() => nav(`/p/${pid}/element/work_items/${x.id}`)}><span className="t">{x.title}</span><span className="muted small">{x.owner}</span><span className={'pill ' + (x.due < new Date().toISOString().slice(0, 10) ? 'bad' : '')}>{x.due}</span><span className="muted small">{x.status}</span></div>)}</div> : <span className="muted small">Nothing with a due date.</span>}</div>
         <div className="card"><h4>Waiting on us</h4>{w.handoffs_in.length ? w.handoffs_in.map((h: any) => <div key={h.id} className="link"><span className="rel">{h.from_team}</span><span><IdLink id={h.id} kind="handoffs" /> {h.what} <span className="muted small">due {h.due || '—'}{h.gate ? ` · ${h.gate}` : ''}</span></span></div>) : <span className="muted small">No pending handoffs to this team.</span>}

@@ -22,7 +22,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Operation': [['form/fracas', 'FRACAS']],
   'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
   'Disposal': [['search?q=disposal', 'Disposal requirements']],
-  'Project planning': [['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
+  'Project planning': [['pdp', 'Development process'], ['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
   'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
   // team workspaces are added dynamically from project.teams
   'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
@@ -110,7 +110,7 @@ function Tree() {
       </Group> })}
     <h4>Technical management</h4>
     {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
-      {p.kinds.filter(k => k !== 'tables' && k !== 'notes').map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {p.kinds.filter(k => !['tables', 'notes', 'phases', 'deliverables'].includes(k)).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
       {p.name === 'Project assessment and control' && Object.entries(project.teams || {}).map(([t, tv]: any) => <Item key={t} to={`/p/${pid}/team/${t}`} label={tv.name} />)}
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}

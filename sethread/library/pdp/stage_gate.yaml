@@ -1,0 +1,32 @@
+name: Generic stage-gate (consumer / industrial hardware)
+description: Concept → Feasibility → Development → Validation → Launch, closed by G0–G4; deliverables per functional focus and per subsystem team.
+phases:
+  - {id: PH-CONCEPT, name: Concept, order: 1, stage: Concept, gate: G0}
+  - {id: PH-FEAS, name: Feasibility, order: 2, stage: Concept, gate: G1}
+  - {id: PH-DEV, name: Development, order: 3, stage: Development, gate: G2}
+  - {id: PH-VAL, name: Validation, order: 4, stage: Development, gate: G3}
+  - {id: PH-LAUNCH, name: Launch, order: 5, stage: Production, gate: G4}
+gates:
+  - {id: G0, name: Concept approval, exit: Needs, MoEs and business case agreed}
+  - {id: G1, name: Feasibility, exit: Architecture chosen; key risks retired; regulatory path known}
+  - {id: G2, name: Design release, exit: Detailed design released; DFMEA complete; DVP&R approved; sourcing complete}
+  - {id: G3, name: Validation complete, exit: DV passed; certification granted or in final report; PFMEA and control plan at CM}
+  - {id: G4, name: Launch readiness, exit: PV passed; field loop live; service and returns ready}
+deliverables:
+  - {id: D-SYS-NEEDS, name: Stakeholder needs & MoEs, gate: G0, focus: systems, check: {type: coverage, key: needs_without_requirements, max: 0, min_count: {kind: needs, n: 1}}}
+  - {id: D-SYS-REQ, name: System requirements baseline, gate: G1, focus: systems, check: {type: coverage, key: requirements_without_tests, max: 0}}
+  - {id: D-COMP-REG, name: Regulatory applicability matrix, gate: G1, focus: compliance, check: {type: coverage, key: regulations_without_requirements, max: 0}}
+  - {id: D-SUB-ARCH, name: Subsystem architecture & boundary ICD, gate: G1, team_kind: subsystem, check: {type: scope, key: boundary_items}}
+  - {id: D-SUB-REQ, name: Subsystem requirements with tests, gate: G2, team_kind: subsystem, check: {type: scope, key: req_coverage}}
+  - {id: D-SUB-DFMEA, name: Subsystem DFMEA, gate: G2, team_kind: subsystem, check: {type: scope, key: fmea_complete}}
+  - {id: D-REL-DFMEA, name: Product DFMEA complete, gate: G2, focus: reliability, check: {type: coverage, key: unassessed_candidates, max: 0}}
+  - {id: D-REL-HIGHAP, name: High-AP modes have tests, gate: G2, focus: reliability, check: {type: coverage, key: high_ap_fm_without_tests, max: 0}}
+  - {id: D-TEST-DVPR, name: DVP&R approved, gate: G2, focus: test, check: {type: coverage, key: requirements_without_tests, max: 0}}
+  - {id: D-SRC-AVL, name: Approved vendor list, gate: G2, focus: sourcing, check: {type: coverage, key: buy_parts_without_supplier, max: 0}}
+  - {id: D-SUB-CAD, name: Released CAD / schematics attached, gate: G2, team_kind: subsystem, check: {type: attachment, roles: [cad, schematic]}}
+  - {id: D-SUB-DV, name: Subsystem DV tests passed, gate: G3, team_kind: subsystem, check: {type: scope, key: tests_passed}}
+  - {id: D-TEST-DV, name: DV results, gate: G3, focus: test, check: {type: tests_passed_share, min: 1.0}}
+  - {id: D-MFG-PFMEA, name: PFMEA & control plan, gate: G3, focus: manufacturing, check: {type: coverage, key: process_steps_without_pfmea, max: 0, min_count: {kind: process_steps, n: 1}}}
+  - {id: D-QA-FIND, name: No open critical findings, gate: G3, focus: quality, check: {type: coverage, key: open_findings_critical, max: 0}}
+  - {id: D-PM-RISK, name: Risk register signed, gate: G4, focus: program, check: {type: note, kind: report, status: final}}
+  - {id: D-FIELD-LOOP, name: Field feedback loop (FRACAS) live, gate: G4, focus: reliability, check: {type: coverage, key: field_events_without_fm, max: 0}}

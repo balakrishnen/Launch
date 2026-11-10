@@ -140,3 +140,7 @@ pre.diff{font:11.5px/1.35 var(--mono);background:#0f172a;color:#e2e8f0;padding:8
 .board .colhead{display:flex;justify-content:space-between;padding:4px 6px 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
 .wcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;cursor:grab;display:flex;flex-direction:column;gap:4px} .wcard:hover{border-color:var(--accent)} .wcard .t{font-size:13px;font-weight:500} .wcard.overdue{border-left:3px solid var(--bad)}
 .ids > a, .ids > span.id{margin-right:6px}
+
+/* PDP */
+.phases{display:flex;gap:8px;overflow-x:auto} .phase{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)} .phase.passed{opacity:.6} .phase.next{border-color:var(--accent);background:var(--accent-soft)} .phase .ph{font-weight:600;font-size:13px} .phase .gate{margin-top:8px;display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer}
+.dchip{display:flex;align-items:center;gap:5px;font-size:12px;padding:3px 6px;border-radius:7px;cursor:pointer;line-height:1.2} .dchip:hover{background:var(--surface-2)} table.matrix td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top} table.matrix tr.grp td{background:var(--surface-2)}

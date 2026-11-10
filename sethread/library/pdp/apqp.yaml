@@ -1,0 +1,26 @@
+name: APQP (automotive, AIAG)
+description: Plan & define → Product design → Process design → Validation → Launch; deliverables per the AIAG APQP checklist.
+phases:
+  - {id: PH-PLAN, name: Plan & define program, order: 1, stage: Concept, gate: APQP-1}
+  - {id: PH-PDES, name: Product design & development, order: 2, stage: Development, gate: APQP-2}
+  - {id: PH-PRDES, name: Process design & development, order: 3, stage: Production, gate: APQP-3}
+  - {id: PH-VAL, name: Product & process validation, order: 4, stage: Production, gate: APQP-4}
+  - {id: PH-LAUNCH, name: Feedback, assessment & corrective action, order: 5, stage: Utilization, gate: APQP-5}
+gates:
+  - {id: APQP-1, name: Design goals & reliability targets, exit: Design goals, reliability and quality goals, preliminary BOM and process flow}
+  - {id: APQP-2, name: Design verification, exit: DFMEA, DVP&R, drawings and specs released; design reviews held}
+  - {id: APQP-3, name: Process verification, exit: Process flow, PFMEA, control plan, packaging standards}
+  - {id: APQP-4, name: Validation (PPAP), exit: Trial run, MSA, capability, PPAP, production validation testing}
+  - {id: APQP-5, name: Launch, exit: Reduced variation, customer satisfaction, delivery and service}
+deliverables:
+  - {id: D-SYS-GOALS, name: Design goals & reliability targets (MoEs), gate: APQP-1, focus: systems, check: {type: coverage, key: needs_without_requirements, max: 0, min_count: {kind: moes, n: 1}}}
+  - {id: D-SUB-DFMEA, name: DFMEA, gate: APQP-2, team_kind: subsystem, check: {type: scope, key: fmea_complete}}
+  - {id: D-TEST-DVPR, name: DVP&R, gate: APQP-2, focus: test, check: {type: coverage, key: requirements_without_tests, max: 0}}
+  - {id: D-SUB-DRAW, name: Drawings & specifications released, gate: APQP-2, team_kind: subsystem, check: {type: attachment, roles: [cad, drawing, schematic]}}
+  - {id: D-QA-REVIEW, name: Design review held, gate: APQP-2, focus: quality, check: {type: collection, kind: reviews, n: 1}}
+  - {id: D-MFG-FLOW, name: Process flow, gate: APQP-3, focus: manufacturing, check: {type: collection, kind: process_steps, n: 1}}
+  - {id: D-MFG-PFMEA, name: PFMEA & control plan, gate: APQP-3, focus: manufacturing, check: {type: coverage, key: process_steps_without_pfmea, max: 0}}
+  - {id: D-SRC-AVL, name: Approved supplier list, gate: APQP-3, focus: sourcing, check: {type: coverage, key: buy_parts_without_supplier, max: 0}}
+  - {id: D-TEST-PV, name: Production validation testing, gate: APQP-4, focus: test, check: {type: tests_passed_share, min: 1.0}}
+  - {id: D-QA-PPAP, name: PPAP package, gate: APQP-4, focus: quality, check: {type: note, kind: report, status: final}}
+  - {id: D-FIELD, name: Field feedback & corrective action, gate: APQP-5, focus: reliability, check: {type: coverage, key: field_events_without_fm, max: 0}}

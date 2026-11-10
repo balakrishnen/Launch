@@ -89,7 +89,11 @@ def gate_readiness(m, store=None):
         blockers = {"open_findings": rep["open_findings_critical"], "pending_handoffs": [h for h in rep["pending_handoffs"] if not m["handoffs"][h].get("gate") or m["handoffs"][h]["gate"] == g],
                     "stale_verification": [f"{x['req']}→{x['test']}" for x in st["stale_verification"]], "upstream_evolved": len(st["upstream_evolved"])}
         ready = all(r["ok"] for r in rows) and not blockers["open_findings"] and not blockers["pending_handoffs"]
-        gates.append({"gate": g, "stage": gstage, "date": gv["date"], "exit": gv["exit"], "status": gv.get("status", "planned"), "criteria": rows, "blockers": blockers, "ready": ready,
+        try:
+            from . import pdp as _pdp; mx = _pdp.matrix(m); dl = mx["per_gate"].get(g, {"done": 0, "partial": 0, "missing": 0, "total": 0})
+        except Exception: dl = {"done": 0, "partial": 0, "missing": 0, "total": 0}
+        if dl["total"]: ready = ready and dl["done"] == dl["total"]
+        gates.append({"gate": g, "stage": gstage, "date": gv["date"], "exit": gv["exit"], "status": gv.get("status", "planned"), "criteria": rows, "blockers": blockers, "ready": ready, "deliverables": dl, "phase": gv.get("phase"),
                       "score": round(100 * sum(1 for r in rows if r["ok"]) / max(1, len(rows)))})
     gates.sort(key=lambda g: g["date"])
     nxt = next((g for g in gates if g["status"] != "passed"), gates[-1] if gates else None)

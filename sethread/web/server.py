@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -678,6 +678,22 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     @app.get("/api/p/{pid}/trend")
     def trend(pid: str, user: str = U):
         S = W.get(pid); return harness.trend(S.store)
+
+    # ---- product development process: phases, gates, deliverables per team; templates; the gate × team matrix
+    @app.get("/api/p/{pid}/pdp")
+    def get_pdp(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return {**pdp.matrix(m), "templates": pdp.templates(S.root), "name": (m.get("program") or {}).get("pdp", "")}
+    @app.post("/api/p/{pid}/pdp/apply")
+    def apply_pdp(pid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); t = pdp.template(body.get("template", ""), S.root)
+        if not t: raise HTTPException(404, "no such template")
+        ops = pdp.apply_ops(m, t, body.get("start") or time.strftime("%Y-%m-%d"), int(body.get("spacing_days", 45)))
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Adopt PDP template: {t['name']}", apply=bool(body.get("apply", True))), user)
+        m = S.store.load(); m.setdefault("program", {})["pdp"] = t["name"]; S.store.save(m)
+        return r
+    @app.get("/api/p/{pid}/team/{tid}/deliverables")
+    def team_deliv(pid: str, tid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return pdp.team_deliverables(m, tid)
 
     @app.get("/api/p/{pid}/team/{tid}")
     def team_ws(pid: str, tid: str, user: str = U):
