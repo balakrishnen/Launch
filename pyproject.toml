@@ -21,4 +21,4 @@ launch = "sethread.cli:main"
 include = ["sethread*"]
 
 [tool.setuptools.package-data]
-sethread = ["web/static/*", "library/*.yaml"]
+sethread = ["web/static/*", "web/dist/*", "web/dist/assets/*", "library/*.yaml"]

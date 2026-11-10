@@ -267,10 +267,21 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         """Per-user API token for OSLC / scripts: HTTP Basic email:token."""
         user = current_user(request); return {"user": user, "token": sign("token:" + user), "basic_auth_example": f"curl -u '{user}:<token>' -H 'Accept: text/turtle' {str(request.base_url).rstrip('/')}/oslc/catalog"}
 
+    DIST = os.path.join(os.path.dirname(__file__), "dist")
+    if os.path.isdir(os.path.join(DIST, "assets")): app.mount("/app/assets", StaticFiles(directory=os.path.join(DIST, "assets")), name="app-assets")
+    def spa():
+        if os.path.exists(os.path.join(DIST, "index.html")): return open(os.path.join(DIST, "index.html"), encoding="utf-8").read()
+        return open(os.path.join(STATIC, "index.html"), encoding="utf-8").read()   # legacy single-file UI as fallback
     @app.get("/", response_class=HTMLResponse)
-    def index(): return open(os.path.join(STATIC, "index.html"), encoding="utf-8").read()
+    def index(): return Response(status_code=307, headers={"Location": "/app/"}) if os.path.exists(os.path.join(DIST, "index.html")) else spa()
+    @app.get("/app", response_class=HTMLResponse)
+    @app.get("/app/", response_class=HTMLResponse)
+    @app.get("/app/{path:path}", response_class=HTMLResponse)
+    def app_index(path: str = ""): return spa()
+    @app.get("/legacy", response_class=HTMLResponse)
+    def legacy(): return open(os.path.join(STATIC, "index.html"), encoding="utf-8").read()
     @app.get("/p/{pid}", response_class=HTMLResponse)
-    def index_p(pid: str): return index()
+    def index_p(pid: str): return Response(status_code=307, headers={"Location": f"/app/p/{pid}"})
 
     @app.post("/api/login")
     def login(l: Login, response: Response):
@@ -480,7 +491,7 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         for sub, key in (("views", "views"), ("sysml", "sysml"), ("docs", "docs")):
             d = os.path.join(os.path.join(S.root, "out"), sub)
             if os.path.isdir(d): r[key] = sorted(os.listdir(d))
-        r["docx"] = sorted(f for f in os.listdir(os.path.join(S.root, "out")) if f.endswith(".docx"))
+        od = os.path.join(S.root, "out"); r["docx"] = sorted(f for f in os.listdir(od) if f.endswith(".docx")) if os.path.isdir(od) else []
         r["documents"] = sorted(os.listdir(S.docs_dir)) if os.path.isdir(S.docs_dir) else []
         return r
 

@@ -84,7 +84,7 @@ def router(store: OAuthStore, current_user, admin_check=None):
         rec = store.d["request"].get(oauth_token)
         if not rec: raise HTTPException(400, "unknown request token")
         try: user = current_user(request)
-        except HTTPException: return RedirectResponse(f"/?next={urllib.parse.quote('/oslc/oauth/authorize?oauth_token=' + oauth_token)}")
+        except HTTPException: return RedirectResponse(f"/app/?next={urllib.parse.quote('/oslc/oauth/authorize?oauth_token=' + oauth_token)}")
         c = store.d["consumers"][rec["consumer"]]
         if c.get("trusted"): return _grant(store, oauth_token, user)
         return HTMLResponse(f"""<!doctype html><html><body style="font:14px -apple-system,Segoe UI,sans-serif;max-width:480px;margin:10vh auto"><h2>Launch</h2>

@@ -48,6 +48,17 @@ every id linked to its element page. Cells in the DFMEA and requirements spec ar
 the change as a logged patch under your name; **Stage for review** hands it to a colleague. The agent pane collapses to
 give a wide table the full screen. A CSV copy is one click when someone insists on a spreadsheet.
 
+## The app
+
+`sethread/web/dist` is the built frontend (React + TypeScript, Vite; source in `web/app`). It is served at `/app/` by the
+same backend, so `pip install -e .` is enough to run it; rebuild with `cd web/app && npm install && npm run build`.
+Design: an icon rail, a project tree by OOSEM stage, tabs for open artifacts, a ⌘K command palette that finds any element,
+artifact or agent action, an artifact library with type/stage/freshness filters, element pages with Overview / Trace /
+Failure modes / Impact / History, the standard forms in a sticky-header grid with inline editing, and the agent as a
+drawer that pushes the content rather than covering it, with a review inbox for patches. Light and dark themes.
+The single-file UI remains at `/legacy`. A read-only review build (`VITE_REVIEW=1 npm run build`) runs the same app over
+a frozen `data.json` for sharing without a backend.
+
 ## Two front ends, one engine
 
 * **`launch ui <dir>`** (one local project) / **`launch serve --data <root>`** (hosted, many projects and users) — the app most people use. A browser window with three panes: the digital thread on the left
