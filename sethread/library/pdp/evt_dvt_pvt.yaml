@@ -6,10 +6,10 @@ phases:
   - {id: PH-DVT, name: Design validation, order: 3, stage: Development, gate: PVT}
   - {id: PH-PVT, name: Production validation, order: 4, stage: Production, gate: MP}
 gates:
-  - {id: EVT, name: EVT build, exit: Architecture frozen; FMEA complete; verification plan baselined}
-  - {id: DVT, name: DVT build, exit: Verification matrix run; all High-AP modes verified; certification started}
-  - {id: PVT, name: PVT build, exit: Certifications granted; PFMEA/control plan at CM; EoL test proven}
-  - {id: MP, name: Mass production, exit: Yield and field loop targets met}
+  - {id: EVT, name: EVT build, exit: "Architecture frozen; FMEA complete; verification plan baselined"}
+  - {id: DVT, name: DVT build, exit: "Verification matrix run; all High-AP modes verified; certification started"}
+  - {id: PVT, name: PVT build, exit: "Certifications granted; PFMEA/control plan at CM; EoL test proven"}
+  - {id: MP, name: Mass production, exit: "Yield and field loop targets met"}
 deliverables:
   - {id: D-SYS-REQ, name: Requirements baseline, gate: EVT, focus: systems, check: {type: coverage, key: requirements_without_tests, max: 0}}
   - {id: D-SUB-ARCH, name: Subsystem boundary ICD, gate: EVT, team_kind: subsystem, check: {type: scope, key: boundary_items}}

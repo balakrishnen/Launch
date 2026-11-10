@@ -8,6 +8,8 @@ export function installReviewShim(data: Record<string, any>) {
     if (url === '/api/me') return json({ user: 'reviewer', single: false, invite_required: false })
     if (url === '/api/projects') return json(data.list || [])
     if (url === '/api/examples') return json(data.examples || [])
+    if (url === '/api/org') return json(data.org || {})
+    if (url === '/api/org/templates') return json(data.org_templates || { templates: [], detail: {} })
     if (url === '/api/token') return json(null, 404)
     if (url.startsWith('/api/oslc/consumers')) return json([])
     if ((init?.method || 'GET') !== 'GET') return json({ detail: 'Review build: read-only snapshot. In the app this would stage a patch for approval.' }, 400)

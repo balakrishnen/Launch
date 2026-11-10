@@ -9,7 +9,7 @@ def get(p):
     except Exception as e: return None
 from sethread import schema
 from sethread.web.server import STAGE_OF
-D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or []}
+D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates')}
 for pid in pids:
     P = {}; g = lambda p: get(f'/api/p/{pid}{p}')
     for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:

@@ -7,11 +7,11 @@ phases:
   - {id: PH-VAL, name: Validation, order: 4, stage: Development, gate: G3}
   - {id: PH-LAUNCH, name: Launch, order: 5, stage: Production, gate: G4}
 gates:
-  - {id: G0, name: Concept approval, exit: Needs, MoEs and business case agreed}
-  - {id: G1, name: Feasibility, exit: Architecture chosen; key risks retired; regulatory path known}
-  - {id: G2, name: Design release, exit: Detailed design released; DFMEA complete; DVP&R approved; sourcing complete}
-  - {id: G3, name: Validation complete, exit: DV passed; certification granted or in final report; PFMEA and control plan at CM}
-  - {id: G4, name: Launch readiness, exit: PV passed; field loop live; service and returns ready}
+  - {id: G0, name: Concept approval, exit: "Needs, MoEs and business case agreed"}
+  - {id: G1, name: Feasibility, exit: "Architecture chosen; key risks retired; regulatory path known"}
+  - {id: G2, name: Design release, exit: "Detailed design released; DFMEA complete; DVP&R approved; sourcing complete"}
+  - {id: G3, name: Validation complete, exit: "DV passed; certification granted or in final report; PFMEA and control plan at CM"}
+  - {id: G4, name: Launch readiness, exit: "PV passed; field loop live; service and returns ready"}
 deliverables:
   - {id: D-SYS-NEEDS, name: Stakeholder needs & MoEs, gate: G0, focus: systems, check: {type: coverage, key: needs_without_requirements, max: 0, min_count: {kind: needs, n: 1}}}
   - {id: D-SYS-REQ, name: System requirements baseline, gate: G1, focus: systems, check: {type: coverage, key: requirements_without_tests, max: 0}}

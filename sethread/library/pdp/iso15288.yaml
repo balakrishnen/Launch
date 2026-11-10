@@ -7,13 +7,13 @@ phases:
   - {id: PH-PROD, name: Production, order: 4, stage: Production, gate: PRR}
   - {id: PH-UTIL, name: Utilization, order: 5, stage: Utilization, gate: ORR}
 gates:
-  - {id: SRR, name: System requirements review, exit: Needs, MoEs and system requirements baselined}
-  - {id: PDR, name: Preliminary design review, exit: Architecture allocated; interfaces defined; risks assessed}
-  - {id: CDR, name: Critical design review, exit: Detailed design complete; analyses complete; verification planned}
-  - {id: TRR, name: Test readiness review, exit: Test procedures, articles and facilities ready}
-  - {id: SVR, name: System verification review, exit: Verification complete; discrepancies closed}
-  - {id: PRR, name: Production readiness review, exit: Processes, suppliers and quality controls ready}
-  - {id: ORR, name: Operational readiness review, exit: Operations and support in place}
+  - {id: SRR, name: System requirements review, exit: "Needs, MoEs and system requirements baselined"}
+  - {id: PDR, name: Preliminary design review, exit: "Architecture allocated; interfaces defined; risks assessed"}
+  - {id: CDR, name: Critical design review, exit: "Detailed design complete; analyses complete; verification planned"}
+  - {id: TRR, name: Test readiness review, exit: "Test procedures, articles and facilities ready"}
+  - {id: SVR, name: System verification review, exit: "Verification complete; discrepancies closed"}
+  - {id: PRR, name: Production readiness review, exit: "Processes, suppliers and quality controls ready"}
+  - {id: ORR, name: Operational readiness review, exit: "Operations and support in place"}
 deliverables:
   - {id: D-SYS-NEEDS, name: Stakeholder needs & MoEs, gate: SRR, focus: systems, check: {type: coverage, key: needs_without_requirements, max: 0}}
   - {id: D-SYS-REQ, name: System requirements with verification, gate: SRR, focus: systems, check: {type: coverage, key: requirements_without_tests, max: 0}}

@@ -7,11 +7,11 @@ phases:
   - {id: PH-VAL, name: Product & process validation, order: 4, stage: Production, gate: APQP-4}
   - {id: PH-LAUNCH, name: Feedback, assessment & corrective action, order: 5, stage: Utilization, gate: APQP-5}
 gates:
-  - {id: APQP-1, name: Design goals & reliability targets, exit: Design goals, reliability and quality goals, preliminary BOM and process flow}
-  - {id: APQP-2, name: Design verification, exit: DFMEA, DVP&R, drawings and specs released; design reviews held}
-  - {id: APQP-3, name: Process verification, exit: Process flow, PFMEA, control plan, packaging standards}
-  - {id: APQP-4, name: Validation (PPAP), exit: Trial run, MSA, capability, PPAP, production validation testing}
-  - {id: APQP-5, name: Launch, exit: Reduced variation, customer satisfaction, delivery and service}
+  - {id: APQP-1, name: Design goals & reliability targets, exit: "Design goals, reliability and quality goals, preliminary BOM and process flow"}
+  - {id: APQP-2, name: Design verification, exit: "DFMEA, DVP&R, drawings and specs released; design reviews held"}
+  - {id: APQP-3, name: Process verification, exit: "Process flow, PFMEA, control plan, packaging standards"}
+  - {id: APQP-4, name: Validation (PPAP), exit: "Trial run, MSA, capability, PPAP, production validation testing"}
+  - {id: APQP-5, name: Launch, exit: "Reduced variation, customer satisfaction, delivery and service"}
 deliverables:
   - {id: D-SYS-GOALS, name: Design goals & reliability targets (MoEs), gate: APQP-1, focus: systems, check: {type: coverage, key: needs_without_requirements, max: 0, min_count: {kind: moes, n: 1}}}
   - {id: D-SUB-DFMEA, name: DFMEA, gate: APQP-2, team_kind: subsystem, check: {type: scope, key: fmea_complete}}

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -376,10 +376,37 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         try: return {"user": current_user(request), "single": bool(W.single), "invite_required": bool(INVITE)}
         except HTTPException: return {"user": None, "single": bool(W.single), "invite_required": bool(INVITE)}
 
+    # ---- organization: process, teams & members, tools, policy — defined once, inherited by every project
+    def org_root(): return W.data_root or os.path.dirname(W.single or ".")
+    @app.get("/api/org")
+    def get_org(user: str = U): o = ORG.load(org_root(), W.tenant); return {**o, "me": {"email": user, "role": ORG.role_of(o, user), "teams": ORG.member_teams(o, user)}}
+    @app.post("/api/org")
+    def set_org(body: dict, user: str = U):
+        o = ORG.load(org_root(), W.tenant)
+        if ORG.role_of(o, user) not in ("admin", "program_manager"): raise HTTPException(403, "admins and program managers edit the organization")
+        for k in ("name", "process", "teams", "members", "tools", "policy"):
+            if k in body: o[k] = body[k]
+        ORG.save(org_root(), o); return get_org(user)
+    @app.post("/api/org/apply/{pid}")
+    def apply_org(pid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant)
+        ops = ORG.apply_ops(o, m, body.get("start") or time.strftime("%Y-%m-%d"))
+        if not ops: return {"ok": True, "patch_id": None}
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Apply organization process and teams ({o.get('name')})", apply=bool(body.get("apply", True))), user)
+        m = S.store.load(); m.setdefault("program", {})["pdp"] = (o.get("process") or {}).get("name", ""); S.store.save(m); return r
+    @app.get("/api/org/templates")
+    def org_templates(user: str = U): return {"templates": pdp.templates(org_root()), "detail": {t["id"]: pdp.template(t["id"], org_root()) for t in pdp.templates(org_root())}}
+
     @app.get("/api/projects")
     def projects(user: str = U): return [W.summary(p) for p in W.ids()]
     @app.post("/api/projects")
-    def new_project(np: NewProject, user: str = U): W.create(np.id.strip().lower(), np.name.strip(), np.description, user); return W.summary(np.id.strip().lower())
+    def new_project(np: NewProject, user: str = U):
+        pid = np.id.strip().lower(); W.create(pid, np.name.strip(), np.description, user)
+        try:
+            o = ORG.load(org_root(), W.tenant); S = W.get(pid); m = S.store.load(); ops = ORG.apply_ops(o, m, time.strftime("%Y-%m-%d"))
+            if ops: human_patch(pid, HumanPatch(ops=ops, rationale=f"Organization defaults: teams and process ({o.get('name')})", apply=True), user)
+        except Exception as e: pass
+        return W.summary(pid)
 
     # ---- examples: shipped product models to assess the app with (examples/<id>/{example.yaml, model.yaml, docs/})
     def examples_dir():
@@ -705,6 +732,8 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         """which team(s) the signed-in user belongs to (members/lead emails) — drives 'My team' in the sidebar"""
         S = W.get(pid); m = S.store.load(); u = user.lower()
         mine = [t for t, v in m["teams"].items() if u in [x.lower() for x in v.get("members", [])] or v.get("lead", "").lower() == u]
+        try: mine += [t for t in ORG.member_teams(ORG.load(org_root(), W.tenant), user) if t in m["teams"] and t not in mine]
+        except Exception: pass
         return {"teams": mine, "user": user}
 
     @app.get("/api/p/{pid}/graph")

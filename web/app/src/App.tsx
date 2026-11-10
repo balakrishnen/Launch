@@ -9,6 +9,7 @@ import { ChatPage } from './pages/Chat'
 import { TeamPage } from './pages/Team'
 import { Board, Timeline, Trend, Harness } from './pages/Execution'
 import { Pdp } from './pages/Pdp'
+import { Org } from './pages/Org'
 import { Collection } from './pages/Collection'
 import { Artifacts, FormPage, MatrixPage, Views, Docs, Sysml } from './pages/Artifacts'
 import { Graph, Gaps, Scorecard, Inbox, Integrations, Documents, History, Budgets, SearchPage, Landing } from './pages/More'
@@ -19,7 +20,7 @@ export default function App() {
   const Router: any = REVIEW ? HashRouter : BrowserRouter
   return <Router {...(REVIEW ? {} : { basename: '/app' })}>
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Landing />} /><Route path="/org" element={<Org />} />
       <Route path="/p/:pid" element={<ProjectProvider><Shell /></ProjectProvider>}>
         <Route index element={<Overview />} />
         <Route path="artifacts" element={<Artifacts />} />
