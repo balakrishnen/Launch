@@ -1,0 +1,229 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "kind": "regulations",
+      "id": "REG-EN15194",
+      "value": {
+        "name": "EPAC safety (EN 15194:2017+A1:2023)",
+        "market": "EU",
+        "trigger": "Pedal-assisted cycle, assist ≤25 km/h, ≤250 W rated",
+        "standard": "EN 15194"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "regulations",
+      "id": "REG-UN383",
+      "value": {
+        "name": "Lithium battery transport tests (UN Manual of Tests and Criteria, Part III, 38.3)",
+        "market": "Global",
+        "trigger": "Li-ion battery shipped by air/sea/road",
+        "standard": "UN 38.3"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-001",
+      "value": {
+        "type": "performance",
+        "text": "The drive system shall deliver an assisted range of at least 60 km on one full charge at 25 km/h assist speed, measured per EN 17404 range test conditions.",
+        "verify": "test",
+        "tests": [
+          "T-001"
+        ],
+        "from_": [
+          "N-01"
+        ],
+        "attr": "assumed: EN 17404 test cycle, 85 kg rider+bike, 20 °C, reference battery capacity TBD by battery-interface trade"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-002",
+      "value": {
+        "type": "performance",
+        "text": "The drive unit shall emit less than 55 dB(A) sound pressure at 1 m during assisted riding at any assist level up to 25 km/h.",
+        "verify": "test",
+        "tests": [
+          "T-002"
+        ],
+        "from_": [
+          "N-02"
+        ],
+        "attr": "assumed: hemi-anechoic room, dyno at nominal cadence 70 rpm and max assist torque; microphone positions per ISO 3744"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-003",
+      "value": {
+        "type": "environmental",
+        "text": "The drive unit shall achieve IPX6 per IEC 60529 and show zero functional failures after the water-jet exposure.",
+        "verify": "test",
+        "tests": [
+          "T-003"
+        ],
+        "from_": [
+          "N-03"
+        ],
+        "attr": "assumed: functional check = full assist + comms + no water in electronics compartment at teardown"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-004",
+      "value": {
+        "type": "physical",
+        "text": "The drive unit (motor + controller + battery interface, excluding battery pack) shall have a mass of less than 3.5 kg.",
+        "verify": "inspection",
+        "tests": [
+          "T-004"
+        ],
+        "from_": [
+          "N-05"
+        ],
+        "attr": "assumed: battery pack excluded from mass budget (per MOE-05 metric)"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-005",
+      "value": {
+        "type": "regulatory",
+        "text": "The drive unit shall provide assist only while the rider pedals, with continuous rated power ≤ 250 W, and shall cut assist off progressively and fully at or before 25 km/h, per EN 15194.",
+        "verify": "test",
+        "tests": [
+          "T-005"
+        ],
+        "from_": [
+          "N-14"
+        ],
+        "regs": [
+          "REG-EN15194"
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "kind": "requirements",
+      "id": "R-006",
+      "value": {
+        "type": "regulatory",
+        "text": "The battery pack used with the drive unit shall pass UN 38.3 tests T.1–T.8 before shipment.",
+        "verify": "test",
+        "tests": [
+          "T-006"
+        ],
+        "from_": [
+          "N-14"
+        ],
+        "regs": [
+          "REG-UN383"
+        ],
+        "attr": "assumed: battery is a bought-in pack; evidence may be supplier UN 38.3 test summary"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-001",
+      "value": {
+        "name": "Assisted range test (EN 17404)",
+        "method": "Dyno/track range run at 25 km/h assist from full charge to cut-off",
+        "gate": "DVT",
+        "passfail": "range >= 60 km",
+        "units": "km",
+        "kind": "test"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-002",
+      "value": {
+        "name": "Drive noise measurement",
+        "method": "Sound pressure at 1 m, hemi-anechoic, dyno across assist levels to 25 km/h",
+        "gate": "DVT",
+        "passfail": "LpA < 55 dB(A) at all points",
+        "units": "dB(A)",
+        "kind": "test"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-003",
+      "value": {
+        "name": "IPX6 water-jet test (IEC 60529)",
+        "method": "12.5 mm nozzle, 100 L/min, 3 min min, all directions; functional check + teardown",
+        "gate": "DVT",
+        "passfail": "0 functional failures, no water ingress into electronics",
+        "units": "failures",
+        "kind": "test"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-004",
+      "value": {
+        "name": "Drive unit mass inspection",
+        "method": "Weigh n=5 production-intent units on calibrated scale",
+        "gate": "DVT",
+        "passfail": "max mass < 3.5 kg",
+        "units": "kg",
+        "kind": "inspection"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-005",
+      "value": {
+        "name": "EN 15194 assist cut-off and rated power test",
+        "method": "Dyno: rated continuous power per EN 15194/EN 60034-1, assist vs speed sweep, no-pedal assist check",
+        "gate": "Certification",
+        "passfail": "P_rated <= 250 W; assist = 0 at >= 25 km/h; no assist without pedalling",
+        "units": "W, km/h",
+        "kind": "test"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "tests",
+      "id": "T-006",
+      "value": {
+        "name": "UN 38.3 battery transport tests",
+        "method": "Accredited lab T.1–T.8 (altitude, thermal, vibration, shock, ext. short, impact, overcharge, forced discharge)",
+        "gate": "Certification",
+        "passfail": "all T.1–T.8 pass; test summary issued",
+        "units": "pass/fail",
+        "kind": "test"
+      }
+    }
+  ],
+  "author": "agent:ui",
+  "rationale": "First system requirements derived from rider needs N-01, N-02, N-03, N-05 (targets from MOE-01/02/03/05) and regulator need N-14 (EN 15194, UN 38.3 from MOE-14). Each requirement gets a test placeholder; test conditions not in the PRD are marked assumed.",
+  "sources": [
+    "N-01",
+    "N-02",
+    "N-03",
+    "N-05",
+    "N-14",
+    "MOE-01",
+    "MOE-02",
+    "MOE-03",
+    "MOE-05",
+    "MOE-14",
+    "PRD.md"
+  ],
+  "id": "d8d213a07b",
+  "created": 1794285593.3282638,
+  "status": "rejected"
+}

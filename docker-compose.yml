@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: launch, POSTGRES_PASSWORD: launch, POSTGRES_DB: launch }
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U launch"], interval: 5s, retries: 10 }
+  launch:
+    build: .
+    ports: ["8765:8765"]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      DATABASE_URL: postgresql://launch:launch@db:5432/launch
+      SETHREAD_TENANT: ${SETHREAD_TENANT:-default}
+      SETHREAD_INVITE: ${SETHREAD_INVITE:-}
+      SETHREAD_SECRET: ${SETHREAD_SECRET:-change-me}
+    volumes:
+      - ./data:/data        # per-project files: docs/, out/, engineering files (the model lives in Postgres)
+volumes: { pgdata: {} }

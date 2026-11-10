@@ -1,0 +1,362 @@
+meta:
+  name: E-Bike Drive Unit
+  version: '0.1'
+  method: OOSEM
+  description: Mid-drive e-bike motor + controller + battery interface
+stakeholders:
+  STK-RIDER:
+    name: Commuter rider
+    description: Commuters aged 20-60 riding the e-bike daily
+    role: ''
+    concerns: ''
+  STK-FLEET:
+    name: Fleet operator
+    description: Operates shared/rental e-bike fleets; cares about uptime, visibility, security
+    role: ''
+    concerns: ''
+  STK-SERVICE:
+    name: Service technician
+    description: Dealer / fleet workshop technician who diagnoses and repairs drive units.
+    role: ''
+    concerns: ''
+  STK-MFG:
+    name: Manufacturing (plant / EOL test)
+    description: Contract plant building 50k units/yr (SMT boards, die-cast housing) and running end-of-line test.
+    role: ''
+    concerns: ''
+  STK-REG:
+    name: Regulators / certification bodies
+    description: EU and US authorities and notified bodies for EN 15194, UL 2849, FCC Part 15 / RED, UN 38.3, IEC 62133-2.
+    role: ''
+    concerns: ''
+moes:
+  MOE-01:
+    need: N-01
+    name: Assisted range
+    metric: Distance ridden at 25 km/h assist on one full charge
+    target: 60
+    unit: km
+    direction: '>='
+    source: PRD.md
+  MOE-02:
+    need: N-02
+    name: Drive noise
+    metric: A-weighted sound pressure at 1 m during assisted riding
+    target: 55
+    unit: dBA
+    direction: <
+    source: PRD.md
+  MOE-03:
+    need: N-03
+    name: Survival of powerful water jets
+    metric: Functional failures after IPX6 (IEC 60529) water-jet exposure
+    target: 0
+    unit: failures
+    direction: '='
+    source: PRD.md
+  MOE-04:
+    need: N-04
+    name: Service life
+    metric: Years of commuter use before drive-unit end of life
+    target: 5
+    unit: years
+    direction: '>='
+    source: PRD.md
+  MOE-05:
+    need: N-05
+    name: Drive unit mass
+    metric: Mass of drive unit (motor + controller + battery interface)
+    target: 3.5
+    unit: kg
+    direction: <
+    source: PRD.md
+  MOE-06:
+    need: N-06
+    name: Energy restore time
+    metric: Time for a field crew to return a depleted bike to full available energy
+    target: 60
+    unit: s
+    direction: <=
+    source: PRD.md (swappable battery); numeric target PROVISIONAL - needs human confirmation
+  MOE-07:
+    need: N-07
+    name: Status freshness
+    metric: Max age of location/state data per vehicle while in network coverage
+    target: 60
+    unit: s
+    direction: <=
+    source: PRD.md (telemetry); numeric target PROVISIONAL - needs human confirmation
+  MOE-08:
+    need: N-08
+    name: Fleet update reach
+    metric: Share of fleet on a released software version within 7 days, with zero depot visits
+    target: 98
+    unit: '%'
+    direction: '>='
+    source: PRD.md (firmware OTA); numeric target PROVISIONAL - needs human confirmation
+  MOE-09:
+    need: N-09
+    name: Unauthorised assist
+    metric: Assist events delivered while vehicle is locked
+    target: 0
+    unit: events
+    direction: '='
+    source: PRD.md (theft lock)
+  MOE-10:
+    name: Mean time to diagnose
+    metric: time from start of diagnosis to fault identified, mean over the fault catalogue
+    target: 10
+    unit: min
+    comparator: <
+  MOE-11:
+    name: Special tools needed for battery removal
+    metric: number of special (non-standard) tools needed to remove the battery
+    target: 0
+    unit: count
+    comparator: '='
+  MOE-12:
+    name: Annual production capacity
+    metric: units built per year
+    target: 50000
+    unit: units/yr
+    comparator: '>='
+  MOE-13:
+    name: End-of-line test time
+    metric: end-of-line test time per unit
+    target: 90
+    unit: s
+    comparator: <
+  MOE-14:
+    name: Certifications passed first time
+    metric: share of required certifications (EN 15194, UL 2849, FCC Part 15, RED, UN 38.3, IEC 62133-2) passed at first submission
+    target: 100
+    unit: '%'
+    comparator: '='
+needs:
+  N-01:
+    stk: STK-RIDER
+    moe: MOE-01
+    text: I want to ride my daily commute there and back on assist without stopping to recharge, because a commute cut short
+      by a flat battery makes me give up on e-bike commuting.
+    program: false
+  N-02:
+    stk: STK-RIDER
+    moe: MOE-02
+    text: I want the bike to be quiet so riding feels natural, because motor whine feels cheap and annoys me and people around
+      me.
+    program: false
+  N-03:
+    stk: STK-RIDER
+    moe: MOE-03
+    text: I want to ride in heavy rain and hose the bike down without it breaking, because I commute year-round in all weather.
+    program: false
+  N-04:
+    stk: STK-RIDER
+    moe: MOE-04
+    text: I want the drive to keep working for years without major repair, because it is the most expensive part of my bike.
+    program: false
+  N-05:
+    stk: STK-RIDER
+    moe: MOE-05
+    text: I want the bike light enough to carry up stairs and onto trains and to handle like a normal bicycle, because the
+      drive adds most of the extra weight.
+    program: false
+  N-06:
+    stk: STK-FLEET
+    moe: MOE-06
+    text: I need depleted bikes back in service quickly without waiting for them to charge, because every hour a bike sits
+      charging is lost rental revenue.
+    program: false
+  N-07:
+    stk: STK-FLEET
+    moe: MOE-07
+    text: I need to know where every bike is and what state it is in without visiting it, because crews are dispatched from
+      remote status and stale data wastes trips.
+    program: false
+  N-08:
+    stk: STK-FLEET
+    moe: MOE-08
+    text: I need to fix and improve bike software across the fleet without bringing bikes in, because a physical recall costs
+      crew time and takes bikes off the street.
+    program: false
+  N-09:
+    stk: STK-FLEET
+    moe: MOE-09
+    text: I need bikes to be useless to thieves and unauthorised riders, because a bike that still assists is worth stealing
+      and theft is a major asset loss.
+    program: false
+  N-10:
+    text: Technicians need to find the cause of a drive-unit fault quickly, because workshop time is billed per job and a
+      bike off the road costs the rider or fleet money.
+    stk: STK-SERVICE
+    moe: MOE-10
+    program: false
+  N-11:
+    text: Technicians and riders need to take the battery off the bike with no special tools, because special tools are often
+      not to hand at the roadside or in small workshops.
+    stk: STK-SERVICE
+    moe: MOE-11
+    program: false
+  N-12:
+    text: The plant needs to build 50,000 units a year, because that is the planned sales volume.
+    stk: STK-MFG
+    moe: MOE-12
+    program: false
+  N-13:
+    text: The plant needs each unit checked at end of line quickly, because a long test holds up the line and stops it reaching
+      the planned volume.
+    stk: STK-MFG
+    moe: MOE-13
+    program: false
+  N-14:
+    text: Regulators need evidence that the drive unit, its radios and its battery meet the EU and US e-bike, radio, cell-safety
+      and transport rules before it is sold or shipped, because the product cannot legally go on sale without it.
+    stk: STK-REG
+    moe: MOE-14
+    program: false
+actors: {}
+use_cases: {}
+scenarios: {}
+regulations:
+  REG-EN15194:
+    name: EPAC safety (EN 15194:2017+A1:2023)
+    market: EU
+    trigger: Pedal-assisted cycle, assist ≤25 km/h, ≤250 W rated
+    standard: EN 15194
+  REG-UN383:
+    name: Lithium battery transport tests (UN Manual of Tests and Criteria, Part III, 38.3)
+    market: Global
+    trigger: Li-ion battery shipped by air/sea/road
+    standard: UN 38.3
+requirements:
+  R-001:
+    type: PERF
+    text: The drive system shall deliver an assisted range of at least 60 km on one full charge at 25 km/h assist speed, measured
+      per EN 17404 range test conditions.
+    verify: test
+    tests:
+    - T-001
+    from_:
+    - N-01
+    attr: 'assumed: EN 17404 test cycle, 85 kg rider+bike, 20 °C, reference battery capacity TBD by battery-interface trade'
+    regs: []
+    uc: []
+  R-002:
+    type: PERF
+    text: The drive unit shall emit less than 55 dB(A) sound pressure at 1 m during assisted riding at any assist level up
+      to 25 km/h.
+    verify: test
+    tests:
+    - T-002
+    from_:
+    - N-02
+    attr: 'assumed: hemi-anechoic room, dyno at nominal cadence 70 rpm and max assist torque; microphone positions per ISO
+      3744'
+    regs: []
+    uc: []
+  R-003:
+    type: ENV
+    text: The drive unit shall achieve IPX6 per IEC 60529 and show zero functional failures after the water-jet exposure.
+    verify: test
+    tests:
+    - T-003
+    from_:
+    - N-03
+    attr: 'assumed: functional check = full assist + comms + no water in electronics compartment at teardown'
+    regs: []
+    uc: []
+  R-004:
+    type: PERF
+    text: The drive unit (motor + controller + battery interface, excluding battery pack) shall have a mass of less than 3.5
+      kg.
+    verify: inspection
+    tests:
+    - T-004
+    from_:
+    - N-05
+    attr: 'assumed: battery pack excluded from mass budget (per MOE-05 metric)'
+    regs: []
+    uc: []
+  R-005:
+    type: REGU
+    text: The drive unit shall provide assist only while the rider pedals, with continuous rated power ≤ 250 W, and shall
+      cut assist off progressively and fully at or before 25 km/h, per EN 15194.
+    verify: test
+    tests:
+    - T-005
+    from_:
+    - N-14
+    regs:
+    - REG-EN15194
+    uc: []
+    attr: ''
+  R-006:
+    type: REGU
+    text: The battery pack used with the drive unit shall pass UN 38.3 tests T.1–T.8 before shipment.
+    verify: test
+    tests:
+    - T-006
+    from_:
+    - N-14
+    regs:
+    - REG-UN383
+    attr: 'assumed: battery is a bought-in pack; evidence may be supplier UN 38.3 test summary'
+    uc: []
+functions: {}
+logical_components: {}
+logical_interfaces: {}
+parts: {}
+nodes: {}
+interfaces: {}
+states: {}
+transitions: {}
+constraints: {}
+trades: {}
+arch_decisions: {}
+tests:
+  T-001:
+    name: Assisted range test (EN 17404)
+    method: Dyno/track range run at 25 km/h assist from full charge to cut-off
+    gate: DVT
+    passfail: range >= 60 km
+    units: km
+    kind: test
+  T-002:
+    name: Drive noise measurement
+    method: Sound pressure at 1 m, hemi-anechoic, dyno across assist levels to 25 km/h
+    gate: DVT
+    passfail: LpA < 55 dB(A) at all points
+    units: dB(A)
+    kind: test
+  T-003:
+    name: IPX6 water-jet test (IEC 60529)
+    method: 12.5 mm nozzle, 100 L/min, 3 min min, all directions; functional check + teardown
+    gate: DVT
+    passfail: 0 functional failures, no water ingress into electronics
+    units: failures
+    kind: test
+  T-004:
+    name: Drive unit mass inspection
+    method: Weigh n=5 production-intent units on calibrated scale
+    gate: DVT
+    passfail: max mass < 3.5 kg
+    units: kg
+    kind: inspection
+  T-005:
+    name: EN 15194 assist cut-off and rated power test
+    method: 'Dyno: rated continuous power per EN 15194/EN 60034-1, assist vs speed sweep, no-pedal assist check'
+    gate: Certification
+    passfail: P_rated <= 250 W; assist = 0 at >= 25 km/h; no assist without pedalling
+    units: W, km/h
+    kind: test
+  T-006:
+    name: UN 38.3 battery transport tests
+    method: Accredited lab T.1–T.8 (altitude, thermal, vibration, shock, ext. short, impact, overcharge, forced discharge)
+    gate: Certification
+    passfail: all T.1–T.8 pass; test summary issued
+    units: pass/fail
+    kind: test
+gates: {}
+fm_assessments: {}
+program:
+  lanes: []

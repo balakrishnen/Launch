@@ -1,0 +1,110 @@
+# Trigger → applicable regulations/standards. Used by the requirements agent (library tool) and the compliance check.
+# trigger keys are product properties the agent detects: radio, battery_liion, skin_contact, mains, wearable, motor, medical_claim, children, outdoor, vehicle, iot_cloud
+- id: FCC-15B
+  trigger: [digital_electronics]
+  market: US
+  name: FCC Part 15 Subpart B (unintentional radiators)
+  standard: ANSI C63.4; FCC 47 CFR 15.107/15.109
+  requirement_hint: "Conducted and radiated emissions within Class B limits; SDoC labelling."
+- id: FCC-15C
+  trigger: [radio]
+  market: US
+  name: FCC Part 15 Subpart C (intentional radiators, 2.4 GHz)
+  standard: ANSI C63.10; 47 CFR 15.247/15.249; KDB 447498 (RF exposure)
+  requirement_hint: "Use a pre-certified module with modular grant where possible; host must keep antenna, placement and RF exposure within grant conditions."
+- id: ISED-RSS
+  trigger: [radio]
+  market: CA
+  name: ISED RSS-247 / RSS-Gen / RSS-102
+  standard: RSS-247, RSS-Gen, RSS-102
+- id: RED
+  trigger: [radio]
+  market: EU
+  name: Radio Equipment Directive 2014/53/EU
+  standard: EN 300 328; EN 301 489-1/-17; EN 62479 / EN 62311; EN IEC 62368-1
+  requirement_hint: "Art. 3.1a safety, 3.1b EMC, 3.2 spectrum; from Aug 2025 also 3.3(d)(e)(f) cybersecurity (EN 18031)"
+- id: RED-CYBER
+  trigger: [radio, iot_cloud]
+  market: EU
+  name: RED delegated act 2022/30 — cybersecurity
+  standard: EN 18031-1/-2/-3
+- id: IEC-62368
+  trigger: [digital_electronics, mains, battery_liion]
+  market: [US, EU, CA]
+  name: Audio/video, ICT equipment safety
+  standard: IEC/UL/EN 62368-1
+- id: IEC-62133
+  trigger: [battery_liion]
+  market: [EU, US]
+  name: Secondary lithium cells and batteries — safety
+  standard: IEC 62133-2; UL 1642 (cell); UL 2054 (pack)
+- id: UN383
+  trigger: [battery_liion]
+  market: global
+  name: UN 38.3 lithium battery transport tests
+  standard: UN Manual of Tests and Criteria Part III 38.3 (T1–T8)
+- id: ISO-10993
+  trigger: [skin_contact]
+  market: global
+  name: Biological evaluation — skin contact
+  standard: "ISO 10993-1/-5/-10/-23; consumer: OEKO-TEX, REACH Annex XVII nickel"
+- id: IEC-60529
+  trigger: [outdoor, wearable]
+  market: global
+  name: Ingress protection
+  standard: IEC 60529 (IPxx)
+- id: IEC-60068
+  trigger: [digital_electronics]
+  market: global
+  name: Environmental testing
+  standard: IEC 60068-2-1/-2/-14/-27/-30/-64/-78
+- id: IEC-61000
+  trigger: [digital_electronics]
+  market: [EU]
+  name: EMC immunity
+  standard: IEC 61000-4-2 (ESD), -4-3, -4-4, -4-5, -4-6, -4-8, -4-11; EN 55032/55035
+- id: CA-PROP65
+  trigger: [consumer]
+  market: US-CA
+  name: California Proposition 65
+  standard: "Cal. Code Regs. tit. 27 §25601"
+- id: RoHS-REACH
+  trigger: [consumer, digital_electronics]
+  market: EU
+  name: RoHS 2011/65/EU; REACH 1907/2006; WEEE; Battery Regulation 2023/1542
+  standard: EN IEC 63000
+- id: IEC-60730
+  trigger: [appliance_control, mains]
+  market: global
+  name: Automatic electrical controls — software class B/C
+  standard: IEC 60730-1 Annex H
+- id: UL-60335
+  trigger: [appliance, mains]
+  market: [US, EU]
+  name: Household appliance safety
+  standard: IEC/UL 60335-1 + part 2-xx
+- id: EN-15194
+  trigger: [ebike]
+  market: EU
+  name: EPAC — electrically power assisted cycles
+  standard: EN 15194:2017+A1:2023
+- id: UL-2849
+  trigger: [ebike]
+  market: US
+  name: Electrical systems for e-bikes
+  standard: UL 2849
+- id: ISO-26262
+  trigger: [vehicle]
+  market: global
+  name: Road vehicles — functional safety
+  standard: ISO 26262:2018 (ASIL)
+- id: IEC-62304
+  trigger: [medical_claim]
+  market: global
+  name: Medical device software life cycle (if medical claims are made)
+  standard: IEC 62304; ISO 14971; IEC 60601-1
+- id: CPSIA
+  trigger: [children]
+  market: US
+  name: Consumer Product Safety Improvement Act
+  standard: ASTM F963; 16 CFR 1250

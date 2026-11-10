@@ -1,0 +1,35 @@
+# Discipline-specific failure mechanisms and typical causes/controls. The risk agent uses these as *prompts*, never as
+# copy-paste rows: each candidate must still be tied to the actual function/interface/transition and its parts.
+electrical:
+  - {mechanism: "Solder joint fatigue", causes: ["CTE mismatch", "thermal cycling", "board flex"], controls: ["IPC-9701 thermal cycling", "underfill/corner bond", "flex-stop ribs"], guide: [intermittent, open]}
+  - {mechanism: "Electromigration / ESD damage", causes: ["ESD at connector", "no TVS"], controls: ["IEC 61000-4-2 8 kV contact", "TVS on external lines"], guide: [loss, degraded]}
+  - {mechanism: "Capacitor degradation (electrolytic/MLCC cracking)", causes: ["board bending", "high ripple temp"], controls: ["MLCC flex-crack-resistant terminations", "derating 50 %"], guide: [degraded, loss]}
+  - {mechanism: "Connector wear / fretting", causes: ["mating cycles beyond rating", "vibration"], controls: ["mating cycle spec", "gold plating", "retention"], guide: [intermittent, open]}
+  - {mechanism: "Battery cell swelling / thermal runaway", causes: ["overcharge", "over-temperature charge", "crush"], controls: ["protection IC + fuel gauge", "charge window 0–45 °C", "UN 38.3, IEC 62133 tests"], guide: [unintended, wrong_value]}
+  - {mechanism: "Sensor drift / offset", causes: ["temperature", "aging", "humidity ingress"], controls: ["calibration", "diagnostics", "coating"], guide: [wrong_value, degraded]}
+mechanical:
+  - {mechanism: "Fatigue crack at stress concentration", causes: ["sharp radius", "cyclic load"], controls: ["FEA", "radius ≥ 0.5 mm", "cyclic test to 2× life"], guide: [loss, degraded]}
+  - {mechanism: "Creep / stress relaxation of plastic snap or seal", causes: ["load at elevated temperature"], controls: ["material creep data", "metal insert", "85 °C storage test"], guide: [degraded, leakage]}
+  - {mechanism: "Wear / abrasion", causes: ["sliding contact", "particulates"], controls: ["hardness pairing", "lubricant", "wear test"], guide: [degraded]}
+  - {mechanism: "Seal failure / ingress", causes: ["compression set", "tolerance stack", "assembly damage"], controls: ["IEC 60529 IPx7 test", "tolerance analysis", "seal inspection"], guide: [leakage]}
+  - {mechanism: "Drop / impact fracture", causes: ["brittle material", "thin wall"], controls: ["IEC 60068-2-31 drop", "ribs", "impact-modified resin"], guide: [loss]}
+firmware:
+  - {mechanism: "Watchdog not covering all tasks", causes: ["task starvation", "deadlock"], controls: ["windowed WDT", "task heartbeat monitor"], guide: [loss, wrong_timing]}
+  - {mechanism: "Stack/heap overflow", causes: ["recursion", "unbounded buffers"], controls: ["static analysis", "stack canaries", "MPU"], guide: [loss, unintended]}
+  - {mechanism: "Flash wear / corrupted config", causes: ["write cycles", "power loss during write"], controls: ["wear levelling", "CRC + dual bank", "brown-out detect"], guide: [wrong_value, loss]}
+  - {mechanism: "OTA bricking", causes: ["power loss", "bad image"], controls: ["A/B images", "signed images", "rollback"], guide: [loss]}
+  - {mechanism: "Timing / race condition", causes: ["ISR shared data", "clock domain"], controls: ["critical sections", "static analysis", "HIL stress"], guide: [wrong_timing, intermittent]}
+software:
+  - {mechanism: "Data loss / sync conflict", causes: ["offline edits", "race"], controls: ["idempotent sync", "conflict tests"], guide: [loss, wrong_value]}
+  - {mechanism: "Privacy breach", causes: ["unencrypted transport", "logging PII"], controls: ["TLS 1.3", "data minimisation", "pen test"], guide: [unintended]}
+  - {mechanism: "Dependency vulnerability", causes: ["stale libraries"], controls: ["SBOM", "CVE scanning"], guide: [unintended]}
+thermal:
+  - {mechanism: "Hot spot above touch limit", causes: ["poor spreading", "high ambient"], controls: ["IEC 62368-1 touch temperature", "thermal camera test", "spreader"], guide: [wrong_value, degraded]}
+textile:
+  - {mechanism: "Knit relaxation / loss of tension", causes: ["wash cycles", "UV", "sweat"], controls: ["AATCC wash cycling", "retention test", "elastane spec"], guide: [degraded]}
+  - {mechanism: "Conductive yarn breakage / resistance rise", causes: ["flex cycles", "corrosion"], controls: ["flex test", "silver-plated nylon spec", "resistance monitoring"], guide: [open, degraded]}
+chemical:
+  - {mechanism: "Skin irritation / sensitisation", causes: ["nickel release", "dye migration", "adhesive"], controls: ["ISO 10993-10/-23", "EN 1811 nickel release", "OEKO-TEX"], guide: [unintended]}
+  - {mechanism: "Corrosion of contacts", causes: ["sweat", "humidity"], controls: ["IEC 60068-2-11 salt mist", "artificial sweat ISO 3160-2", "plating"], guide: [degraded, open]}
+optical:
+  - {mechanism: "Lens fogging / contamination", causes: ["ingress", "outgassing"], controls: ["desiccant", "low-outgassing adhesives", "humidity cycling"], guide: [degraded]}

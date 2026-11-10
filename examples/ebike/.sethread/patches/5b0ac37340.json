@@ -1,0 +1,149 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-SERVICE",
+      "value": {
+        "name": "Service technician",
+        "description": "Dealer / fleet workshop technician who diagnoses and repairs drive units."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-MFG",
+      "value": {
+        "name": "Manufacturing (plant / EOL test)",
+        "description": "Contract plant building 50k units/yr (SMT boards, die-cast housing) and running end-of-line test."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-REG",
+      "value": {
+        "name": "Regulators / certification bodies",
+        "description": "EU and US authorities and notified bodies for EN 15194, UL 2849, FCC Part 15 / RED, UN 38.3, IEC 62133-2."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-10",
+      "value": {
+        "text": "Technicians need to find the cause of a drive-unit fault quickly, because workshop time is billed per job and a bike off the road costs the rider or fleet money.",
+        "stk": "STK-SERVICE",
+        "moe": "MOE-10"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-11",
+      "value": {
+        "text": "Technicians and riders need to take the battery off the bike with no special tools, because special tools are often not to hand at the roadside or in small workshops.",
+        "stk": "STK-SERVICE",
+        "moe": "MOE-11"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-12",
+      "value": {
+        "text": "The plant needs to build 50,000 units a year, because that is the planned sales volume.",
+        "stk": "STK-MFG",
+        "moe": "MOE-12"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-13",
+      "value": {
+        "text": "The plant needs each unit checked at end of line quickly, because a long test holds up the line and stops it reaching the planned volume.",
+        "stk": "STK-MFG",
+        "moe": "MOE-13"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-14",
+      "value": {
+        "text": "Regulators need evidence that the drive unit, its radios and its battery meet the EU and US e-bike, radio, cell-safety and transport rules before it is sold or shipped, because the product cannot legally go on sale without it.",
+        "stk": "STK-REG",
+        "moe": "MOE-14"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-10",
+      "value": {
+        "name": "Mean time to diagnose",
+        "metric": "time from start of diagnosis to fault identified, mean over the fault catalogue",
+        "target": 10,
+        "unit": "min",
+        "comparator": "<"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-11",
+      "value": {
+        "name": "Special tools needed for battery removal",
+        "metric": "number of special (non-standard) tools needed to remove the battery",
+        "target": 0,
+        "unit": "count",
+        "comparator": "="
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-12",
+      "value": {
+        "name": "Annual production capacity",
+        "metric": "units built per year",
+        "target": 50000,
+        "unit": "units/yr",
+        "comparator": ">="
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-13",
+      "value": {
+        "name": "End-of-line test time",
+        "metric": "end-of-line test time per unit",
+        "target": 90,
+        "unit": "s",
+        "comparator": "<"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-14",
+      "value": {
+        "name": "Certifications passed first time",
+        "metric": "share of required certifications (EN 15194, UL 2849, FCC Part 15, RED, UN 38.3, IEC 62133-2) passed at first submission",
+        "target": 100,
+        "unit": "%",
+        "comparator": "="
+      }
+    }
+  ],
+  "author": "agent:needs",
+  "rationale": "Adds the PRD stakeholders not covered by staged patch 3fef2fe8fc (rider, fleet): service, manufacturing, regulators. Each gets needs in plain stakeholder language with a reason ('because ...') and one MoE with a number. The needs avoid naming solutions; 'SMT + die-cast' is kept only in the stakeholder description as context. Ids start at N-10 / MOE-10 so they cannot clash with 3fef2fe8fc. MOE-14 target (100% passed at first submission) is PROVISIONAL because the PRD only lists the standards. Regulation elements (REG-) are left to the requirements role.",
+  "sources": [
+    "PRD.md"
+  ],
+  "id": "5b0ac37340",
+  "created": 1794284728.8117437,
+  "status": "applied"
+}

@@ -1,0 +1,31 @@
+{
+  "ops": [
+    {
+      "op": "update",
+      "kind": "requirements",
+      "id": "R-001",
+      "value": {
+        "text": "Changed text for diff test"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "parts",
+      "id": "P-TEST",
+      "value": {
+        "name": "testPart",
+        "type": "TestPart",
+        "discipline": "mechanical",
+        "parent": "P-CAP"
+      }
+    }
+  ],
+  "author": "test",
+  "rationale": "diff test",
+  "sources": [
+    "x"
+  ],
+  "id": "6d04a437c2",
+  "created": 1794284647.1922219,
+  "status": "rejected"
+}

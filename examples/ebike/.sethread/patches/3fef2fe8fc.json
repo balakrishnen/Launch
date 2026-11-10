@@ -1,0 +1,246 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-RIDER",
+      "value": {
+        "name": "Commuter rider",
+        "description": "Commuters aged 20-60 riding the e-bike daily"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-FLEET",
+      "value": {
+        "name": "Fleet operator",
+        "description": "Operates shared/rental e-bike fleets; cares about uptime, visibility, security"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-01",
+      "value": {
+        "stk": "STK-RIDER",
+        "moe": "MOE-01",
+        "text": "I want to ride my daily commute there and back on assist without stopping to recharge, because a commute cut short by a flat battery makes me give up on e-bike commuting."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-01",
+      "value": {
+        "need": "N-01",
+        "name": "Assisted range",
+        "metric": "Distance ridden at 25 km/h assist on one full charge",
+        "target": 60,
+        "unit": "km",
+        "direction": ">=",
+        "source": "PRD.md"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-02",
+      "value": {
+        "stk": "STK-RIDER",
+        "moe": "MOE-02",
+        "text": "I want the bike to be quiet so riding feels natural, because motor whine feels cheap and annoys me and people around me."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-02",
+      "value": {
+        "need": "N-02",
+        "name": "Drive noise",
+        "metric": "A-weighted sound pressure at 1 m during assisted riding",
+        "target": 55,
+        "unit": "dBA",
+        "direction": "<",
+        "source": "PRD.md"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-03",
+      "value": {
+        "stk": "STK-RIDER",
+        "moe": "MOE-03",
+        "text": "I want to ride in heavy rain and hose the bike down without it breaking, because I commute year-round in all weather."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-03",
+      "value": {
+        "need": "N-03",
+        "name": "Survival of powerful water jets",
+        "metric": "Functional failures after IPX6 (IEC 60529) water-jet exposure",
+        "target": 0,
+        "unit": "failures",
+        "direction": "=",
+        "source": "PRD.md"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-04",
+      "value": {
+        "stk": "STK-RIDER",
+        "moe": "MOE-04",
+        "text": "I want the drive to keep working for years without major repair, because it is the most expensive part of my bike."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-04",
+      "value": {
+        "need": "N-04",
+        "name": "Service life",
+        "metric": "Years of commuter use before drive-unit end of life",
+        "target": 5,
+        "unit": "years",
+        "direction": ">=",
+        "source": "PRD.md"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-05",
+      "value": {
+        "stk": "STK-RIDER",
+        "moe": "MOE-05",
+        "text": "I want the bike light enough to carry up stairs and onto trains and to handle like a normal bicycle, because the drive adds most of the extra weight."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-05",
+      "value": {
+        "need": "N-05",
+        "name": "Drive unit mass",
+        "metric": "Mass of drive unit (motor + controller + battery interface)",
+        "target": 3.5,
+        "unit": "kg",
+        "direction": "<",
+        "source": "PRD.md"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-06",
+      "value": {
+        "stk": "STK-FLEET",
+        "moe": "MOE-06",
+        "text": "I need depleted bikes back in service quickly without waiting for them to charge, because every hour a bike sits charging is lost rental revenue."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-06",
+      "value": {
+        "need": "N-06",
+        "name": "Energy restore time",
+        "metric": "Time for a field crew to return a depleted bike to full available energy",
+        "target": 60,
+        "unit": "s",
+        "direction": "<=",
+        "source": "PRD.md (swappable battery); numeric target PROVISIONAL - needs human confirmation"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-07",
+      "value": {
+        "stk": "STK-FLEET",
+        "moe": "MOE-07",
+        "text": "I need to know where every bike is and what state it is in without visiting it, because crews are dispatched from remote status and stale data wastes trips."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-07",
+      "value": {
+        "need": "N-07",
+        "name": "Status freshness",
+        "metric": "Max age of location/state data per vehicle while in network coverage",
+        "target": 60,
+        "unit": "s",
+        "direction": "<=",
+        "source": "PRD.md (telemetry); numeric target PROVISIONAL - needs human confirmation"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-08",
+      "value": {
+        "stk": "STK-FLEET",
+        "moe": "MOE-08",
+        "text": "I need to fix and improve bike software across the fleet without bringing bikes in, because a physical recall costs crew time and takes bikes off the street."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-08",
+      "value": {
+        "need": "N-08",
+        "name": "Fleet update reach",
+        "metric": "Share of fleet on a released software version within 7 days, with zero depot visits",
+        "target": 98,
+        "unit": "%",
+        "direction": ">=",
+        "source": "PRD.md (firmware OTA); numeric target PROVISIONAL - needs human confirmation"
+      }
+    },
+    {
+      "op": "add",
+      "kind": "needs",
+      "id": "N-09",
+      "value": {
+        "stk": "STK-FLEET",
+        "moe": "MOE-09",
+        "text": "I need bikes to be useless to thieves and unauthorised riders, because a bike that still assists is worth stealing and theft is a major asset loss."
+      }
+    },
+    {
+      "op": "add",
+      "kind": "moes",
+      "id": "MOE-09",
+      "value": {
+        "need": "N-09",
+        "name": "Unauthorised assist",
+        "metric": "Assist events delivered while vehicle is locked",
+        "target": 0,
+        "unit": "events",
+        "direction": "=",
+        "source": "PRD.md (theft lock)"
+      }
+    }
+  ],
+  "author": "agent:needs",
+  "rationale": "Rider and fleet-operator needs from PRD, in stakeholder language with causal driver ('because ...'). PRD solution terms (swappable battery, BLE/LTE, OTA, theft lock) kept out of need text and recorded only as MoE source. One numeric MoE per need. MOE-06/07/08 targets are PROVISIONAL — PRD gives no number. Supersedes probe patch 7cf2429546 (STK-RIDER only) — reject that one.",
+  "sources": [
+    "PRD.md"
+  ],
+  "id": "3fef2fe8fc",
+  "created": 1794284394.3650637,
+  "status": "applied"
+}

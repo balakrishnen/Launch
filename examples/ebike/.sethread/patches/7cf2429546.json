@@ -1,0 +1,21 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "kind": "stakeholders",
+      "id": "STK-RIDER",
+      "value": {
+        "name": "Commuter rider",
+        "description": "Commuters aged 20-60 riding the e-bike daily"
+      }
+    }
+  ],
+  "author": "agent:needs",
+  "rationale": "Schema probe: add rider stakeholder from PRD.",
+  "sources": [
+    "PRD.md"
+  ],
+  "id": "7cf2429546",
+  "created": 1794284323.3657558,
+  "status": "rejected"
+}

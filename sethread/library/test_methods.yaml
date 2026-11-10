@@ -1,0 +1,23 @@
+# Standard test methods the V&V agent can cite; severity defaults are starting points, the requirement decides.
+- {id: TM-THERM-CYC, name: "Thermal cycling", standard: "IEC 60068-2-14 Nb", default: "-20/+60 °C, 1 h dwell, 100 cycles", covers: ["solder fatigue", "CTE"]}
+- {id: TM-DAMP-CYC, name: "Damp heat cyclic", standard: "IEC 60068-2-30 Db", default: "25/55 °C 93 % RH, 6 cycles"}
+- {id: TM-DAMP-STEADY, name: "Damp heat steady state", standard: "IEC 60068-2-78", default: "40 °C / 93 % RH, 500 h powered"}
+- {id: TM-COLD, name: "Cold operation", standard: "IEC 60068-2-1 Ab", default: "-10 °C, 2 h operating"}
+- {id: TM-HOT, name: "Dry heat operation", standard: "IEC 60068-2-2 Bb", default: "+45 °C, 4 h operating"}
+- {id: TM-VIB, name: "Random vibration", standard: "IEC 60068-2-64", default: "10–500 Hz, 1.5 Grms, 1 h/axis"}
+- {id: TM-SHOCK, name: "Shock", standard: "IEC 60068-2-27", default: "50 g, 11 ms half-sine, 3/direction"}
+- {id: TM-DROP, name: "Free fall", standard: "IEC 60068-2-31", default: "1.0 m onto concrete, 6 faces"}
+- {id: TM-IP, name: "Ingress protection", standard: "IEC 60529", default: "IPX4 spray / IPX7 1 m 30 min"}
+- {id: TM-ESD, name: "ESD immunity", standard: "IEC 61000-4-2", default: "±8 kV contact, ±15 kV air"}
+- {id: TM-RS, name: "Radiated immunity", standard: "IEC 61000-4-3", default: "3 V/m 80 MHz–6 GHz"}
+- {id: TM-EMI, name: "Radiated emissions", standard: "CISPR 32 / ANSI C63.4", default: "Class B"}
+- {id: TM-SALT, name: "Salt mist", standard: "IEC 60068-2-11", default: "48 h 5 % NaCl"}
+- {id: TM-SWEAT, name: "Artificial sweat", standard: "ISO 3160-2 / ISO 12870", default: "24 h at 40 °C"}
+- {id: TM-UN383, name: "Lithium battery transport", standard: "UN 38.3 T1–T8", default: "altitude, thermal, vibration, shock, external short, impact/crush, overcharge, forced discharge"}
+- {id: TM-62133, name: "Cell/pack safety", standard: "IEC 62133-2", default: "external short, overcharge, forced discharge, crush, thermal abuse"}
+- {id: TM-TOUCH, name: "Touch temperature", standard: "IEC 62368-1 / IEC Guide 117", default: "≤ 41 °C sustained skin contact (43 °C for 10 min)"}
+- {id: TM-HALT, name: "HALT", standard: "IEST-RP-PR003", default: "step stress: cold, hot, vibration, combined to destruct limits"}
+- {id: TM-WASH, name: "Wash cycling (textile electronics)", standard: "AATCC TM135 / IEC 63203-204-1", default: "25 cycles, 30 °C delicate"}
+- {id: TM-FLEX, name: "Flex cycling", standard: "IEC 62715-6-1 / IPC-TM-650 2.4.3", default: "10 000 cycles, R = 10 mm"}
+- {id: TM-ACOUSTIC, name: "Acoustic noise", standard: "ISO 3744 / IEC 60704", default: "sound power, hemi-anechoic"}
+- {id: TM-LIFE, name: "Accelerated life (Arrhenius)", standard: "JESD22-A108 / Weibull success-run", default: "Ea = 0.7 eV, 85 °C, n = 22 for R90C90"}

@@ -1,0 +1,4317 @@
+meta:
+  name: Sabi Cap
+  version: '1.0'
+  method: OOSEM
+  description: Non-invasive EEG BCI beanie; reliability program derived from the model
+stakeholders:
+  STK-WEARER:
+    name: Wearer
+    role: Primary user; wears the cap 4 h/day
+    concerns: comfort, safety, it works outdoors, privacy
+  STK-SABI:
+    name: Sabi (business)
+    role: Ships by year-end; brand depends on first cohort
+    concerns: returns, safety events, press
+  STK-CM:
+    name: Contract manufacturer
+    role: Builds, tests, ships
+    concerns: testable design, yield, clear acceptance criteria
+  STK-REG:
+    name: Regulators (FCC, EU, ISED)
+    role: Market access
+    concerns: RF, EMC, safety, substances, RF exposure
+  STK-RETAIL:
+    name: Retail / logistics
+    role: Stocks and ships product
+    concerns: battery transport, retailer safety marks, shelf life
+  STK-SUPPORT:
+    name: Support / field quality
+    role: Handles returns and complaints
+    concerns: diagnosable failures, telemetry
+  STK-APP:
+    name: Phone app / BFM backend
+    role: Receives decoded text and telemetry
+    concerns: link reliability, data integrity, security
+moes:
+  MOE-WEAR:
+    name: Daily wear hours
+    target: ≥ 4 h/day sustained over 2 weeks in wear trial; comfort score ≥ 4/5
+  MOE-SAFETY:
+    name: Safety events
+    target: Zero burn, battery or skin-injury events in first 10,000 units
+  MOE-ENV:
+    name: Environmental survivability
+    target: Operational after IPX4, sweat ×5, 1 m drop, −10 °C start
+  MOE-LIFE:
+    name: Design life
+    target: R(2 yr) ≥ 0.90 at 90 % confidence
+  MOE-SEC:
+    name: Security
+    target: No unauthenticated pairing; link encrypted; external audit passed
+  MOE-AFR:
+    name: Year-1 hardware AFR
+    target: ≤ 3 % at launch, ≤ 2 % at 6 months; all-cause returns ≤ 5 % in 90 days
+  MOE-SCHED:
+    name: Launch
+    target: Ship Dec 28, 2026 or founders' cohort with Q1 close-out
+  MOE-TEST:
+    name: EoL testability
+    target: Functional test ≤ 90 s, DPPM escape ≤ 500
+  MOE-CERT:
+    name: Certification
+    target: FCC grant/SDoC, CE DoC, ISED cert before ship
+  MOE-SHIP:
+    name: Shelf and transport
+    target: Cell 40–60 % SoC after 6 months storage; UN 38.3 pass
+  MOE-DIAG:
+    name: Diagnosability
+    target: ≥ 90 % of returns classified from telemetry before bench
+  MOE-LINK:
+    name: Link robustness
+    target: Reconnect ≤ 5 s; packet loss ≤ 0.1 % with phone in pocket
+needs:
+  N-01:
+    stk: STK-WEARER
+    text: Wear it for hours every day without discomfort or skin reaction
+    moe: MOE-WEAR
+  N-02:
+    stk: STK-WEARER
+    text: It never burns me or exposes me to a battery event
+    moe: MOE-SAFETY
+  N-03:
+    stk: STK-WEARER
+    text: 'It works through a full day of normal life: sweat, rain, bag, drops, cold mornings'
+    moe: MOE-ENV
+  N-04:
+    stk: STK-WEARER
+    text: Decoding keeps working for two years of daily use
+    moe: MOE-LIFE
+  N-05:
+    stk: STK-WEARER
+    text: My neural data and text are private
+    moe: MOE-SEC
+  N-06:
+    stk: STK-SABI
+    text: Field returns and safety events stay low enough to protect the launch
+    moe: MOE-AFR
+  N-07:
+    stk: STK-SABI
+    text: Ship by year-end with a known, bounded risk
+    moe: MOE-SCHED
+    program: true
+  N-08:
+    stk: STK-CM
+    text: Every unit can be functionally tested in under 90 s with measurable pass/fail
+    moe: MOE-TEST
+  N-09:
+    stk: STK-REG
+    text: Legal to sell in US, EU and Canada
+    moe: MOE-CERT
+  N-10:
+    stk: STK-RETAIL
+    text: Can be air-shipped and stocked for six months
+    moe: MOE-SHIP
+  N-11:
+    stk: STK-SUPPORT
+    text: Every field failure is diagnosable from device data
+    moe: MOE-DIAG
+  N-12:
+    stk: STK-APP
+    text: Link is robust and data arrives intact and authenticated
+    moe: MOE-LINK
+actors:
+  ACT-WEARER:
+    name: Wearer
+  ACT-PHONE:
+    name: Phone app
+  ACT-DOCK:
+    name: Charge dock
+  ACT-CM:
+    name: Factory / CM
+  ACT-SUPPORT:
+    name: Support
+  ACT-ENV:
+    name: Environment (sweat, rain, ESD, drops, cold)
+use_cases:
+  UC-01:
+    name: Think to text
+    actors:
+    - ACT-WEARER
+    - ACT-PHONE
+    includes:
+    - UC-02
+    - UC-03
+    needs:
+    - N-04
+    - N-12
+  UC-02:
+    name: Wear for hours
+    actors:
+    - ACT-WEARER
+    - ACT-ENV
+    includes: []
+    needs:
+    - N-01
+    - N-02
+    - N-03
+  UC-03:
+    name: Pair with phone
+    actors:
+    - ACT-PHONE
+    includes: []
+    needs:
+    - N-05
+    - N-12
+  UC-04:
+    name: Charge
+    actors:
+    - ACT-DOCK
+    includes: []
+    needs:
+    - N-02
+  UC-05:
+    name: Update firmware
+    actors:
+    - ACT-PHONE
+    - ACT-SUPPORT
+    includes: []
+    needs:
+    - N-06
+  UC-06:
+    name: Report health
+    actors:
+    - ACT-PHONE
+    - ACT-SUPPORT
+    includes: []
+    needs:
+    - N-11
+  UC-07:
+    name: Manufacture and test
+    actors:
+    - ACT-CM
+    includes: []
+    needs:
+    - N-08
+  UC-08:
+    name: Store and ship
+    actors:
+    - ACT-CM
+    includes: []
+    needs:
+    - N-10
+scenarios:
+  SC-WEAR:
+    uc: UC-01
+    name: WearSession
+    steps:
+    - F01
+    - F02
+    - F03
+    - F07
+    - F04
+    - F05
+    - F06
+    - F07
+    - F12
+    - F03
+    concurrent:
+    - F10
+    - F08
+    - F11
+    - F12
+  SC-CHARGE:
+    uc: UC-04
+    name: ChargeSession
+    steps:
+    - F09a
+    - F09b
+    - F09c
+    - F09d
+    - F09e
+    - F08b
+    concurrent: []
+  SC-UPDATE:
+    uc: UC-05
+    name: FirmwareUpdate
+    steps:
+    - F13a
+    - F13b
+    - F13c
+    - F13d
+    concurrent: []
+  SC-SHIP:
+    uc: UC-08
+    name: StoreAndShip
+    steps:
+    - F14a
+    - F14b
+    - F14c
+    concurrent: []
+  SC-EOL:
+    uc: UC-07
+    name: EndOfLineTest
+    steps:
+    - F15a
+    - F15b
+    - F15c
+    concurrent: []
+regulations:
+  REG-FCC15B:
+    name: FCC Part 15 Subpart B
+    market: US
+    trigger: digital device
+    standard: 47 CFR 15.107/15.109
+  REG-FCC15C:
+    name: FCC Part 15 Subpart C (or module grant)
+    market: US
+    trigger: 2.4 GHz intentional radiator
+    standard: 47 CFR 15.247; KDB 996369
+  REG-FCCRF:
+    name: FCC RF exposure
+    market: US
+    trigger: body-worn transmitter < 20 cm
+    standard: 47 CFR 2.1093; KDB 447498
+  REG-RED:
+    name: Radio Equipment Directive 2014/53/EU
+    market: EU
+    trigger: radio equipment
+    standard: EN 300 328; EN 301 489-1/-17; EN IEC 62368-1; EN 62479 / EN 50566
+  REG-ISED:
+    name: ISED Canada
+    market: CA
+    trigger: radio equipment
+    standard: RSS-Gen; RSS-247; RSS-102; ICES-003
+  REG-UN383:
+    name: UN 38.3 lithium battery transport
+    market: all
+    trigger: lithium cell/pack shipped
+    standard: UN Manual of Tests and Criteria III.38.3
+  REG-62133:
+    name: IEC 62133-2 / UL 2054
+    market: EU, retail
+    trigger: portable lithium pack
+    standard: IEC 62133-2; UL 2054; UL 1642 cell
+  REG-62368:
+    name: IEC/UL 62368-1 product safety
+    market: all
+    trigger: ICT/AV equipment with battery and charger
+    standard: IEC 62368-1
+  REG-ROHS:
+    name: RoHS 2011/65/EU + 2015/863
+    market: EU
+    trigger: electrical equipment
+    standard: EN IEC 63000
+  REG-REACH:
+    name: REACH SVHC, SCIP
+    market: EU
+    trigger: articles with chemicals
+    standard: EC 1907/2006 Art. 33
+  REG-PROP65:
+    name: California Prop 65
+    market: US-CA
+    trigger: listed chemicals
+    standard: Cal. Health & Safety Code 25249
+  REG-10993:
+    name: ISO 10993 biocompatibility
+    market: all (expected under RED 3.1a safety)
+    trigger: prolonged intact-skin contact
+    standard: ISO 10993-1, -5, -10, -23
+  REG-WEEE:
+    name: WEEE / battery marking and take-back
+    market: EU
+    trigger: EEE with battery
+    standard: 2012/19/EU; 2023/1542
+requirements:
+  R-001:
+    type: PERF
+    text: The cap shall operate ≥ 4 h continuously on-head per charge.
+    from_:
+    - N-01
+    uc:
+    - UC-02
+    attr: runtime_h >= 4
+    verify: test
+    tests:
+    - T-E4
+    - T-B13
+    regs: []
+  R-002:
+    type: PERF
+    text: The cap shall maintain contact impedance within range on ≥ 99 % of sensor sites during a session.
+    from_:
+    - N-04
+    uc:
+    - UC-01
+    attr: usable_fraction >= 0.99
+    verify: test
+    tests:
+    - T-M5
+    - T-I2
+    - T-H1
+    regs: []
+  R-003:
+    type: PERF
+    text: The cap shall decode with end-to-end latency ≤ 1.0 s under reference noise.
+    from_:
+    - N-04
+    uc:
+    - UC-01
+    attr: latency_s <= 1.0
+    verify: test
+    tests:
+    - T-X2
+    regs: []
+  R-004:
+    type: REL
+    text: The cap shall achieve 2-year design life (≥ 2,920 on-head hours, ≥ 730 charge cycles, ≥ 1,460 don/doff) with R ≥
+      0.90 at 90 % confidence.
+    from_:
+    - N-04
+    - N-06
+    uc:
+    - UC-02
+    attr: R(2yr) >= 0.90 @ C=0.90
+    verify: analysis
+    tests:
+    - T-L2
+    - T-M5
+    - T-M6
+    - T-B1
+    regs: []
+  R-005:
+    type: REL
+    text: No single sensor-site failure shall remove a contiguous region larger than 2 % of sites.
+    from_:
+    - N-04
+    uc:
+    - UC-01
+    attr: clustered_loss <= 0.02
+    verify: analysis
+    tests:
+    - T-E1
+    - T-L1
+    regs: []
+  R-010:
+    type: SAFE
+    text: Scalp-side surface temperature shall not exceed 41 °C sustained or 43 °C for > 10 min in any state.
+    from_:
+    - N-02
+    uc:
+    - UC-02
+    - UC-04
+    attr: T_scalp <= 41
+    verify: test
+    tests:
+    - T-E5
+    - T-B12
+    regs: []
+  R-011:
+    type: SAFE
+    text: Charging shall be inhibited while the cap is detected as worn.
+    from_:
+    - N-02
+    uc:
+    - UC-04
+    attr: charge_enabled -> not worn
+    verify: test
+    tests:
+    - T-F1
+    - T-B12
+    regs: []
+  R-012:
+    type: SAFE
+    text: Charging shall occur only within the cell JEITA window (0–45 °C) and shall terminate at C/20.
+    from_:
+    - N-02
+    uc:
+    - UC-04
+    attr: JEITA
+    verify: test
+    tests:
+    - T-B11
+    - T-X5
+    regs: []
+  R-013:
+    type: SAFE
+    text: DC leakage current into skin through any electrode shall be ≤ 10 µA under single-fault conditions.
+    from_:
+    - N-02
+    uc:
+    - UC-02
+    attr: I_leak <= 10e-6
+    verify: test
+    tests:
+    - T-X6
+    regs: []
+  R-014:
+    type: SAFE
+    text: Skin-contact materials shall show no cytotoxicity, irritation or sensitization per ISO 10993-5/-23/-10.
+    from_:
+    - N-01
+    - N-02
+    uc:
+    - UC-02
+    regs:
+    - REG-10993
+    verify: test
+    tests:
+    - T-BIO
+    attr: ''
+  R-015:
+    type: SAFE
+    text: The fault handler shall disable charging and acquisition within 1 s of a thermal or battery fault.
+    from_:
+    - N-02
+    uc:
+    - UC-04
+    - UC-02
+    attr: t_fault_cut <= 1 s
+    verify: test
+    tests:
+    - T-F1
+    regs: []
+  R-020:
+    type: REL
+    text: The battery shall retain ≥ 80 % capacity after 500 cycles at 25 °C and ≥ 80 % after 300 cycles at 45 °C.
+    from_:
+    - N-04
+    uc:
+    - UC-04
+    attr: Q500 >= 0.80
+    verify: test
+    tests:
+    - T-B1
+    - T-B2
+    - T-B3
+    regs: []
+  R-021:
+    type: SAFE
+    text: Cell swelling shall not exceed 8 % thickness at end of life and the housing shall retain ≥ 10 % headroom.
+    from_:
+    - N-02
+    uc:
+    - UC-04
+    attr: swell <= 0.08
+    verify: test
+    tests:
+    - T-B4
+    regs: []
+  R-022:
+    type: REGU
+    text: The pack shall pass UN 38.3 T1–T8 and IEC 62133-2 (or UL 2054).
+    from_:
+    - N-09
+    - N-10
+    regs:
+    - REG-UN383
+    - REG-62133
+    verify: test
+    tests:
+    - T-UN383
+    - T-62133
+    uc: []
+    attr: ''
+  R-023:
+    type: PERF
+    text: Fuel gauge state-of-charge error shall be ≤ 5 % across −10 to 45 °C and across life.
+    from_:
+    - N-01
+    uc:
+    - UC-04
+    attr: soc_err <= 0.05
+    verify: test
+    tests:
+    - T-B13
+    regs: []
+  R-030:
+    type: ENV
+    text: The cap shall be operational after IEC 60529 IPX4 water spray.
+    from_:
+    - N-03
+    uc:
+    - UC-02
+    regs: []
+    verify: test
+    tests:
+    - T-I1
+    attr: ''
+  R-031:
+    type: ENV
+    text: Electrode impedance drift shall be ≤ 15 % after five 24 h artificial-sweat soaks (ISO 105-E04).
+    from_:
+    - N-03
+    - N-04
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-I2
+    regs: []
+    attr: ''
+  R-032:
+    type: ENV
+    text: The cap shall be operational after 1.0 m drops onto concrete in 6 orientations and after 50 tumble falls.
+    from_:
+    - N-03
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-M3
+    - T-M4
+    regs: []
+    attr: ''
+  R-033:
+    type: ENV
+    text: The cap shall meet IEC 61000-4-2 criterion B at ±8 kV contact / ±15 kV air and criterion A at ±4/±8 kV.
+    from_:
+    - N-03
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-X1
+    regs: []
+    attr: ''
+  R-034:
+    type: ENV
+    text: The cap shall boot and hold a BLE link at −10 °C and operate at +45 °C.
+    from_:
+    - N-03
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-E4
+    - T-E5
+    regs: []
+    attr: ''
+  R-035:
+    type: ENV
+    text: The cap shall be functional after IEC 60068-2-14 thermal cycling (−20/+60 °C, 100 cycles) and 60068-2-30 damp heat.
+    from_:
+    - N-03
+    - N-04
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-E1
+    - T-E2
+    - T-E3
+    regs: []
+    attr: ''
+  R-036:
+    type: ENV
+    text: The knit shall show no exposed conductor after 20,000 Martindale rubs and 20 cleaning cycles.
+    from_:
+    - N-01
+    - N-03
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-M7
+    - T-I4
+    regs: []
+    attr: ''
+  R-040:
+    type: IFACE
+    text: The flex bus shall deliver channel data with bit error rate ≤ 1e-9 across the full stretch range.
+    from_:
+    - N-04
+    uc:
+    - UC-01
+    attr: BER <= 1e-9
+    verify: test
+    tests:
+    - T-M5
+    - T-M6
+    regs: []
+  R-041:
+    type: IFACE
+    text: The BLE link shall reconnect within 5 s and sustain ≤ 0.1 % packet loss with the phone in a pocket at 1 m.
+    from_:
+    - N-12
+    uc:
+    - UC-03
+    attr: reconnect <= 5 s
+    verify: test
+    tests:
+    - T-R1
+    regs: []
+  R-042:
+    type: SEC
+    text: Pairing shall require user confirmation and the link shall be encrypted and authenticated.
+    from_:
+    - N-05
+    - N-12
+    uc:
+    - UC-03
+    verify: inspection
+    tests:
+    - T-SEC
+    regs: []
+    attr: ''
+  R-043:
+    type: IFACE
+    text: Knit stretch limit shall be ≤ the flex array strain limit at every size (design interface requirement).
+    from_:
+    - N-04
+    uc:
+    - UC-02
+    attr: stretch_knit <= strain_flex
+    verify: analysis
+    tests:
+    - T-M5
+    regs: []
+  R-050:
+    type: FUNC
+    text: Don/doff shall be detected within 10 s with false on-head rate < 1 % (bag/table) on dry, wet and hair-covered head
+      forms.
+    from_:
+    - N-01
+    - N-11
+    uc:
+    - UC-02
+    attr: t_detect <= 10 s
+    verify: test
+    tests:
+    - T-F1
+    regs: []
+  R-051:
+    type: FUNC
+    text: 'Firmware update shall be atomic: power loss at any point shall leave a bootable image.'
+    from_:
+    - N-06
+    uc:
+    - UC-05
+    verify: test
+    tests:
+    - T-F2
+    regs: []
+    attr: ''
+  R-052:
+    type: FUNC
+    text: Every fault class (open channel, hot battery, drop, thermal limit, charger fault) shall be detected, classified
+      and reported within one sync.
+    from_:
+    - N-11
+    uc:
+    - UC-06
+    verify: test
+    tests:
+    - T-F1
+    regs: []
+    attr: ''
+  R-053:
+    type: FUNC
+    text: Acquisition shall stop within 60 s of contact loss and the device shall enter Idle.
+    from_:
+    - N-01
+    uc:
+    - UC-02
+    verify: test
+    tests:
+    - T-F1
+    regs: []
+    attr: ''
+  R-060:
+    type: MFG
+    text: Every unit shall complete an end-of-line functional test (impedance map, battery, RF link, diagnostics) in ≤ 90
+      s with numeric pass/fail.
+    from_:
+    - N-08
+    uc:
+    - UC-07
+    verify: demonstration
+    tests:
+    - T-EOL
+    regs: []
+    attr: ''
+  R-061:
+    type: MFG
+    text: Units shall leave the factory in ship mode at 40–60 % SoC and wake on first dock after 6 months of storage.
+    from_:
+    - N-10
+    uc:
+    - UC-08
+    verify: test
+    tests:
+    - T-S1
+    regs: []
+    attr: ''
+  R-062:
+    type: ENV
+    text: Packaged units shall be functional after IEC 60068-2-64 random vibration (1.5 Grms, 1 h/axis).
+    from_:
+    - N-10
+    uc:
+    - UC-08
+    verify: test
+    tests:
+    - T-M1
+    regs: []
+    attr: ''
+  R-070:
+    type: REGU
+    text: The cap shall comply with FCC Part 15 B (and 15 C or module grant) and FCC RF exposure rules for body-worn devices.
+    from_:
+    - N-09
+    regs:
+    - REG-FCC15B
+    - REG-FCC15C
+    - REG-FCCRF
+    verify: test
+    tests:
+    - T-FCC
+    - T-X4
+    uc: []
+    attr: ''
+  R-071:
+    type: REGU
+    text: The cap shall comply with RED 2014/53/EU via harmonized standards EN 300 328, EN 301 489-1/-17, EN IEC 62368-1,
+      EN 62479/EN 50566.
+    from_:
+    - N-09
+    regs:
+    - REG-RED
+    - REG-62368
+    verify: test
+    tests:
+    - T-RED
+    uc: []
+    attr: ''
+  R-072:
+    type: REGU
+    text: The cap shall comply with ISED RSS-Gen, RSS-247, RSS-102 and ICES-003.
+    from_:
+    - N-09
+    regs:
+    - REG-ISED
+    verify: test
+    tests:
+    - T-ISED
+    uc: []
+    attr: ''
+  R-073:
+    type: REGU
+    text: All materials shall comply with RoHS (10 substances) and REACH SVHC disclosure; Prop 65 labeling where applicable.
+    from_:
+    - N-09
+    regs:
+    - REG-ROHS
+    - REG-REACH
+    - REG-PROP65
+    verify: inspection
+    tests:
+    - T-MAT
+    uc: []
+    attr: ''
+  R-074:
+    type: REGU
+    text: The product shall carry WEEE and battery marks and support take-back.
+    from_:
+    - N-09
+    regs:
+    - REG-WEEE
+    verify: inspection
+    tests:
+    - T-LABEL
+    uc: []
+    attr: ''
+  R-080:
+    type: REL
+    text: Year-1 hardware AFR shall be ≤ 3 % at launch and ≤ 2 % by month 6, measured from telemetry unit-years.
+    from_:
+    - N-06
+    uc:
+    - UC-06
+    attr: AFR <= 0.03
+    verify: analysis
+    tests:
+    - T-FIELD
+    regs: []
+functions:
+  F01:
+    name: Don cap / fit and retain
+    alloc:
+    - P-TEXTILE
+    - P-ARRAY
+    reqs:
+    - R-002
+    - R-043
+    perf: stays in place 4 h; stretch ≤ 20 %
+    safety_decision: ''
+  F02:
+    name: Make and hold electrode–scalp contact
+    alloc:
+    - P-ARRAY
+    - P-TEXTILE
+    reqs:
+    - R-002
+    perf: ≥ 99 % sites in range
+    safety_decision: ''
+  F03:
+    name: Detect don/doff and usable channels
+    alloc:
+    - P-FW-ACQ
+    - P-ASIC
+    reqs:
+    - R-050
+    - R-053
+    perf: ≤ 10 s; false on-head < 1 %
+    safety_decision: worn-detect threshold
+  F04:
+    name: Acquire neural signals
+    alloc:
+    - P-ASIC
+    - P-FLEX
+    - P-MCU
+    reqs:
+    - R-002
+    - R-004
+    - R-005
+    - R-034
+    perf: noise floor ≤ spec
+    safety_decision: ''
+  F05:
+    name: Transfer channel data array → module
+    alloc:
+    - P-FLEX
+    - P-MCU
+    reqs:
+    - R-040
+    perf: BER ≤ 1e-9
+    safety_decision: ''
+  F06:
+    name: Decode signals to text
+    alloc:
+    - P-FW-DEC
+    - P-MCU
+    reqs:
+    - R-003
+    perf: latency ≤ 1 s
+    safety_decision: ''
+  F07:
+    name: Pair and stream to phone
+    alloc:
+    - P-RADIO
+    - P-FW-BLE
+    reqs:
+    - R-041
+    - R-042
+    perf: reconnect ≤ 5 s
+    safety_decision: ''
+  F08:
+    name: Supply and manage power
+    alloc:
+    - P-BATT
+    - P-FW-PWR
+    reqs:
+    - R-001
+    - R-004
+    - R-021
+    - R-034
+    perf: 4 h runtime; no brown-out
+    safety_decision: ''
+  F08b:
+    name: Update fuel gauge
+    alloc:
+    - P-GAUGE
+    - P-FW-CHG
+    reqs:
+    - R-023
+    perf: SoC error ≤ 5 %
+    safety_decision: SoC gates update and low-battery behaviour
+  F09a:
+    name: Detect dock
+    alloc:
+    - P-CHARGER
+    - P-FW-CHG
+    reqs:
+    - R-061
+    perf: ''
+    safety_decision: ''
+  F09b:
+    name: Check not worn before charging
+    alloc:
+    - P-FW-CHG
+    - P-FW-ACQ
+    reqs:
+    - R-011
+    perf: ''
+    safety_decision: worn-detect impedance
+  F09c:
+    name: Check cell temperature (JEITA)
+    alloc:
+    - P-NTC
+    - P-FW-CHG
+    reqs:
+    - R-012
+    perf: ''
+    safety_decision: NTC reading
+  F09d:
+    name: Charge CC-CV
+    alloc:
+    - P-CHARGER
+    - P-BATT
+    reqs:
+    - R-012
+    - R-020
+    perf: 0.5 C to 4.2 V
+    safety_decision: ''
+  F09e:
+    name: Terminate charge at cutoff
+    alloc:
+    - P-CHARGER
+    - P-FW-CHG
+    reqs:
+    - R-012
+    perf: C/20
+    safety_decision: ''
+  F10:
+    name: Protect wearer from heat, current and materials
+    alloc:
+    - P-HOUSING
+    - P-NTC2
+    - P-FW-DIAG
+    - P-COATING
+    reqs:
+    - R-010
+    - R-013
+    - R-014
+    - R-015
+    perf: scalp ≤ 41 °C
+    safety_decision: scalp thermistor
+  F11:
+    name: Protect electronics from environment
+    alloc:
+    - P-TEXTILE
+    - P-ENCAP
+    - P-HOUSING
+    - P-ASIC
+    reqs:
+    - R-030
+    - R-031
+    - R-032
+    - R-033
+    - R-035
+    - R-036
+    perf: IPX4, sweat, ESD, drop
+    safety_decision: ''
+  F12:
+    name: Monitor health and report telemetry
+    alloc:
+    - P-FW-DIAG
+    - P-FW-BLE
+    reqs:
+    - R-052
+    - R-080
+    perf: all fault classes within one sync
+    safety_decision: ''
+  F13a:
+    name: Receive firmware image
+    alloc:
+    - P-FW-BLE
+    reqs:
+    - R-051
+    perf: ''
+    safety_decision: ''
+  F13b:
+    name: Verify image signature
+    alloc:
+    - P-FW-PWR
+    reqs:
+    - R-042
+    - R-051
+    perf: ''
+    safety_decision: ''
+  F13c:
+    name: Write image to inactive bank
+    alloc:
+    - P-FW-PWR
+    - P-MCU
+    reqs:
+    - R-051
+    perf: ''
+    safety_decision: SoC > 30 % gate
+  F13d:
+    name: Reboot and confirm
+    alloc:
+    - P-FW-PWR
+    reqs:
+    - R-051
+    perf: ''
+    safety_decision: ''
+  F14a:
+    name: Enter ship mode at factory
+    alloc:
+    - P-FW-PWR
+    - P-CM
+    reqs:
+    - R-061
+    perf: 40–60 % SoC
+    safety_decision: ''
+  F14b:
+    name: Survive storage and transport
+    alloc:
+    - P-BATT
+    - P-PACKAGING
+    reqs:
+    - R-061
+    - R-062
+    perf: 6 months
+    safety_decision: ''
+  F14c:
+    name: Wake on first dock
+    alloc:
+    - P-FW-PWR
+    - P-CHARGER
+    reqs:
+    - R-061
+    perf: ''
+    safety_decision: ''
+  F15a:
+    name: Run EoL functional test
+    alloc:
+    - P-CM
+    - P-FW-DIAG
+    reqs:
+    - R-060
+    perf: ≤ 90 s
+    safety_decision: ''
+  F15b:
+    name: Record serial and test data
+    alloc:
+    - P-CM
+    reqs:
+    - R-060
+    perf: ''
+    safety_decision: ''
+  F15c:
+    name: Apply HASS screen
+    alloc:
+    - P-CM
+    reqs:
+    - R-060
+    perf: inside operating margin
+    safety_decision: ''
+logical_components:
+  LC-FIT:
+    name: Head Interface
+    role: Hold the system on the head and keep sensing elements against the scalp
+    funcs:
+    - F01
+    - F02
+    quality:
+    - comfort
+    - retention
+    - size range
+    parts:
+    - P-TEXTILE
+    - P-ARRAY
+  LC-SENSE:
+    name: Neural Sensing
+    role: Transduce scalp potentials into digitized channel data
+    funcs:
+    - F04
+    - F05
+    quality:
+    - noise floor
+    - channel count
+    - robustness to motion
+    parts:
+    - P-ASIC
+    - P-FLEX
+    - P-MCU
+  LC-COND:
+    name: Contact Supervision
+    role: Decide when the system is worn and which channels are usable
+    funcs:
+    - F03
+    quality:
+    - false on-head rate
+    - latency
+    parts:
+    - P-FW-ACQ
+    - P-ASIC
+  LC-DEC:
+    name: Decoding
+    role: Convert channel data to text with the Brain Foundation Model
+    funcs:
+    - F06
+    quality:
+    - accuracy
+    - latency
+    parts:
+    - P-FW-DEC
+    - P-MCU
+  LC-COMM:
+    name: Communication
+    role: Pair with and stream to the phone; receive updates
+    funcs:
+    - F07
+    - F13a
+    quality:
+    - link robustness
+    - security
+    parts:
+    - P-RADIO
+    - P-FW-BLE
+  LC-PWR:
+    name: Energy Storage and Management
+    role: Store energy, supply it, estimate state of charge
+    funcs:
+    - F08
+    - F08b
+    quality:
+    - runtime
+    - cycle life
+    - SoC accuracy
+    parts:
+    - P-BATT
+    - P-CELL
+    - P-PCM
+    - P-GAUGE
+    - P-FW-PWR
+    - P-FW-CHG
+  LC-CHG:
+    name: Charging Control
+    role: Replenish energy safely
+    funcs:
+    - F09a
+    - F09b
+    - F09c
+    - F09d
+    - F09e
+    quality:
+    - safety
+    - charge time
+    parts:
+    - P-CHARGER
+    - P-NTC
+    - P-FW-CHG
+    - P-FW-ACQ
+    - P-BATT
+  LC-SAFE:
+    name: Wearer Protection
+    role: Keep heat, current and materials within safe limits
+    funcs:
+    - F10
+    quality:
+    - scalp temperature
+    - leakage
+    - biocompatibility
+    parts:
+    - P-HOUSING
+    - P-NTC2
+    - P-FW-DIAG
+    - P-COATING
+  LC-ENV:
+    name: Environmental Protection
+    role: Isolate electronics from sweat, water, ESD and impact
+    funcs:
+    - F11
+    quality:
+    - ingress
+    - ESD
+    - drop
+    parts:
+    - P-TEXTILE
+    - P-ENCAP
+    - P-HOUSING
+    - P-ASIC
+  LC-HEALTH:
+    name: Health Monitoring
+    role: Detect, classify and report faults
+    funcs:
+    - F12
+    quality:
+    - coverage
+    - attribution accuracy
+    parts:
+    - P-FW-DIAG
+    - P-FW-BLE
+  LC-UPD:
+    name: Software Update
+    role: Replace firmware atomically
+    funcs:
+    - F13b
+    - F13c
+    - F13d
+    quality:
+    - atomicity
+    - authenticity
+    parts:
+    - P-FW-PWR
+    - P-MCU
+    - P-FW-BLE
+  LC-LIFE:
+    name: Lifecycle Support
+    role: Manufacturing test, ship mode, storage
+    funcs:
+    - F14a
+    - F14b
+    - F14c
+    - F15a
+    - F15b
+    - F15c
+    quality:
+    - testability
+    - shelf life
+    parts:
+    - P-FW-PWR
+    - P-CM
+    - P-BATT
+    - P-PACKAGING
+    - P-CHARGER
+    - P-FW-DIAG
+logical_interfaces:
+  LI-01:
+    a: LC-FIT
+    b: LC-SENSE
+    flow: mechanical placement of sensing elements; shared strain
+  LI-02:
+    a: LC-SENSE
+    b: LC-COND
+    flow: per-site impedance
+  LI-03:
+    a: LC-SENSE
+    b: LC-DEC
+    flow: channel data stream
+  LI-04:
+    a: LC-COND
+    b: LC-CHG
+    flow: worn / not-worn decision
+  LI-05:
+    a: LC-DEC
+    b: LC-COMM
+    flow: decoded text
+  LI-06:
+    a: LC-HEALTH
+    b: LC-COMM
+    flow: telemetry; fault reports
+  LI-07:
+    a: LC-PWR
+    b: LC-CHG
+    flow: cell voltage, temperature, SoC
+  LI-08:
+    a: LC-PWR
+    b: LC-SENSE
+    flow: regulated power
+  LI-09:
+    a: LC-SAFE
+    b: LC-CHG
+    flow: thermal inhibit
+  LI-10:
+    a: LC-SAFE
+    b: LC-HEALTH
+    flow: thermal and leakage events
+  LI-11:
+    a: LC-COMM
+    b: LC-UPD
+    flow: firmware image
+  LI-12:
+    a: LC-PWR
+    b: LC-UPD
+    flow: SoC gate for update
+  LI-13:
+    a: LC-LIFE
+    b: LC-HEALTH
+    flow: end-of-line diagnostics
+  LI-14:
+    a: LC-LIFE
+    b: LC-PWR
+    flow: ship-mode command; wake
+parts:
+  P-CAP:
+    name: cap
+    type: Cap
+    parent: null
+    attrs: {}
+    discipline: system
+    context: false
+  P-TEXTILE:
+    name: textile
+    type: Textile
+    parent: P-CAP
+    attrs:
+      stretchLimit: 20 % (assumed)
+      sizes: 54–62 cm
+    discipline: textile
+    context: false
+  P-KNIT:
+    name: knitYarnDyes
+    type: KnitMaterial
+    parent: P-TEXTILE
+    attrs: {}
+    discipline: textile
+    context: false
+  P-TRIM:
+    name: sweatbandTrim
+    type: Trim
+    parent: P-TEXTILE
+    attrs: {}
+    discipline: textile
+    context: false
+  P-ARRAY:
+    name: array
+    type: SensorArray
+    parent: P-CAP
+    attrs:
+      nSites: 70k–100k
+      siteFootprint: ~1 mm
+    discipline: electrical
+    context: false
+  P-ASIC:
+    name: asic[*]
+    type: SensorASIC
+    parent: P-ARRAY
+    attrs:
+      esdHBM: TBD
+      qual: JESD47 by vendor
+    discipline: electrical
+    context: false
+  P-FLEX:
+    name: flex
+    type: FlexInterconnect
+    parent: P-ARRAY
+    attrs:
+      minBendRadius: TBD
+      strainLimit: TBD
+      class: IPC-6013 class 2
+    discipline: electrical
+    context: false
+  P-COATING:
+    name: electrodeCoating
+    type: Coating
+    parent: P-ARRAY
+    attrs:
+      nickelFree: required
+    discipline: chemical
+    context: false
+  P-ENCAP:
+    name: encapsulant
+    type: Encapsulant
+    parent: P-ARRAY
+    attrs: {}
+    discipline: chemical
+    context: false
+  P-MODULE:
+    name: module
+    type: ElectronicsModule
+    parent: P-CAP
+    attrs:
+      power_W: TBD
+      location: crown
+    discipline: electrical
+    context: false
+  P-MCU:
+    name: mcu
+    type: MCU
+    parent: P-MODULE
+    attrs: {}
+    discipline: electrical
+    context: false
+  P-RADIO:
+    name: radioIC
+    type: RadioIC
+    parent: P-MODULE
+    attrs:
+      band: 2.4 GHz BLE
+      modular: preferred
+    discipline: electrical
+    context: false
+  P-CHARGER:
+    name: charger
+    type: ChargerIC
+    parent: P-MODULE
+    attrs:
+      Vcv: 4.2 V
+      Icc: 0.5 C
+      OVP: 6 V
+    discipline: electrical
+    context: false
+  P-GAUGE:
+    name: gauge
+    type: FuelGauge
+    parent: P-MODULE
+    attrs: {}
+    discipline: electrical
+    context: false
+  P-NTC:
+    name: cellThermistor
+    type: NTC
+    parent: P-MODULE
+    attrs:
+      faultDetect: open/short
+    discipline: electrical
+    context: false
+  P-NTC2:
+    name: scalpThermistor
+    type: NTC
+    parent: P-MODULE
+    attrs:
+      placement: hottest scalp-side point (from thermal map)
+    discipline: electrical
+    context: false
+  P-HOUSING:
+    name: housing
+    type: Housing
+    parent: P-MODULE
+    attrs:
+      dropHeight: 1.0 m
+      swellHeadroom: ≥ 10 %
+      R_th_scalp: TBD
+    discipline: mechanical
+    context: false
+  P-BATT:
+    name: battery
+    type: BatteryPack
+    parent: P-CAP
+    attrs:
+      capacity_mAh: 300–600 (assumed)
+      cycleLife: 500 @ 80 %
+    discipline: electrical
+    context: false
+  P-CELL:
+    name: cell
+    type: LiPoCell
+    parent: P-BATT
+    attrs:
+      cert: UL 1642 / 62133-2
+    discipline: chemical
+    context: false
+  P-PCM:
+    name: pcm
+    type: ProtectionCircuit
+    parent: P-BATT
+    attrs:
+      OVtrip: ≤ 4.3 V
+    discipline: electrical
+    context: false
+  P-FW:
+    name: fw
+    type: Firmware
+    parent: P-CAP
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-FW-ACQ:
+    name: acquire
+    type: AcquisitionService
+    parent: P-FW
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-FW-DEC:
+    name: decode
+    type: DecodePipeline
+    parent: P-FW
+    attrs: {}
+    discipline: software
+    context: false
+  P-FW-BLE:
+    name: ble
+    type: BLEStack
+    parent: P-FW
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-FW-DIAG:
+    name: diag
+    type: Diagnostics
+    parent: P-FW
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-FW-CHG:
+    name: chargeCtl
+    type: ChargeController
+    parent: P-FW
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-FW-PWR:
+    name: powerMgr
+    type: PowerManager
+    parent: P-FW
+    attrs: {}
+    discipline: firmware
+    context: false
+  P-HEAD:
+    name: head
+    type: Head
+    parent: null
+    attrs: {}
+    discipline: external
+    context: true
+  P-PHONE:
+    name: phone
+    type: Phone
+    parent: null
+    attrs: {}
+    discipline: external
+    context: true
+  P-DOCK:
+    name: dock
+    type: ChargeDock
+    parent: null
+    attrs: {}
+    discipline: external
+    context: true
+  P-CM:
+    name: factory
+    type: ContractManufacturer
+    parent: null
+    attrs: {}
+    discipline: manufacturing
+    context: true
+  P-PACKAGING:
+    name: packaging
+    type: RetailPackage
+    parent: null
+    attrs: {}
+    discipline: mechanical
+    context: true
+nodes:
+  ND-TEXTILE:
+    name: Textile node
+    parts:
+    - P-TEXTILE
+    - P-KNIT
+    - P-TRIM
+    lcs:
+    - LC-FIT
+    - LC-ENV
+  ND-ARRAY:
+    name: Sensor array node
+    parts:
+    - P-ARRAY
+    - P-ASIC
+    - P-FLEX
+    - P-COATING
+    - P-ENCAP
+    lcs:
+    - LC-SENSE
+    - LC-FIT
+    - LC-ENV
+    - LC-SAFE
+  ND-MODULE:
+    name: Electronics module node
+    parts:
+    - P-MODULE
+    - P-MCU
+    - P-RADIO
+    - P-CHARGER
+    - P-GAUGE
+    - P-NTC
+    - P-NTC2
+    - P-HOUSING
+    lcs:
+    - LC-DEC
+    - LC-COMM
+    - LC-CHG
+    - LC-SAFE
+    - LC-ENV
+    - LC-PWR
+  ND-BATTERY:
+    name: Battery node
+    parts:
+    - P-BATT
+    - P-CELL
+    - P-PCM
+    lcs:
+    - LC-PWR
+  ND-FW:
+    name: Firmware node (hosted on module MCU)
+    parts:
+    - P-FW
+    - P-FW-ACQ
+    - P-FW-DEC
+    - P-FW-BLE
+    - P-FW-DIAG
+    - P-FW-CHG
+    - P-FW-PWR
+    lcs:
+    - LC-COND
+    - LC-DEC
+    - LC-COMM
+    - LC-CHG
+    - LC-SAFE
+    - LC-HEALTH
+    - LC-UPD
+    - LC-LIFE
+    - LC-PWR
+interfaces:
+  IF-1:
+    name: array.bus ↔ module.bus (flex-to-rigid)
+    a: P-ARRAY
+    b: P-MODULE
+    items:
+    - ChannelData
+    - ElectricalPower
+    kind: electrical + mechanical
+    funcs:
+    - F05
+  IF-2:
+    name: battery.bus ↔ module.batt
+    a: P-BATT
+    b: P-MODULE
+    items:
+    - ElectricalPower
+    - cellTemp
+    - SoC
+    kind: electrical + thermal
+    funcs:
+    - F08
+    - F09c
+    - F08b
+  IF-3:
+    name: textile.skin ↔ array.electrodes (co-located)
+    a: P-TEXTILE
+    b: P-ARRAY
+    items:
+    - Sweat
+    - MechanicalLoad
+    kind: material + mechanical
+    funcs:
+    - F02
+    - F11
+  IF-4:
+    name: textile.fit = array.mech (shared head load)
+    a: P-TEXTILE
+    b: P-ARRAY
+    items:
+    - MechanicalLoad
+    kind: mechanical
+    funcs:
+    - F01
+  IF-5:
+    name: array.electrodes ↔ head.scalp
+    a: P-ARRAY
+    b: P-HEAD
+    items:
+    - NeuralSignal
+    - Sweat
+    - Heat
+    - DC leakage
+    kind: bio-electrical
+    funcs:
+    - F02
+    - F04
+  IF-6:
+    name: module.skinSide ↔ head.scalp
+    a: P-MODULE
+    b: P-HEAD
+    items:
+    - Heat
+    kind: thermal
+    funcs:
+    - F10
+  IF-7:
+    name: module.radio ↔ phone.link
+    a: P-MODULE
+    b: P-PHONE
+    items:
+    - DecodedText
+    - Telemetry
+    - FirmwareImage
+    kind: RF + protocol
+    funcs:
+    - F07
+    - F12
+    - F13a
+  IF-8:
+    name: dock.power ↔ module.charge
+    a: P-DOCK
+    b: P-MODULE
+    items:
+    - ElectricalPower
+    kind: electrical + mechanical
+    funcs:
+    - F09a
+    - F09d
+  IF-9:
+    name: head.shape ↔ textile.fit
+    a: P-HEAD
+    b: P-TEXTILE
+    items:
+    - MechanicalLoad
+    kind: mechanical + human factors
+    funcs:
+    - F01
+states:
+  S-SHIPMODE:
+    name: ShipMode
+  S-OFF:
+    name: 'Off'
+  S-IDLE:
+    name: Idle
+  S-PAIRING:
+    name: Pairing
+  S-ACQUIRING:
+    name: Acquiring
+  S-STREAMING:
+    name: Streaming
+  S-CHARGING:
+    name: Charging
+  S-UPDATING:
+    name: Updating
+  S-FAULT:
+    name: Fault
+transitions:
+  TR-01:
+    frm: S-SHIPMODE
+    to: S-IDLE
+    trigger: dockDetected
+    guard: ''
+    sensor: P-CHARGER
+    func: F14c
+  TR-02:
+    frm: S-OFF
+    to: S-IDLE
+    trigger: powerButton
+    guard: ''
+    sensor: null
+    func: F08
+  TR-03:
+    frm: S-IDLE
+    to: S-ACQUIRING
+    trigger: contactDetected
+    guard: ''
+    sensor: P-FW-ACQ
+    func: F03
+  TR-04:
+    frm: S-ACQUIRING
+    to: S-STREAMING
+    trigger: linkUp
+    guard: ''
+    sensor: null
+    func: F07
+  TR-05:
+    frm: S-STREAMING
+    to: S-ACQUIRING
+    trigger: linkLost
+    guard: ''
+    sensor: null
+    func: F07
+  TR-06:
+    frm: S-ACQUIRING
+    to: S-IDLE
+    trigger: contactLost
+    guard: after 60 s
+    sensor: P-FW-ACQ
+    func: F03
+  TR-07:
+    frm: S-IDLE
+    to: S-CHARGING
+    trigger: dockDetected
+    guard: not worn
+    sensor: P-FW-ACQ
+    func: F09b
+  TR-08:
+    frm: S-CHARGING
+    to: S-IDLE
+    trigger: chargeComplete or undocked
+    guard: ''
+    sensor: P-GAUGE
+    func: F09e
+  TR-09:
+    frm: S-IDLE
+    to: S-UPDATING
+    trigger: fwAvailable
+    guard: soc > 30 %
+    sensor: P-GAUGE
+    func: F13c
+  TR-10:
+    frm: S-UPDATING
+    to: S-IDLE
+    trigger: updateConfirmed
+    guard: ''
+    sensor: null
+    func: F13d
+  TR-11:
+    frm: S-IDLE
+    to: S-OFF
+    trigger: idleTimeout
+    guard: ''
+    sensor: null
+    func: F08
+  TR-12:
+    frm: S-STREAMING
+    to: S-FAULT
+    trigger: thermal or battery fault
+    guard: scalpTemp > 41 or cellTemp > 50
+    sensor: P-NTC2
+    func: F10
+  TR-13:
+    frm: S-CHARGING
+    to: S-FAULT
+    trigger: charge fault
+    guard: cellTemp outside JEITA or OVP or NTC fault
+    sensor: P-NTC
+    func: F09c
+  TR-14:
+    frm: S-FAULT
+    to: S-IDLE
+    trigger: faultCleared
+    guard: userAck
+    sensor: null
+    func: F10
+  TR-15:
+    frm: S-IDLE
+    to: S-PAIRING
+    trigger: pairRequest
+    guard: ''
+    sensor: null
+    func: F07
+  TR-16:
+    frm: S-PAIRING
+    to: S-ACQUIRING
+    trigger: paired
+    guard: user confirmed
+    sensor: null
+    func: F07
+constraints:
+  C-THERM:
+    name: ScalpTemperature
+    formula: T_scalp = T_ambient + P_module · R_th(housing→scalp) ≤ 41 °C
+    inputs:
+    - P-MODULE.power_W
+    - P-HOUSING.R_th_scalp
+    reqs:
+    - R-010
+    tests:
+    - T-E5
+    - T-B12
+  C-FLEX:
+    name: FlexLife (inverse power law)
+    formula: N_fail = N_ref · (ε_ref/ε_use)^n, n ≈ 2; require N_fail ≥ 3 × 1,460
+    inputs:
+    - P-TEXTILE.stretchLimit
+    - P-FLEX.strainLimit
+    reqs:
+    - R-004
+    - R-043
+    tests:
+    - T-L2
+    - T-M5
+    - T-M6
+  C-SOLDER:
+    name: SolderFatigue (Coffin-Manson)
+    formula: AF = (ΔT_test/ΔT_use)^2; 100 cycles at ΔT 80 ≈ 7.7 yr at ΔT 15
+    inputs:
+    - P-ARRAY.nSites
+    reqs:
+    - R-004
+    - R-005
+    tests:
+    - T-E1
+    - T-L2
+  C-PECK:
+    name: SweatCorrosion (Peck)
+    formula: AF = (RH_t/RH_u)^2.7 · exp[(Ea/k)(1/T_u − 1/T_t)], Ea 0.8 eV; 500 h at 60 °C/90 % ≈ 5 yr
+    inputs:
+    - use profile scalp microclimate
+    reqs:
+    - R-004
+    - R-031
+    tests:
+    - T-E3
+    - T-I2
+    - T-L2
+  C-BATT:
+    name: BatteryLife
+    formula: Q(n,T) = Q0·(1 − k·n)·exp(−Ea/k(1/T_u − 1/T_r)·t); Q(500, 25 °C) ≥ 0.8 Q0; swelling(Q) ≤ 8 %
+    inputs:
+    - P-CELL
+    - P-CHARGER.Vcv
+    reqs:
+    - R-020
+    - R-021
+    tests:
+    - T-B1
+    - T-B2
+    - T-B3
+    - T-B4
+  C-WEIB:
+    name: Reliability (Weibull)
+    formula: R(t) = exp[−(t/η)^β] ≥ 0.90 at 2 yr, 90 % confidence; n = ln(1−C)/ln(R) traded with (t_test/t_use)^β
+    inputs:
+    - all life tests
+    reqs:
+    - R-004
+    tests:
+    - T-L2
+  C-AFR:
+    name: FieldAFR
+    formula: AFR = failures / unit-years (telemetry); ≤ 3 % → ≤ 2 %
+    inputs:
+    - telemetry on-head hours
+    reqs:
+    - R-080
+    tests:
+    - T-FIELD
+  C-SAMPLE:
+    name: SampleSize
+    formula: 'success-run n = ln(1−C)/ln(R): 22 at 90/90; reduced by (t_test/t_use)^β'
+    inputs:
+    - C-WEIB
+    reqs:
+    - R-004
+    tests:
+    - T-L2
+trades:
+  TD-01:
+    name: 'Radio: pre-certified module vs custom'
+    options:
+    - module (modular grant, host SDoC)
+    - custom (full 15C/RED radio test)
+    criteria:
+    - schedule
+    - RF margin
+    - cost
+    - size
+    recommendation: module for launch; custom for v2
+    affects:
+    - R-070
+    - R-071
+    - R-072
+  TD-02:
+    name: 'Charging while worn: allow vs inhibit'
+    options:
+    - allow with thermal limit
+    - inhibit via worn-detect
+    criteria:
+    - safety (R-010)
+    - UX
+    - complexity
+    recommendation: inhibit; makes R-011 a requirement
+    affects:
+    - R-011
+    - R-010
+  TD-03:
+    name: 'Scalp thermistor: present vs rely on cell NTC'
+    options:
+    - dedicated scalp-side NTC
+    - infer from cell NTC + model
+    criteria:
+    - detection latency (FM on TR-12)
+    - cost
+    recommendation: dedicated NTC at thermal-map hotspot
+    affects:
+    - R-010
+    - R-015
+  TD-04:
+    name: 'Firmware update: single bank vs dual bank'
+    options:
+    - single bank + bootloader
+    - dual bank A/B
+    criteria:
+    - brick risk (R-051)
+    - flash cost
+    recommendation: dual bank
+    affects:
+    - R-051
+  TD-05:
+    name: 'Electrode finish: Ag/AgCl vs carbon vs gold'
+    options:
+    - Ag/AgCl
+    - carbon-loaded polymer
+    - gold
+    criteria:
+    - impedance
+    - corrosion (R-031)
+    - biocompat (R-014)
+    - cost
+    recommendation: carbon-loaded for v1 pending 10993
+    affects:
+    - R-014
+    - R-031
+    - R-013
+arch_decisions:
+  AD-01:
+    title: Single electronics module at the crown
+    decision: Concentrate MCU, radio, charger and battery in one rigid module at the crown; sensor array is passive flex with
+      distributed ASICs
+    rationale: Minimises rigid mass on the scalp sides; one flex-to-rigid interface (IF-1) instead of many; drop energy absorbed
+      at crown
+    trade: null
+    reqs:
+    - R-005
+    - R-032
+    - R-010
+    consequences:
+    - IF-1 becomes the dominant fatigue interface (FM on F05)
+    - crown thermal path must be managed (C-THERM)
+  AD-02:
+    title: Pre-certified radio module
+    decision: Use a modular-approved BLE module for v1
+    rationale: Removes 15C/RED radio test from the critical path; host SDoC only
+    trade: TD-01
+    reqs:
+    - R-070
+    - R-071
+    - R-072
+    consequences:
+    - Antenna placement constrained by module
+    - v2 may integrate
+  AD-03:
+    title: Charging inhibited while worn
+    decision: Charging is gated by worn-detect; no charging on head
+    rationale: Removes the dominant burn scenario rather than mitigating it
+    trade: TD-02
+    reqs:
+    - R-011
+    - R-010
+    consequences:
+    - Worn-detect becomes a safety function (F09b)
+    - needs multi-feature detection
+  AD-04:
+    title: Dedicated scalp-side thermistor
+    decision: Place a second NTC at the thermal-map hotspot on the scalp side
+    rationale: Cell NTC cannot see scalp temperature; latency of inferred temperature too high
+    trade: TD-03
+    reqs:
+    - R-010
+    - R-015
+    consequences:
+    - Thermal map test required on every build (T-E5)
+  AD-05:
+    title: Dual-bank firmware
+    decision: A/B banks with signed images and rollback
+    rationale: Eliminates brick-on-power-loss
+    trade: TD-04
+    reqs:
+    - R-051
+    - R-042
+    consequences:
+    - Flash cost
+    - SoC gate for update
+  AD-06:
+    title: Ship mode at factory
+    decision: Deep-sleep ship mode at 40–60 % SoC, exit on first dock
+    rationale: Six-month shelf without deep discharge
+    trade: null
+    reqs:
+    - R-061
+    consequences:
+    - EoL step; wake test per lot (T-S1)
+  AD-07:
+    title: Carbon-loaded electrode finish, nickel-free
+    decision: Carbon-loaded polymer electrode surface; no nickel anywhere in skin contact
+    rationale: Corrosion and sensitization risk lower than metal finishes
+    trade: TD-05
+    reqs:
+    - R-013
+    - R-014
+    - R-031
+    consequences:
+    - Higher impedance than Ag/AgCl; ASIC input range must accommodate
+  AD-08:
+    title: Serpentine flex with strain relief; knit stretch bounded
+    decision: Flex traces serpentine; bend radius rule at IF-1; knit stretch limit ≤ flex strain limit (R-043)
+    rationale: Interconnect fatigue is the dominant life mechanism (C-FLEX)
+    trade: null
+    reqs:
+    - R-004
+    - R-043
+    consequences:
+    - Knit sizing range limited by flex
+tests:
+  T-E1:
+    name: Thermal cycling
+    method: IEC 60068-2-14 Nb, −20/+60 °C, 1 h dwell, 100 cycles
+    gate: DVT
+    units: '8'
+    passfail: Functional; ≤ 0.5 % channels drift > 20 %; no opens on X-ray of 2 units
+    kind: test
+  T-E2:
+    name: Damp heat, cyclic
+    method: IEC 60068-2-30 Db, 25/55 °C, 93 % RH, 6 cycles
+    gate: DVT
+    units: '8'
+    passfail: Functional; no corrosion; leakage < 10 µA
+    kind: test
+  T-E3:
+    name: Damp heat, steady
+    method: IEC 60068-2-78, 40 °C/93 % RH, 500 h powered
+    gate: DVT
+    units: '8'
+    passfail: As E2; self-discharge < 3 %/month
+    kind: test
+  T-E4:
+    name: Cold operation and pulse load
+    method: IEC 60068-2-1 Ab, −10 °C, 2 h; TX pulse load at −10 °C and EoL
+    gate: DVT
+    units: '4'
+    passfail: Boots; BLE holds; no brown-out
+    kind: test
+  T-E5:
+    name: Hot operation and thermal map
+    method: IEC 60068-2-2 Bb, +45 °C, 4 h; thermocouples at scalp interface
+    gate: DVT
+    units: '4'
+    passfail: Skin-side ≤ 41 °C; hottest point found; thermistor placed there
+    kind: test
+  T-M1:
+    name: Random vibration (packaged)
+    method: IEC 60068-2-64, 10–500 Hz, 1.5 Grms, 1 h/axis
+    gate: DVT
+    units: '4'
+    passfail: Functional; no unseat
+    kind: test
+  T-M2:
+    name: Shock
+    method: IEC 60068-2-27, 50 g 11 ms, 3/direction
+    gate: DVT
+    units: '4'
+    passfail: Functional
+    kind: test
+  T-M3:
+    name: Drop
+    method: 1.0 m onto concrete, 6 orientations + 2 edges, powered
+    gate: DVT
+    units: '6'
+    passfail: Functional; no housing crack; battery no deformation; ≤ 0.2 % new channel loss
+    kind: test
+  T-M4:
+    name: Tumble
+    method: IEC 60068-2-32 Method 2, 0.5 m, 50 falls
+    gate: DVT
+    units: '4'
+    passfail: As M3
+    kind: test
+  T-M5:
+    name: Don/doff and stretch cycling with BER
+    method: Head form 54–62 cm, 2,000 don/doff; +20 % stretch 5,000 cycles; BER logged; knit vs flex stretch measured
+    gate: EVT, DVT
+    units: '6'
+    passfail: ≤ 0.5 % channel loss; BER ≤ 1e-9; no cracks on cross-section; knit stretch ≤ flex limit
+    kind: test
+  T-M6:
+    name: Flex endurance
+    method: IPC-TM-650 2.4.3 dynamic flex, 3 tightest radii, 10,000 cycles, continuity + BER
+    gate: EVT
+    units: 5 coupons
+    passfail: No opens; ΔR < 10 %
+    kind: test
+  T-M7:
+    name: Knit abrasion
+    method: ISO 12947 Martindale, 20,000 rubs
+    gate: DVT
+    units: '4'
+    passfail: No exposed conductor; pilling ≥ grade 3
+    kind: test
+  T-M8:
+    name: Charge contact mate cycling
+    method: 1,500 mate cycles after abrasion
+    gate: DVT
+    units: '4'
+    passfail: ΔR < 50 mΩ; retention ≥ 70 %
+    kind: test
+  T-I1:
+    name: Water spray
+    method: IEC 60529 IPX4, 10 min, powered
+    gate: DVT
+    units: '4'
+    passfail: Functional; no ingress
+    kind: test
+  T-I2:
+    name: Artificial sweat
+    method: ISO 105-E04 acid + alkaline, 24 h soak ×5, biased
+    gate: DVT
+    units: '8'
+    passfail: Impedance drift ≤ 15 %; no corrosion; no discoloration
+    kind: test
+  T-I3:
+    name: Salt mist
+    method: IEC 60068-2-52 Kb, 2 cycles
+    gate: DVT
+    units: '4'
+    passfail: No corrosion on contacts
+    kind: test
+  T-I4:
+    name: Cleaning cycles
+    method: Hand wash per care label, 20 cycles
+    gate: DVT
+    units: '4'
+    passfail: Functional; label legible; no delamination
+    kind: test
+  T-X1:
+    name: ESD
+    method: IEC 61000-4-2, ±8 kV contact, ±15 kV air, electrode field included
+    gate: EVT, DVT
+    units: '3'
+    passfail: Criterion B at ±8/±15; A at ±4/±8
+    kind: test
+  T-X2:
+    name: Radiated immunity and latency
+    method: IEC 61000-4-3, 3 V/m 80 MHz–6 GHz with decode running; latency measured
+    gate: DVT
+    units: '2'
+    passfail: Noise floor rise < 2×; latency ≤ 1 s
+    kind: test
+  T-X3:
+    name: Charger conducted immunity/surge
+    method: IEC 61000-4-4/-5/-6 on charger input
+    gate: DVT
+    units: '2'
+    passfail: Criterion B
+    kind: test
+  T-X4:
+    name: Emissions pre-scan
+    method: CISPR 32 Class B / FCC 15B
+    gate: EVT
+    units: '2'
+    passfail: ≥ 6 dB margin
+    kind: test
+  T-X5:
+    name: Charging abuse
+    method: 12 V on 5 V input; hot plug 100×; charge at −5 and +45 °C
+    gate: DVT
+    units: '4'
+    passfail: No fire/vent; charger refuses and logs
+    kind: test
+  T-X6:
+    name: Skin leakage current
+    method: Electrode DC leakage under single front-end fault, wet skin model; IEC 60601-1 patient-leakage values as target
+    gate: DVT
+    units: '4'
+    passfail: ≤ 10 µA
+    kind: test
+  T-H1:
+    name: Fit and motion
+    method: Head-form retention with walk/nod/lie-down profile; 20-wearer slip and pressure scoring
+    gate: DVT
+    units: '6'
+    passfail: No slip; no pressure points; motion artefact rate ≤ spec
+    kind: test
+  T-R1:
+    name: Link robustness
+    method: Range/reconnect with phone in pocket positions; 4 h soak with interference; protocol compatibility
+    gate: DVT
+    units: '4'
+    passfail: Reconnect ≤ 5 s; loss ≤ 0.1 %
+    kind: test
+  T-F1:
+    name: Firmware fault injection and threshold sweep
+    method: Inject every fault class; worn-detect on dry/wet/hair/conductive-stand forms; timers; fault handler cuts charger
+    gate: DVT
+    units: '2'
+    passfail: Each class detected and correctly attributed; no charge while worn; cut ≤ 1 s
+    kind: test
+  T-F2:
+    name: Update robustness
+    method: Power cut at 10 points in write sequence; low-SoC attempt
+    gate: DVT
+    units: '20'
+    passfail: Always bootable; low-SoC refused
+    kind: test
+  T-S1:
+    name: Ship mode and storage
+    method: 6-month storage simulation (45 °C accelerated) from ship mode; first-dock wake, 30 units/lot
+    gate: PVT
+    units: '30'
+    passfail: SoC 40–60 % at unbox; wakes
+    kind: test
+  T-B1:
+    name: Cycle life 25 °C
+    method: 0.5 C/0.5 C, 100 % DoD, 500 cycles
+    gate: DVT
+    units: 10 cells
+    passfail: ≥ 80 % capacity; impedance rise ≤ 50 %
+    kind: test
+  T-B2:
+    name: Cycle life 45 °C
+    method: As B1, 300 cycles
+    gate: DVT
+    units: 5 cells
+    passfail: ≥ 80 %; no venting
+    kind: test
+  T-B3:
+    name: Calendar aging
+    method: 100 % SoC 45 °C 500 h; 50 % SoC 25 °C 500 h
+    gate: DVT
+    units: 10 cells
+    passfail: ≤ 10 % irreversible loss
+    kind: test
+  T-B4:
+    name: Swelling
+    method: Thickness at capacity-fade steps
+    gate: DVT
+    units: same cells
+    passfail: ≤ 8 %; housing headroom ≥ 10 %
+    kind: test
+  T-B11:
+    name: Charging-system functional
+    method: Termination C/20; JEITA window; NTC open/short → no charge; OVP 6 V; CV accuracy
+    gate: DVT
+    units: '4'
+    passfail: All behaviours as spec and logged
+    kind: test
+  T-B12:
+    name: Worn-while-charging thermal and inhibit
+    method: Charge on head form at 25/35 °C; inhibit when worn, incl. wet knit and conductive stand
+    gate: DVT
+    units: '2'
+    passfail: ≤ 41 °C; inhibit works
+    kind: test
+  T-B13:
+    name: Fuel gauge accuracy
+    method: Across B1 cycles and −10/+45 °C
+    gate: DVT
+    units: '4'
+    passfail: SoC error ≤ 5 %
+    kind: test
+  T-L1:
+    name: HALT
+    method: 'Module and flex array: cold/hot step, rapid thermal, 6-DoF vibe step, combined'
+    gate: EVT
+    units: 4 + 4
+    passfail: Margins recorded; every failure root-caused
+    kind: test
+  T-L2:
+    name: ALT
+    method: Flex fatigue (inverse power), sweat (Peck), solder (Coffin-Manson), battery; Weibull fits
+    gate: DVT–PVT
+    units: per ALT
+    passfail: Lower 90 % bound R(2 yr) ≥ 0.90
+    kind: analysis
+  T-HASS:
+    name: HASS proof-of-screen
+    method: Screen inside margins; 20 passes then full qualification
+    gate: PVT
+    units: '10'
+    passfail: Negligible life consumed
+    kind: test
+  T-EOL:
+    name: End-of-line functional test
+    method: 'FX-01 head form: impedance map, battery, RF, diagnostics, ship-mode set; GR&R'
+    gate: PVT
+    units: all
+    passfail: ≤ 90 s; GR&R < 10 %
+    kind: demonstration
+  T-WT:
+    name: Wear trial (validation)
+    method: 20 wearers, 4 h/day, 2 weeks; dermatologist review; decode usability
+    gate: DVT
+    units: '20'
+    passfail: Comfort ≥ 4/5; no irritation; decode usable
+    kind: demonstration
+  T-BIO:
+    name: Biocompatibility
+    method: ISO 10993-5, -23, -10 on final processed skin-contact materials; chem characterization -18
+    gate: DVT
+    units: per material
+    passfail: No cytotoxicity, irritation, sensitization
+    kind: test
+  T-SEC:
+    name: Security review
+    method: Pairing and link review; penetration test; signed-image check
+    gate: DVT
+    units: '2'
+    passfail: No unauthenticated pairing; encrypted link
+    kind: inspection
+  T-FCC:
+    name: FCC Part 15 testing
+    method: 15B SDoC on host; module grant or 15C certification; RF exposure per KDB 447498
+    gate: DVT
+    units: '2'
+    passfail: Grant / SDoC
+    kind: test
+  T-RED:
+    name: RED harmonized testing
+    method: EN 300 328; EN 301 489-1/-17; EN IEC 62368-1; EN 62479/50566
+    gate: DVT
+    units: '2'
+    passfail: Reports support DoC
+    kind: test
+  T-ISED:
+    name: ISED certification
+    method: RSS-Gen, RSS-247, RSS-102, ICES-003
+    gate: DVT
+    units: same
+    passfail: Certificate
+    kind: test
+  T-UN383:
+    name: UN 38.3
+    method: T1–T8 on pack and cells
+    gate: Week 1
+    units: per standard
+    passfail: Pass; Test Summary
+    kind: test
+  T-62133:
+    name: IEC 62133-2 / UL 2054
+    method: Pack safety
+    gate: Week 1
+    units: per standard
+    passfail: CB report / recognition
+    kind: test
+  T-MAT:
+    name: Materials compliance
+    method: RoHS supplier declarations + XRF; REACH SVHC; Prop 65 screening
+    gate: EVT BOM freeze
+    units: BOM
+    passfail: Declarations complete
+    kind: inspection
+  T-LABEL:
+    name: Labeling and marks
+    method: FCC ID/IC, CE, WEEE, battery marks, Prop 65 artwork review
+    gate: PVT
+    units: artwork
+    passfail: Approved
+    kind: inspection
+  T-FIELD:
+    name: Field telemetry and returns analysis
+    method: AFR from unit-years; Pareto; 8D; weekly review
+    gate: Launch
+    units: fleet
+    passfail: AFR ≤ 3 % → ≤ 2 %
+    kind: analysis
+gates:
+  EVT:
+    date: '2026-11-16'
+    exit: FMEA complete; HALT done; verification plan baselined; pre-scans passed; long-lead tests started
+  DVT:
+    date: '2026-11-30'
+    exit: Verification matrix run; all High-AP FMs verified; certification testing started on representative units
+  PVT:
+    date: '2026-12-14'
+    exit: Certifications granted or in final report; PFMEA/HASS/EoL at CM; ORT running; telemetry validated
+  Launch:
+    date: '2026-12-28'
+    exit: AFR model and returns loop live; risk register signed
+fm_assessments:
+  FA-F01-loss:
+    element: F01
+    guide: loss
+    mode: Cap slides or rides up during use
+    effect: Contact lost mid-session; constant re-seating
+    cause: Knit relaxes with wear/washing; size mismatch
+    S: 6
+    O: 6
+    D: 3
+    controls: Size range; knit spec; retention test
+    tests:
+    - T-H1
+    - T-M7
+    - T-I4
+  FA-F01-degraded:
+    element: F01
+    guide: degraded
+    mode: Pressure points, discomfort over 4 h
+    effect: Reduced wear time; returns
+    cause: Module mass at crown; seam placement
+    S: 5
+    O: 6
+    D: 4
+    controls: Wear trial; mass budget
+    tests:
+    - T-H1
+    - T-WT
+  FA-F01-intermittent:
+    element: F01
+    guide: intermittent
+    ncr: fit is quasi-static; covered by loss/degraded
+  FA-F01-unintended:
+    element: F01
+    guide: unintended
+    ncr: no unintended fit behaviour
+  FA-F01-wrong_timing:
+    element: F01
+    guide: wrong timing
+    ncr: not time-dependent
+  FA-F01-wrong_value:
+    element: F01
+    guide: wrong value
+    ncr: no value
+  FA-F02-loss:
+    element: F02
+    guide: loss
+    mode: No contact on a region
+    effect: Region dark; decode degraded
+    cause: Knit tension loss; hair
+    S: 6
+    O: 5
+    D: 4
+    controls: Tension spec; fit sizes
+    tests:
+    - T-H1
+    - T-M5
+  FA-F02-degraded:
+    element: F02
+    guide: degraded
+    mode: High/unstable impedance
+    effect: Decode quality drops
+    cause: Hair, dry skin, fit variation
+    S: 6
+    O: 7
+    D: 4
+    controls: Impedance telemetry; electrode geometry
+    tests:
+    - T-I2
+    - T-F1
+    - T-WT
+  FA-F02-intermittent:
+    element: F02
+    guide: intermittent
+    mode: Contact breaks with head movement
+    effect: Motion artefacts dominate
+    cause: Insufficient knit tension; electrode geometry
+    S: 6
+    O: 7
+    D: 4
+    controls: Motion profile test
+    tests:
+    - T-H1
+  FA-F02-unintended:
+    element: F02
+    guide: unintended
+    ncr: no unintended contact mode
+  FA-F02-wrong_timing:
+    element: F02
+    guide: wrong timing
+    ncr: not applicable
+  FA-F02-wrong_value:
+    element: F02
+    guide: wrong value
+    ncr: impedance value covered by degraded
+  FA-F03-loss:
+    element: F03
+    guide: loss
+    mode: Don never detected
+    effect: Cap never acquires; NFF return
+    cause: Threshold too tight for dry/hair heads
+    S: 5
+    O: 4
+    D: 5
+    controls: Threshold sweep on head forms
+    tests:
+    - T-F1
+  FA-F03-degraded:
+    element: F03
+    guide: degraded
+    mode: Usable-channel map excludes good channels
+    effect: Decode degraded though hardware fine
+    cause: Overly tight impedance window
+    S: 5
+    O: 5
+    D: 6
+    controls: Window calibration
+    tests:
+    - T-F1
+  FA-F03-intermittent:
+    element: F03
+    guide: intermittent
+    mode: Don/doff toggles during use
+    effect: Session interruptions
+    cause: Hysteresis missing
+    S: 4
+    O: 5
+    D: 5
+    controls: Hysteresis + 60 s timer
+    tests:
+    - T-F1
+  FA-F03-unintended:
+    element: F03
+    guide: unintended
+    mode: False on-head in bag/table
+    effect: Battery drained; wrong telemetry denominators
+    cause: Impedance threshold tuned on dry heads; conductive surfaces
+    S: 5
+    O: 5
+    D: 6
+    controls: Multi-feature worn detection; bag test
+    tests:
+    - T-F1
+  FA-F03-wrong_timing:
+    element: F03
+    guide: wrong timing
+    mode: Detection > 10 s
+    effect: User confusion
+    cause: Slow impedance scan
+    S: 3
+    O: 4
+    D: 3
+    controls: Scan rate
+    tests:
+    - T-F1
+  FA-F03-wrong_value:
+    element: F03
+    guide: wrong value
+    ncr: covered by degraded/unintended
+  FA-F04-loss:
+    element: F04
+    guide: loss
+    mode: Clustered channel loss
+    effect: Decode accuracy drops
+    cause: Interconnect fatigue (IF-1, flex)
+    S: 7
+    O: 6
+    D: 5
+    controls: Serpentine traces; strain relief; IPC-6013
+    tests:
+    - T-M5
+    - T-M6
+    - T-E1
+    - T-L1
+    - T-L2
+  FA-F04-degraded:
+    element: F04
+    guide: degraded
+    mode: Noise floor rise
+    effect: Decode degraded
+    cause: RF interference; ESD-damaged front end; corrosion
+    S: 6
+    O: 6
+    D: 5
+    controls: Shielding; TVS; TX scheduling
+    tests:
+    - T-X1
+    - T-X2
+    - T-I2
+  FA-F04-intermittent:
+    element: F04
+    guide: intermittent
+    mode: Dropouts under flex
+    effect: Gaps in data
+    cause: Marginal flex connection
+    S: 6
+    O: 5
+    D: 6
+    controls: BER logging under stretch
+    tests:
+    - T-M5
+  FA-F04-unintended:
+    element: F04
+    guide: unintended
+    ncr: no unintended acquisition beyond F03 false on-head
+  FA-F04-wrong_timing:
+    element: F04
+    guide: wrong timing
+    mode: Sample timing jitter
+    effect: Decoder sees discontinuities
+    cause: Clock / bus arbitration
+    S: 5
+    O: 3
+    D: 5
+    controls: Timestamping
+    tests:
+    - T-F1
+  FA-F04-wrong_value:
+    element: F04
+    guide: wrong value
+    mode: Impedance/offset drift from corrosion
+    effect: Noise, eventual open
+    cause: Sweat + bias voltage
+    S: 7
+    O: 6
+    D: 6
+    controls: Conformal coat; nickel-free finish; bias minimised
+    tests:
+    - T-E2
+    - T-E3
+    - T-I1
+    - T-I2
+  FA-F05-loss:
+    element: F05
+    guide: loss
+    mode: Flex-to-rigid open
+    effect: Array region dark
+    cause: Bend fatigue at transition
+    S: 7
+    O: 6
+    D: 5
+    controls: Strain relief; bend-radius rule
+    tests:
+    - T-M5
+    - T-M6
+    - T-L1
+  FA-F05-degraded:
+    element: F05
+    guide: degraded
+    mode: Bus errors / dropped frames under flex
+    effect: Gaps in data
+    cause: Connector micro-motion; signal integrity
+    S: 6
+    O: 5
+    D: 6
+    controls: BER logging during M5/M6
+    tests:
+    - T-M5
+    - T-M6
+  FA-F05-intermittent:
+    element: F05
+    guide: intermittent
+    ncr: covered by degraded
+  FA-F05-unintended:
+    element: F05
+    guide: unintended
+    ncr: n/a
+  FA-F05-wrong_timing:
+    element: F05
+    guide: wrong timing
+    ncr: covered by F04 wrong timing
+  FA-F05-wrong_value:
+    element: F05
+    guide: wrong value
+    ncr: data integrity covered by degraded (BER)
+  FA-F06-loss:
+    element: F06
+    guide: loss
+    mode: No text output
+    effect: Product unusable
+    cause: Model/pipeline crash
+    S: 7
+    O: 3
+    D: 3
+    controls: Validation; watchdog
+    tests:
+    - T-WT
+  FA-F06-degraded:
+    element: F06
+    guide: degraded
+    mode: Accuracy below spec at real-world noise
+    effect: Product does not work for user
+    cause: Model trained on lab data
+    S: 7
+    O: 6
+    D: 5
+    controls: Wear trial (validation, not reliability)
+    tests:
+    - T-WT
+  FA-F06-intermittent:
+    element: F06
+    guide: intermittent
+    ncr: software; validation scope
+  FA-F06-unintended:
+    element: F06
+    guide: unintended
+    ncr: validation scope
+  FA-F06-wrong_timing:
+    element: F06
+    guide: wrong timing
+    mode: Latency > 1 s
+    effect: Unusable interaction
+    cause: Compute budget
+    S: 5
+    O: 4
+    D: 3
+    controls: Latency test
+    tests:
+    - T-X2
+  FA-F06-wrong_value:
+    element: F06
+    guide: wrong value
+    ncr: = degraded
+  FA-F07-loss:
+    element: F07
+    guide: loss
+    mode: Link drops; slow reconnect
+    effect: Session interrupted
+    cause: Antenna detuned by head/hair; phone in pocket
+    S: 5
+    O: 6
+    D: 4
+    controls: Antenna placement; link test
+    tests:
+    - T-R1
+  FA-F07-degraded:
+    element: F07
+    guide: degraded
+    mode: Packet loss > 0.1 %
+    effect: Data gaps
+    cause: Interference; low RSSI
+    S: 4
+    O: 5
+    D: 4
+    controls: Link soak
+    tests:
+    - T-R1
+  FA-F07-intermittent:
+    element: F07
+    guide: intermittent
+    ncr: = loss
+  FA-F07-unintended:
+    element: F07
+    guide: unintended
+    mode: Unauthorized pairing / interception
+    effect: Privacy breach, brand damage
+    cause: Weak pairing; unencrypted link
+    S: 9
+    O: 2
+    D: 5
+    controls: Authenticated pairing; encryption; audit
+    tests:
+    - T-SEC
+  FA-F07-wrong_timing:
+    element: F07
+    guide: wrong timing
+    ncr: covered by reconnect time in loss
+  FA-F07-wrong_value:
+    element: F07
+    guide: wrong value
+    ncr: data integrity by protocol CRC; not credible
+  FA-F08-loss:
+    element: F08
+    guide: loss
+    mode: No power / won't turn on
+    effect: Dead unit
+    cause: Battery deep-discharged; PCM latched
+    S: 6
+    O: 4
+    D: 3
+    controls: Ship mode; PCM recovery
+    tests:
+    - T-S1
+    - T-E4
+  FA-F08-degraded:
+    element: F08
+    guide: degraded
+    mode: Runtime shortfall
+    effect: Returns, complaints
+    cause: Capacity fade; false on-head (F03)
+    S: 6
+    O: 5
+    D: 4
+    controls: Cycle life; F03 fix
+    tests:
+    - T-B1
+    - T-F1
+  FA-F08-intermittent:
+    element: F08
+    guide: intermittent
+    mode: Brown-out reset under TX peak
+    effect: Session lost; data corruption
+    cause: Battery impedance at cold; bulk capacitance
+    S: 6
+    O: 4
+    D: 5
+    controls: Pulse-load test at −10 °C and EoL
+    tests:
+    - T-E4
+  FA-F08-unintended:
+    element: F08
+    guide: unintended
+    ncr: n/a
+  FA-F08-wrong_timing:
+    element: F08
+    guide: wrong timing
+    ncr: n/a
+  FA-F08-wrong_value:
+    element: F08
+    guide: wrong value
+    ncr: SoC covered under F08b
+  FA-F08b-wrong_value:
+    element: F08b
+    guide: wrong value
+    mode: SoC reported wrong
+    effect: Unexpected shutdown; update at low SoC (brick)
+    cause: Gauge not characterized across T and age
+    S: 5
+    O: 5
+    D: 5
+    controls: Gauge characterization
+    tests:
+    - T-B13
+  FA-F08b-loss:
+    element: F08b
+    guide: loss
+    ncr: gauge absent reads as wrong value
+  FA-F08b-degraded:
+    element: F08b
+    guide: degraded
+    ncr: = wrong value
+  FA-F08b-intermittent:
+    element: F08b
+    guide: intermittent
+    ncr: = wrong value
+  FA-F08b-unintended:
+    element: F08b
+    guide: unintended
+    ncr: n/a
+  FA-F08b-wrong_timing:
+    element: F08b
+    guide: wrong timing
+    ncr: n/a
+  FA-F09a-loss:
+    element: F09a
+    guide: loss
+    mode: Dock not detected / won't charge
+    effect: Return
+    cause: Contact corrosion or wear; detect threshold
+    S: 6
+    O: 5
+    D: 3
+    controls: Gold pogo; recessed; salt mist
+    tests:
+    - T-M8
+    - T-I3
+  FA-F09a-degraded:
+    element: F09a
+    guide: degraded
+    ncr: = loss
+  FA-F09a-intermittent:
+    element: F09a
+    guide: intermittent
+    mode: Charging stops and starts
+    effect: Slow charge; user distrust
+    cause: Contact wear
+    S: 4
+    O: 4
+    D: 3
+    controls: Mate cycling
+    tests:
+    - T-M8
+  FA-F09a-unintended:
+    element: F09a
+    guide: unintended
+    mode: Dock detected falsely (conductive surface)
+    effect: Enters Charging logic without dock
+    cause: Detect by voltage only
+    S: 5
+    O: 3
+    D: 4
+    controls: Handshake with dock
+    tests:
+    - T-F1
+  FA-F09a-wrong_timing:
+    element: F09a
+    guide: wrong timing
+    ncr: n/a
+  FA-F09a-wrong_value:
+    element: F09a
+    guide: wrong value
+    ncr: n/a
+  FA-F09b-wrong_value:
+    element: F09b
+    guide: wrong value
+    mode: Worn-check says not worn while worn
+    effect: Charging on head → scalp heat
+    cause: Worn detection fails on wet knit or conductive hat stand
+    S: 9
+    O: 2
+    D: 5
+    controls: Multi-feature worn detect; test on wet knit and conductive stand
+    tests:
+    - T-F1
+    - T-B12
+  FA-F09b-loss:
+    element: F09b
+    guide: loss
+    mode: Worn-check skipped
+    effect: Same as wrong value
+    cause: Firmware defect
+    S: 9
+    O: 2
+    D: 4
+    controls: Code review; fault injection
+    tests:
+    - T-F1
+  FA-F09b-degraded:
+    element: F09b
+    guide: degraded
+    ncr: = wrong value
+  FA-F09b-intermittent:
+    element: F09b
+    guide: intermittent
+    ncr: = wrong value
+  FA-F09b-unintended:
+    element: F09b
+    guide: unintended
+    ncr: n/a
+  FA-F09b-wrong_timing:
+    element: F09b
+    guide: wrong timing
+    ncr: n/a
+  FA-F09c-wrong_value:
+    element: F09c
+    guide: wrong value
+    mode: NTC open/short reads as valid temperature
+    effect: Charge outside JEITA → plating, cell damage
+    cause: No NTC fault detection
+    S: 9
+    O: 2
+    D: 5
+    controls: NTC fault detect (open/short); charger refuses
+    tests:
+    - T-B11
+    - T-X5
+  FA-F09c-loss:
+    element: F09c
+    guide: loss
+    mode: No temperature check
+    effect: Charge at any temperature
+    cause: Firmware defect
+    S: 9
+    O: 2
+    D: 4
+    controls: Fault injection
+    tests:
+    - T-B11
+  FA-F09c-degraded:
+    element: F09c
+    guide: degraded
+    ncr: = wrong value
+  FA-F09c-intermittent:
+    element: F09c
+    guide: intermittent
+    ncr: = wrong value
+  FA-F09c-unintended:
+    element: F09c
+    guide: unintended
+    ncr: n/a
+  FA-F09c-wrong_timing:
+    element: F09c
+    guide: wrong timing
+    ncr: n/a
+  FA-F09d-loss:
+    element: F09d
+    guide: loss
+    ncr: = F09a loss
+  FA-F09d-degraded:
+    element: F09d
+    guide: degraded
+    mode: Slow charge / low capacity delivered
+    effect: User complaint
+    cause: Adapter power; thermal derate
+    S: 3
+    O: 4
+    D: 3
+    controls: Charger test
+    tests:
+    - T-B11
+  FA-F09d-intermittent:
+    element: F09d
+    guide: intermittent
+    ncr: = F09a intermittent
+  FA-F09d-unintended:
+    element: F09d
+    guide: unintended
+    mode: Over-voltage / wrong adapter accepted
+    effect: Cell damage, thermal event
+    cause: No input OVP
+    S: 9
+    O: 3
+    D: 5
+    controls: Input OVP 6 V; 62368-1
+    tests:
+    - T-X3
+    - T-X5
+  FA-F09d-wrong_timing:
+    element: F09d
+    guide: wrong timing
+    ncr: n/a
+  FA-F09d-wrong_value:
+    element: F09d
+    guide: wrong value
+    mode: CV above 4.2 V
+    effect: Accelerated aging, swelling
+    cause: Charger tolerance
+    S: 7
+    O: 3
+    D: 5
+    controls: Charger accuracy test
+    tests:
+    - T-B11
+  FA-F09e-loss:
+    element: F09e
+    guide: loss
+    mode: Trickle beyond termination
+    effect: Cell stress, swelling
+    cause: Termination current below gauge noise
+    S: 7
+    O: 3
+    D: 5
+    controls: Termination test
+    tests:
+    - T-B11
+  FA-F09e-degraded:
+    element: F09e
+    guide: degraded
+    ncr: = loss
+  FA-F09e-intermittent:
+    element: F09e
+    guide: intermittent
+    ncr: n/a
+  FA-F09e-unintended:
+    element: F09e
+    guide: unintended
+    ncr: n/a
+  FA-F09e-wrong_timing:
+    element: F09e
+    guide: wrong timing
+    ncr: = loss
+  FA-F09e-wrong_value:
+    element: F09e
+    guide: wrong value
+    ncr: = loss
+  FA-F10-wrong_value:
+    element: F10
+    guide: wrong value
+    mode: Scalp-side > 41 °C
+    effect: Low-temperature burn
+    cause: Thermal path to scalp; charging while worn
+    S: 9
+    O: 3
+    D: 4
+    controls: Thermal spreader away from scalp; charge inhibit; FW monitor
+    tests:
+    - T-E5
+    - T-B12
+  FA-F10-loss:
+    element: F10
+    guide: loss
+    mode: Thermal monitor absent/ignored
+    effect: No protection
+    cause: FW defect
+    S: 9
+    O: 2
+    D: 5
+    controls: Fault injection
+    tests:
+    - T-F1
+  FA-F10-wrong_timing:
+    element: F10
+    guide: wrong timing
+    mode: Fault fires late
+    effect: Exposure above limit for minutes
+    cause: Thermistor far from hot spot; slow polling
+    S: 9
+    O: 3
+    D: 5
+    controls: Thermal map placement; 1 s polling
+    tests:
+    - T-E5
+    - T-F1
+  FA-F10-degraded:
+    element: F10
+    guide: degraded
+    ncr: = wrong value
+  FA-F10-intermittent:
+    element: F10
+    guide: intermittent
+    ncr: n/a
+  FA-F10-unintended:
+    element: F10
+    guide: unintended
+    ncr: n/a
+  FA-F11-loss:
+    element: F11
+    guide: loss
+    mode: Ingress / corrosion
+    effect: Failures
+    cause: Sweat, rain, washing
+    S: 7
+    O: 6
+    D: 6
+    controls: IPX4; conformal coat; drain
+    tests:
+    - T-I1
+    - T-I2
+    - T-I3
+    - T-I4
+  FA-F11-degraded:
+    element: F11
+    guide: degraded
+    mode: Knit abrasion exposes conductor
+    effect: Short to skin; cosmetic return
+    cause: Abrasion, washing
+    S: 5
+    O: 6
+    D: 4
+    controls: Knit spec; encapsulation
+    tests:
+    - T-M7
+    - T-I4
+  FA-F11-intermittent:
+    element: F11
+    guide: intermittent
+    ncr: n/a
+  FA-F11-unintended:
+    element: F11
+    guide: unintended
+    mode: ESD damage to front end
+    effect: Dead channels, resets
+    cause: Dry air, hair, synthetic clothing
+    S: 7
+    O: 6
+    D: 4
+    controls: TVS at inputs; ground return; conductive knit bleed
+    tests:
+    - T-X1
+  FA-F11-wrong_timing:
+    element: F11
+    guide: wrong timing
+    ncr: n/a
+  FA-F11-wrong_value:
+    element: F11
+    guide: wrong value
+    mode: Housing cracks / battery deforms on drop
+    effect: Loss of function; battery hazard
+    cause: 1 m drop on hard floor
+    S: 8
+    O: 4
+    D: 3
+    controls: Crown placement; energy-absorbing mount
+    tests:
+    - T-M2
+    - T-M3
+    - T-M4
+  FA-F12-loss:
+    element: F12
+    guide: loss
+    mode: Fault not detected / not reported
+    effect: Blind field
+    cause: FW defect; sync failure
+    S: 5
+    O: 4
+    D: 7
+    controls: Diagnostics spec; fault injection
+    tests:
+    - T-F1
+  FA-F12-degraded:
+    element: F12
+    guide: degraded
+    ncr: = loss
+  FA-F12-intermittent:
+    element: F12
+    guide: intermittent
+    ncr: = loss
+  FA-F12-unintended:
+    element: F12
+    guide: unintended
+    ncr: 'privacy: telemetry carries no neural data by design'
+  FA-F12-wrong_timing:
+    element: F12
+    guide: wrong timing
+    ncr: one-sync latency acceptable
+  FA-F12-wrong_value:
+    element: F12
+    guide: wrong value
+    mode: Fault mis-attributed (contact loss logged as channel failure)
+    effect: Wrong RCA, wrong CAPA
+    cause: Diagnostic logic conflates modes
+    S: 5
+    O: 5
+    D: 7
+    controls: Fault injection per class
+    tests:
+    - T-F1
+  FA-F13a-loss:
+    element: F13a
+    guide: loss
+    ncr: retry at protocol level
+  FA-F13a-degraded:
+    element: F13a
+    guide: degraded
+    ncr: retry
+  FA-F13a-intermittent:
+    element: F13a
+    guide: intermittent
+    ncr: retry
+  FA-F13a-unintended:
+    element: F13a
+    guide: unintended
+    ncr: covered by F13b
+  FA-F13a-wrong_timing:
+    element: F13a
+    guide: wrong timing
+    ncr: n/a
+  FA-F13a-wrong_value:
+    element: F13a
+    guide: wrong value
+    ncr: covered by F13b
+  FA-F13b-loss:
+    element: F13b
+    guide: loss
+    mode: Unsigned/forged image accepted
+    effect: Compromised device
+    cause: Signature check bypassed
+    S: 9
+    O: 1
+    D: 5
+    controls: Signed images; secure boot
+    tests:
+    - T-SEC
+  FA-F13b-degraded:
+    element: F13b
+    guide: degraded
+    ncr: n/a
+  FA-F13b-intermittent:
+    element: F13b
+    guide: intermittent
+    ncr: n/a
+  FA-F13b-unintended:
+    element: F13b
+    guide: unintended
+    ncr: = loss
+  FA-F13b-wrong_timing:
+    element: F13b
+    guide: wrong timing
+    ncr: n/a
+  FA-F13b-wrong_value:
+    element: F13b
+    guide: wrong value
+    ncr: = loss
+  FA-F13c-loss:
+    element: F13c
+    guide: loss
+    mode: Bricked unit after power loss mid-write
+    effect: Dead unit; mass returns
+    cause: Single bank; no SoC gate
+    S: 8
+    O: 3
+    D: 3
+    controls: Dual bank; SoC > 30 % gate
+    tests:
+    - T-F2
+  FA-F13c-degraded:
+    element: F13c
+    guide: degraded
+    ncr: n/a
+  FA-F13c-intermittent:
+    element: F13c
+    guide: intermittent
+    ncr: = loss
+  FA-F13c-unintended:
+    element: F13c
+    guide: unintended
+    ncr: n/a
+  FA-F13c-wrong_timing:
+    element: F13c
+    guide: wrong timing
+    ncr: = loss
+  FA-F13c-wrong_value:
+    element: F13c
+    guide: wrong value
+    mode: Update starts at low SoC (gauge wrong)
+    effect: Brick
+    cause: SoC error (F08b)
+    S: 8
+    O: 3
+    D: 4
+    controls: Gauge characterization; margin
+    tests:
+    - T-F2
+    - T-B13
+  FA-F13d-loss:
+    element: F13d
+    guide: loss
+    mode: Stuck in Updating / no rollback
+    effect: Unusable until recovery
+    cause: Verify fails with no fallback
+    S: 8
+    O: 3
+    D: 3
+    controls: Rollback to previous bank
+    tests:
+    - T-F2
+  FA-F13d-degraded:
+    element: F13d
+    guide: degraded
+    ncr: n/a
+  FA-F13d-intermittent:
+    element: F13d
+    guide: intermittent
+    ncr: n/a
+  FA-F13d-unintended:
+    element: F13d
+    guide: unintended
+    ncr: n/a
+  FA-F13d-wrong_timing:
+    element: F13d
+    guide: wrong timing
+    ncr: n/a
+  FA-F13d-wrong_value:
+    element: F13d
+    guide: wrong value
+    ncr: n/a
+  FA-F14a-loss:
+    element: F14a
+    guide: loss
+    mode: Ship mode never entered
+    effect: Cells deep-discharged in inventory; DOA
+    cause: Factory process skips command
+    S: 7
+    O: 4
+    D: 5
+    controls: EoL step; audit
+    tests:
+    - T-S1
+    - T-EOL
+  FA-F14a-degraded:
+    element: F14a
+    guide: degraded
+    ncr: n/a
+  FA-F14a-intermittent:
+    element: F14a
+    guide: intermittent
+    ncr: n/a
+  FA-F14a-unintended:
+    element: F14a
+    guide: unintended
+    ncr: n/a
+  FA-F14a-wrong_timing:
+    element: F14a
+    guide: wrong timing
+    ncr: n/a
+  FA-F14a-wrong_value:
+    element: F14a
+    guide: wrong value
+    mode: Shipped at wrong SoC
+    effect: Capacity loss in storage
+    cause: Process
+    S: 5
+    O: 3
+    D: 4
+    controls: EoL SoC check
+    tests:
+    - T-EOL
+  FA-F14b-loss:
+    element: F14b
+    guide: loss
+    mode: Transport damage
+    effect: DOA
+    cause: Packaging
+    S: 6
+    O: 3
+    D: 3
+    controls: Package vibration/drop
+    tests:
+    - T-M1
+  FA-F14b-degraded:
+    element: F14b
+    guide: degraded
+    mode: Self-discharge in storage
+    effect: Capacity loss
+    cause: Leakage current in ship mode
+    S: 6
+    O: 3
+    D: 5
+    controls: Ship-mode current spec
+    tests:
+    - T-S1
+  FA-F14b-intermittent:
+    element: F14b
+    guide: intermittent
+    ncr: n/a
+  FA-F14b-unintended:
+    element: F14b
+    guide: unintended
+    ncr: n/a
+  FA-F14b-wrong_timing:
+    element: F14b
+    guide: wrong timing
+    ncr: n/a
+  FA-F14b-wrong_value:
+    element: F14b
+    guide: wrong value
+    ncr: n/a
+  FA-F14c-loss:
+    element: F14c
+    guide: loss
+    mode: Unit never wakes on first dock
+    effect: DOA
+    cause: Dock detect threshold; deep-sleep wake
+    S: 7
+    O: 3
+    D: 3
+    controls: Wake test per lot
+    tests:
+    - T-S1
+  FA-F14c-degraded:
+    element: F14c
+    guide: degraded
+    ncr: n/a
+  FA-F14c-intermittent:
+    element: F14c
+    guide: intermittent
+    ncr: n/a
+  FA-F14c-unintended:
+    element: F14c
+    guide: unintended
+    ncr: n/a
+  FA-F14c-wrong_timing:
+    element: F14c
+    guide: wrong timing
+    ncr: n/a
+  FA-F14c-wrong_value:
+    element: F14c
+    guide: wrong value
+    ncr: n/a
+  FA-F15a-loss:
+    element: F15a
+    guide: loss
+    mode: EoL test escapes defects
+    effect: Field DOA, DPPM
+    cause: Test coverage gap
+    S: 6
+    O: 4
+    D: 6
+    controls: Coverage vs FMEA; GR&R
+    tests:
+    - T-EOL
+  FA-F15a-degraded:
+    element: F15a
+    guide: degraded
+    ncr: = loss
+  FA-F15a-intermittent:
+    element: F15a
+    guide: intermittent
+    ncr: fixture; GR&R
+  FA-F15a-unintended:
+    element: F15a
+    guide: unintended
+    ncr: n/a
+  FA-F15a-wrong_timing:
+    element: F15a
+    guide: wrong timing
+    mode: Test > 90 s
+    effect: Line throughput
+    cause: Impedance scan time
+    S: 3
+    O: 4
+    D: 2
+    controls: Parallel scan
+    tests:
+    - T-EOL
+  FA-F15a-wrong_value:
+    element: F15a
+    guide: wrong value
+    mode: False pass/fail
+    effect: Escapes or yield loss
+    cause: Limits not GR&R-qualified
+    S: 6
+    O: 4
+    D: 5
+    controls: GR&R
+    tests:
+    - T-EOL
+  FA-F15b-loss:
+    element: F15b
+    guide: loss
+    mode: Serial/test data not recorded
+    effect: No traceability for returns
+    cause: MES integration
+    S: 5
+    O: 3
+    D: 5
+    controls: Data system
+    tests:
+    - T-EOL
+  FA-F15b-degraded:
+    element: F15b
+    guide: degraded
+    ncr: n/a
+  FA-F15b-intermittent:
+    element: F15b
+    guide: intermittent
+    ncr: n/a
+  FA-F15b-unintended:
+    element: F15b
+    guide: unintended
+    ncr: n/a
+  FA-F15b-wrong_timing:
+    element: F15b
+    guide: wrong timing
+    ncr: n/a
+  FA-F15b-wrong_value:
+    element: F15b
+    guide: wrong value
+    ncr: = loss
+  FA-F15c-loss:
+    element: F15c
+    guide: loss
+    mode: Screen not applied / ineffective
+    effect: Infant mortality in field
+    cause: HASS profile too mild
+    S: 5
+    O: 4
+    D: 6
+    controls: Proof-of-screen
+    tests:
+    - T-HASS
+  FA-F15c-degraded:
+    element: F15c
+    guide: degraded
+    ncr: = loss
+  FA-F15c-intermittent:
+    element: F15c
+    guide: intermittent
+    ncr: n/a
+  FA-F15c-unintended:
+    element: F15c
+    guide: unintended
+    mode: Screen consumes life
+    effect: Early wear-out
+    cause: HASS too severe
+    S: 6
+    O: 3
+    D: 5
+    controls: Proof-of-screen
+    tests:
+    - T-HASS
+  FA-F15c-wrong_timing:
+    element: F15c
+    guide: wrong timing
+    ncr: n/a
+  FA-F15c-wrong_value:
+    element: F15c
+    guide: wrong value
+    ncr: n/a
+  FA-IF-1-open:
+    element: IF-1
+    guide: open
+    mode: Flex-to-rigid open
+    effect: Array region dark
+    cause: Bend fatigue
+    S: 7
+    O: 6
+    D: 5
+    controls: Strain relief
+    tests:
+    - T-M5
+    - T-M6
+  FA-IF-1-degraded:
+    element: IF-1
+    guide: degraded
+    mode: Bus BER rises under flex
+    effect: Data gaps
+    cause: Micro-motion
+    S: 6
+    O: 5
+    D: 6
+    controls: BER test
+    tests:
+    - T-M5
+  FA-IF-1-leakage-crosstalk:
+    element: IF-1
+    guide: leakage/crosstalk
+    mode: Crosstalk between channels
+    effect: Noise
+    cause: Routing
+    S: 4
+    O: 3
+    D: 5
+    controls: Signal integrity review
+    tests:
+    - T-X2
+  FA-IF-1-mismatch:
+    element: IF-1
+    guide: mismatch
+    mode: Connector pitch/retention mismatch under stretch
+    effect: Intermittent
+    cause: Mechanical spec gap
+    S: 6
+    O: 3
+    D: 4
+    controls: Interface control document
+    tests:
+    - T-M5
+  FA-IF-2-open:
+    element: IF-2
+    guide: open
+    mode: Battery disconnect
+    effect: Dead unit
+    cause: Tab weld; connector
+    S: 6
+    O: 3
+    D: 3
+    controls: Pull test; vibe
+    tests:
+    - T-M1
+    - T-M2
+  FA-IF-2-degraded:
+    element: IF-2
+    guide: degraded
+    mode: High contact resistance → voltage sag
+    effect: Brown-out
+    cause: Connector wear
+    S: 5
+    O: 3
+    D: 5
+    controls: Pulse load
+    tests:
+    - T-E4
+  FA-IF-2-leakage-crosstalk:
+    element: IF-2
+    guide: leakage/crosstalk
+    ncr: not credible
+  FA-IF-2-mismatch:
+    element: IF-2
+    guide: mismatch
+    mode: NTC/SoC signal scaling mismatch between pack and host
+    effect: Wrong temperature or SoC decisions
+    cause: Vendor change
+    S: 8
+    O: 2
+    D: 5
+    controls: Interface spec; incoming inspection
+    tests:
+    - T-B11
+    - T-B13
+  FA-IF-3-open:
+    element: IF-3
+    guide: open
+    ncr: co-located; no connection to open
+  FA-IF-3-degraded:
+    element: IF-3
+    guide: degraded
+    mode: Sweat path to electronics via knit
+    effect: Corrosion
+    cause: Wicking
+    S: 7
+    O: 5
+    D: 6
+    controls: Drain design; coat
+    tests:
+    - T-I2
+  FA-IF-3-leakage-crosstalk:
+    element: IF-3
+    guide: leakage/crosstalk
+    ncr: n/a
+  FA-IF-3-mismatch:
+    element: IF-3
+    guide: mismatch
+    mode: Knit material incompatible with electrode coating (galvanic/chemical)
+    effect: Corrosion, discoloration
+    cause: Material selection
+    S: 6
+    O: 3
+    D: 6
+    controls: Material compatibility test
+    tests:
+    - T-I2
+  FA-IF-4-open:
+    element: IF-4
+    guide: open
+    ncr: n/a
+  FA-IF-4-degraded:
+    element: IF-4
+    guide: degraded
+    ncr: = F01
+  FA-IF-4-leakage-crosstalk:
+    element: IF-4
+    guide: leakage/crosstalk
+    ncr: n/a
+  FA-IF-4-mismatch:
+    element: IF-4
+    guide: mismatch
+    mode: Textile stretches more than flex array tolerates
+    effect: Array strain beyond design
+    cause: Knit and flex designed to different stretch limits
+    S: 7
+    O: 5
+    D: 5
+    controls: Design interface requirement R-043
+    tests:
+    - T-M5
+  FA-IF-5-open:
+    element: IF-5
+    guide: open
+    ncr: = F02 loss
+  FA-IF-5-degraded:
+    element: IF-5
+    guide: degraded
+    ncr: = F02 degraded
+  FA-IF-5-leakage-crosstalk:
+    element: IF-5
+    guide: leakage/crosstalk
+    mode: DC leakage / bias current into skin above limit
+    effect: Skin irritation; electrochemistry at electrode
+    cause: Front-end bias; coating breach
+    S: 8
+    O: 3
+    D: 6
+    controls: Leakage test under single fault
+    tests:
+    - T-X6
+  FA-IF-5-mismatch:
+    element: IF-5
+    guide: mismatch
+    mode: Skin-contact material sensitizing
+    effect: Health complaint; recall
+    cause: Dyes, adhesives, nickel
+    S: 9
+    O: 2
+    D: 5
+    controls: ISO 10993; approved-materials list
+    tests:
+    - T-BIO
+  FA-IF-6-open:
+    element: IF-6
+    guide: open
+    ncr: no heat path = safe
+  FA-IF-6-degraded:
+    element: IF-6
+    guide: degraded
+    ncr: = F10
+  FA-IF-6-leakage-crosstalk:
+    element: IF-6
+    guide: leakage/crosstalk
+    ncr: n/a
+  FA-IF-6-mismatch:
+    element: IF-6
+    guide: mismatch
+    mode: Thermal path lower R_th than modelled
+    effect: Scalp hotter than analysis
+    cause: Material change
+    S: 9
+    O: 2
+    D: 4
+    controls: Thermal map on every build
+    tests:
+    - T-E5
+  FA-IF-7-open:
+    element: IF-7
+    guide: open
+    ncr: = F07 loss
+  FA-IF-7-degraded:
+    element: IF-7
+    guide: degraded
+    ncr: = F07 degraded
+  FA-IF-7-leakage-crosstalk:
+    element: IF-7
+    guide: leakage/crosstalk
+    mode: Own radio raises EEG noise floor
+    effect: Decode degraded
+    cause: TX during sampling
+    S: 6
+    O: 6
+    D: 5
+    controls: TX scheduling; shielding
+    tests:
+    - T-X2
+  FA-IF-7-mismatch:
+    element: IF-7
+    guide: mismatch
+    mode: Protocol version mismatch with app
+    effect: No pairing / data loss
+    cause: Release management
+    S: 5
+    O: 3
+    D: 4
+    controls: Compatibility test
+    tests:
+    - T-R1
+  FA-IF-8-open:
+    element: IF-8
+    guide: open
+    ncr: = F09a loss
+  FA-IF-8-degraded:
+    element: IF-8
+    guide: degraded
+    ncr: = F09a
+  FA-IF-8-leakage-crosstalk:
+    element: IF-8
+    guide: leakage/crosstalk
+    ncr: n/a
+  FA-IF-8-mismatch:
+    element: IF-8
+    guide: mismatch
+    mode: Non-compliant adapter / wrong dock
+    effect: Over-voltage
+    cause: User
+    S: 9
+    O: 3
+    D: 5
+    controls: Input OVP
+    tests:
+    - T-X5
+  FA-IF-9-open:
+    element: IF-9
+    guide: open
+    ncr: n/a
+  FA-IF-9-degraded:
+    element: IF-9
+    guide: degraded
+    ncr: = F01
+  FA-IF-9-leakage-crosstalk:
+    element: IF-9
+    guide: leakage/crosstalk
+    ncr: n/a
+  FA-IF-9-mismatch:
+    element: IF-9
+    guide: mismatch
+    mode: Head sizes outside knit range
+    effect: No fit for part of population
+    cause: Size range
+    S: 5
+    O: 4
+    D: 2
+    controls: Anthropometric range
+    tests:
+    - T-H1
+  FA-TR-01-fails_to_fire:
+    element: TR-01
+    guide: fails to fire
+    mode: Unit never wakes on first dock
+    effect: DOA
+    cause: Detect threshold; deep-sleep
+    S: 7
+    O: 3
+    D: 3
+    controls: Wake test
+    tests:
+    - T-S1
+  FA-TR-01-fires_falsely:
+    element: TR-01
+    guide: fires falsely
+    ncr: 'wake in storage drains battery: covered F14b degraded'
+  FA-TR-01-fires_late:
+    element: TR-01
+    guide: fires late
+    ncr: acceptable
+  FA-TR-02-fails_to_fire:
+    element: TR-02
+    guide: fails to fire
+    mode: Won't turn on at cold
+    effect: Outdoor use lost
+    cause: Battery sag at −10 °C
+    S: 5
+    O: 4
+    D: 3
+    controls: Cold boot test
+    tests:
+    - T-E4
+  FA-TR-02-fires_falsely:
+    element: TR-02
+    guide: fires falsely
+    ncr: n/a
+  FA-TR-02-fires_late:
+    element: TR-02
+    guide: fires late
+    ncr: acceptable
+  FA-TR-03-fails_to_fire:
+    element: TR-03
+    guide: fails to fire
+    ncr: = F03 loss
+  FA-TR-03-fires_falsely:
+    element: TR-03
+    guide: fires falsely
+    ncr: = F03 unintended
+  FA-TR-03-fires_late:
+    element: TR-03
+    guide: fires late
+    ncr: = F03 wrong timing
+  FA-TR-04-fails_to_fire:
+    element: TR-04
+    guide: fails to fire
+    ncr: = F07 loss
+  FA-TR-04-fires_falsely:
+    element: TR-04
+    guide: fires falsely
+    ncr: n/a
+  FA-TR-04-fires_late:
+    element: TR-04
+    guide: fires late
+    ncr: = reconnect time
+  FA-TR-05-fails_to_fire:
+    element: TR-05
+    guide: fails to fire
+    ncr: 'stays streaming without link: buffer overflow covered fires late'
+  FA-TR-05-fires_falsely:
+    element: TR-05
+    guide: fires falsely
+    ncr: brief interruption
+  FA-TR-05-fires_late:
+    element: TR-05
+    guide: fires late
+    mode: Buffered data lost
+    effect: Decode gaps
+    cause: Buffer sizing
+    S: 4
+    O: 5
+    D: 5
+    controls: Buffer test
+    tests:
+    - T-F1
+  FA-TR-06-fails_to_fire:
+    element: TR-06
+    guide: fails to fire
+    mode: Stuck acquiring after doff
+    effect: Battery drain overnight
+    cause: Timer/hysteresis bug
+    S: 5
+    O: 4
+    D: 6
+    controls: Fault injection
+    tests:
+    - T-F1
+  FA-TR-06-fires_falsely:
+    element: TR-06
+    guide: fires falsely
+    ncr: = F03 intermittent
+  FA-TR-06-fires_late:
+    element: TR-06
+    guide: fires late
+    ncr: 60 s tolerance
+  FA-TR-07-fails_to_fire:
+    element: TR-07
+    guide: fails to fire
+    ncr: 'won''t charge: = F09a loss'
+  FA-TR-07-fires_falsely:
+    element: TR-07
+    guide: fires falsely
+    mode: Charging while worn (worn-check wrong)
+    effect: Scalp heat
+    cause: Worn detection fails on wet knit / conductive stand
+    S: 9
+    O: 2
+    D: 5
+    controls: Multi-feature worn detect
+    tests:
+    - T-F1
+    - T-B12
+  FA-TR-07-fires_late:
+    element: TR-07
+    guide: fires late
+    ncr: acceptable
+  FA-TR-08-fails_to_fire:
+    element: TR-08
+    guide: fails to fire
+    mode: Trickle beyond termination
+    effect: Cell stress, swelling
+    cause: Termination current below gauge noise
+    S: 7
+    O: 3
+    D: 5
+    controls: Termination test
+    tests:
+    - T-B11
+  FA-TR-08-fires_falsely:
+    element: TR-08
+    guide: fires falsely
+    mode: Charge stops early
+    effect: Short runtime
+    cause: Gauge/termination error
+    S: 4
+    O: 4
+    D: 4
+    controls: Charger test
+    tests:
+    - T-B11
+  FA-TR-08-fires_late:
+    element: TR-08
+    guide: fires late
+    ncr: = fails to fire
+  FA-TR-09-fails_to_fire:
+    element: TR-09
+    guide: fails to fire
+    ncr: update deferred; acceptable
+  FA-TR-09-fires_falsely:
+    element: TR-09
+    guide: fires falsely
+    mode: Update starts at low SoC
+    effect: Brick
+    cause: SoC wrong (F08b)
+    S: 8
+    O: 3
+    D: 4
+    controls: Gauge characterization
+    tests:
+    - T-F2
+    - T-B13
+  FA-TR-09-fires_late:
+    element: TR-09
+    guide: fires late
+    ncr: acceptable
+  FA-TR-10-fails_to_fire:
+    element: TR-10
+    guide: fails to fire
+    mode: Stuck in Updating
+    effect: Unusable until recovery
+    cause: Verify fails, no rollback
+    S: 8
+    O: 3
+    D: 3
+    controls: Dual bank rollback
+    tests:
+    - T-F2
+  FA-TR-10-fires_falsely:
+    element: TR-10
+    guide: fires falsely
+    ncr: 'confirm before verify: covered F13b'
+  FA-TR-10-fires_late:
+    element: TR-10
+    guide: fires late
+    ncr: acceptable
+  FA-TR-11-fails_to_fire:
+    element: TR-11
+    guide: fails to fire
+    mode: Never sleeps
+    effect: Battery drain
+    cause: Timer bug
+    S: 4
+    O: 3
+    D: 5
+    controls: Fault injection
+    tests:
+    - T-F1
+  FA-TR-11-fires_falsely:
+    element: TR-11
+    guide: fires falsely
+    mode: Sleeps during use
+    effect: Session lost
+    cause: Idle detection wrong
+    S: 4
+    O: 3
+    D: 4
+    controls: Fault injection
+    tests:
+    - T-F1
+  FA-TR-11-fires_late:
+    element: TR-11
+    guide: fires late
+    ncr: acceptable
+  FA-TR-12-fails_to_fire:
+    element: TR-12
+    guide: fails to fire
+    mode: Thermal fault never raised
+    effect: Burn risk
+    cause: Thermistor fault; FW
+    S: 9
+    O: 2
+    D: 5
+    controls: NTC fault detect; fault injection
+    tests:
+    - T-F1
+    - T-E5
+  FA-TR-12-fires_falsely:
+    element: TR-12
+    guide: fires falsely
+    mode: Nuisance faults
+    effect: User distrust; NFF
+    cause: Noisy thermistor
+    S: 4
+    O: 4
+    D: 4
+    controls: Filtering
+    tests:
+    - T-F1
+  FA-TR-12-fires_late:
+    element: TR-12
+    guide: fires late
+    mode: Exposure above limit for minutes
+    effect: Burn risk
+    cause: Thermistor far from hot spot; slow polling
+    S: 9
+    O: 3
+    D: 5
+    controls: Thermal map placement; 1 s polling
+    tests:
+    - T-E5
+    - T-F1
+  FA-TR-13-fails_to_fire:
+    element: TR-13
+    guide: fails to fire
+    mode: Charge outside JEITA / OVP not caught
+    effect: Lithium plating; cell damage
+    cause: NTC open reads valid; OVP absent
+    S: 9
+    O: 2
+    D: 5
+    controls: NTC fault detect; OVP
+    tests:
+    - T-B11
+    - T-X5
+  FA-TR-13-fires_falsely:
+    element: TR-13
+    guide: fires falsely
+    mode: Nuisance charge faults
+    effect: Won't charge in normal conditions
+    cause: Thresholds too tight
+    S: 4
+    O: 4
+    D: 4
+    controls: Threshold test
+    tests:
+    - T-B11
+  FA-TR-13-fires_late:
+    element: TR-13
+    guide: fires late
+    ncr: = fails to fire
+  FA-TR-14-fails_to_fire:
+    element: TR-14
+    guide: fails to fire
+    mode: Latched fault, unit appears dead
+    effect: Return, NFF
+    cause: No user-visible clear path
+    S: 5
+    O: 4
+    D: 4
+    controls: Clear path in app
+    tests:
+    - T-F1
+  FA-TR-14-fires_falsely:
+    element: TR-14
+    guide: fires falsely
+    mode: Fault cleared while hazard persists (still charging/heating)
+    effect: Hazard persists
+    cause: Fault handler does not cut charger
+    S: 9
+    O: 2
+    D: 4
+    controls: Handler cuts charger and acquisition; verify in Fault
+    tests:
+    - T-F1
+  FA-TR-14-fires_late:
+    element: TR-14
+    guide: fires late
+    ncr: acceptable
+  FA-TR-15-fails_to_fire:
+    element: TR-15
+    guide: fails to fire
+    ncr: = F07
+  FA-TR-15-fires_falsely:
+    element: TR-15
+    guide: fires falsely
+    ncr: = F07 unintended
+  FA-TR-15-fires_late:
+    element: TR-15
+    guide: fires late
+    ncr: acceptable
+  FA-TR-16-fails_to_fire:
+    element: TR-16
+    guide: fails to fire
+    ncr: = F07
+  FA-TR-16-fires_falsely:
+    element: TR-16
+    guide: fires falsely
+    mode: Paired without user confirmation
+    effect: Privacy breach
+    cause: Just-works pairing
+    S: 9
+    O: 2
+    D: 5
+    controls: Confirmation required (R-042)
+    tests:
+    - T-SEC
+  FA-TR-16-fires_late:
+    element: TR-16
+    guide: fires late
+    ncr: acceptable
+program:
+  lanes:
+  - name: 'HALT: module + flex array'
+    start: '2026-11-16'
+    end: '2026-11-27'
+  - name: 'Battery: UN 38.3, IEC 62133'
+    start: '2026-11-16'
+    end: '2026-12-18'
+  - name: 'Biocompat: ISO 10993'
+    start: '2026-11-16'
+    end: '2026-12-18'
+  - name: Verification matrix
+    start: '2026-11-30'
+    end: '2026-12-18'
+  - name: FCC / RED / ISED testing
+    start: '2026-12-01'
+    end: '2026-12-23'
+  - name: HASS + EoL screen at CM
+    start: '2026-12-14'
+    end: '2026-12-23'
