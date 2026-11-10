@@ -5,7 +5,11 @@ schema and referential integrity, staged under .sethread/patches/, and applied o
 (by a human, or by policy for low-risk kinds). Every applied patch is appended to the provenance log.
 """
 from __future__ import annotations
-import copy, fcntl, json, os, time, uuid
+import copy, json, os, time, uuid
+try:
+    import fcntl
+except ImportError:   # Windows
+    fcntl = None
 from dataclasses import dataclass, field, asdict
 from typing import Any
 import yaml
@@ -54,9 +58,10 @@ class Store:
 
     def save(self, model: dict) -> None:
         with open(os.path.join(self.root, ".sethread", ".lock"), "a+") as lk:
-            fcntl.flock(lk, fcntl.LOCK_EX)
-            self._save(model)
-            fcntl.flock(lk, fcntl.LOCK_UN)
+            if fcntl: fcntl.flock(lk, fcntl.LOCK_EX)
+            try: self._save(model)
+            finally:
+                if fcntl: fcntl.flock(lk, fcntl.LOCK_UN)
 
     def _save(self, model: dict) -> None:
         with open(self.model_path, "w") as fh:
