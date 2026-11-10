@@ -1,12 +1,36 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, ShieldCheck, PanelLeft, FileText, History, ListChecks, HelpCircle, Image, Code2, FolderOpen, Bell } from 'lucide-react'
+import { Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
 import { useProject } from '../state'
-import { FORMS, KIND_LABEL, STAGE_COLOR } from '../api'
+import { FORMS, KIND_LABEL, STAGE_COLOR, stageColor, LIFECYCLE } from '../api'
 import { AgentDrawer } from './Agent'
 import { Palette } from './Palette'
 
-const STAGES = ['1 Needs', '2 Requirements', '3 Logical architecture', '4 Physical architecture', '5 Analysis', '6 Verification']
+
+// non-collection artifacts per ISO 15288 process: [route, label, count key]
+const EXTRA: Record<string, [string, string, string?][]> = {
+  'Stakeholder needs and requirements definition': [['matrix/needs/requirements', 'Needs × requirements']],
+  'System requirements definition': [['form/reqspec', 'Requirements specification'], ['matrix/regulations/requirements', 'Regulations × requirements'], ['collection/certification_plan', 'Certification plan']],
+  'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['views', 'Diagrams']],
+  'Design definition': [['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
+  'System analysis': [['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
+  'Implementation': [['form/avl', 'AVL / sourcing']],
+  'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
+  'Verification': [['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
+  'Transition': [['form/pfmea', 'PFMEA'], ['form/control_plan', 'Control plan']],
+  'Validation': [['matrix/needs/requirements', 'Needs validated'], ['collection/moes', 'Measures of effectiveness']],
+  'Operation': [['form/fracas', 'FRACAS']],
+  'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
+  'Disposal': [['search?q=disposal', 'Disposal requirements']],
+  'Project planning': [['teams', 'Lifecycle & gates'], ['form/work_items', 'Work items board']],
+  'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
+  'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
+  'Risk management': [['form/risks', 'Risk register']],
+  'Configuration management': [['history', 'History & baselines']],
+  'Information management': [['documents', 'Source documents'], ['docs', 'Design documentation'], ['sysml', 'SysML v2 text'], ['artifacts', 'Artifact library']],
+  'Measurement': [['scorecard', 'Scorecard'], ['gaps', 'Open gaps']],
+  'Quality assurance': [['form/findings', 'Findings log'], ['inbox', 'Review inbox']],
+}
 
 export function Shell() {
   const { pid, project, tabs, closeTab, activeTab, drawer, setDrawer, setPalette, theme, setTheme } = useProject()
@@ -29,7 +53,7 @@ export function Shell() {
       <div className="user"><span className="av">{(project?.user || 'U')[0].toUpperCase()}</span><div><div className="nm">{project?.user?.split('@')[0] || 'you'}</div><div className="ws">{project?.meta?.name || pid}</div></div></div>
     </aside>
     <main className="main">
-      {tabs.length > 0 && <div className="tabbar">{tabs.map(t => <div key={t.key} className={'tab' + (t.key === activeTab || loc.pathname === t.path ? ' active' : '')} onClick={() => nav(t.path)}>{t.stage && <span className="dot" style={{ background: STAGE_COLOR[t.stage] || 'var(--sx)' }} />}<span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</span><button className="x" onClick={e => { e.stopPropagation(); closeTab(t.key) }}><X size={12} /></button></div>)}</div>}
+      {tabs.length > 0 && <div className="tabbar">{tabs.map(t => <div key={t.key} className={'tab' + (t.key === activeTab || loc.pathname === t.path ? ' active' : '')} onClick={() => nav(t.path)}>{t.stage && <span className="dot" style={{ background: stageColor(t.stage) }} />}<span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</span><button className="x" onClick={e => { e.stopPropagation(); closeTab(t.key) }}><X size={12} /></button></div>)}</div>}
       <div className="content"><Outlet /></div>
     </main>
     <AgentDrawer />
@@ -58,50 +82,32 @@ function Tree() {
   const [open, setOpen] = useState<Record<string, boolean>>(() => { try { return JSON.parse(localStorage.getItem('tree2') || '{}') } catch { return {} } })
   useEffect(() => { try { localStorage.setItem('tree2', JSON.stringify(open)) } catch { } }, [open])
   if (!project) return null
-  const byStage: Record<string, string[]> = {}; for (const [k, s] of Object.entries(project.stage_of)) (byStage[s] ??= []).push(k)
   const isOpen = (k: string) => open[k] === true
   const staged = patches.filter(p => p.status === 'staged').length
   const Item = ({ to, label, n, icon, end, pill }: { to: string; label: string; n?: number; icon?: React.ReactNode; end?: boolean; pill?: string }) => <NavLink to={to} end={end} className={({ isActive }) => isActive ? 'active' : ''}>{icon}<span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>{pill && <span className="pill warn" style={{ marginLeft: 'auto' }}>{pill}</span>}{n !== undefined && !pill && <span className="n">{n}</span>}</NavLink>
-  const Group = ({ k, label, color, n, children }: { k: string; label: string; color?: string; n?: number; children: React.ReactNode }) => <>
-    <div className="group" onClick={() => setOpen(o => ({ ...o, [k]: !isOpen(k) }))}><span className="sw" style={{ width: 9, height: 9, borderRadius: 3, background: color || 'var(--sx)' }} /><span>{label}</span>{n !== undefined && <span className="n">{n}</span>}<ChevronDown size={14} style={{ color: 'var(--ink-3)', transform: isOpen(k) ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }} /></div>
+  const Group = ({ k, label, color, n, children, small, current }: { k: string; label: string; color?: string; n?: number; children: React.ReactNode; small?: boolean; current?: boolean }) => <>
+    <div className={'group' + (small ? ' small' : '') + (current ? ' current' : '')} title={current ? 'current life-cycle stage' : label} onClick={() => setOpen(o => ({ ...o, [k]: !isOpen(k) }))}><span className="sw" style={{ width: 9, height: 9, borderRadius: 3, background: color || 'var(--sx)' }} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>{current && <span className="pill accent" style={{ fontSize: 10, padding: '0 6px' }}>now</span>}{n !== undefined && <span className="n">{n}</span>}<ChevronDown size={14} style={{ color: 'var(--ink-3)', transform: isOpen(k) ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }} /></div>
     {isOpen(k) && <div className="sub">{children}</div>}</>
-  const stageN = (s: string) => (byStage[s] || []).reduce((a, k) => a + (project.counts[k] || 0), 0)
-  return <div className="tree">
+    return <div className="tree">
     <Item to={`/p/${pid}`} end label="Home" icon={<Home size={17} />} />
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />
     <Item to={`/p/${pid}/graph`} label="Graph" icon={<GitBranch size={17} />} />
-    <h4>Digital thread</h4>
-    {STAGES.map(s => <Group key={s} k={s} label={s.replace(/^\d /, '')} color={STAGE_COLOR[s]} n={stageN(s)}>{(byStage[s] || []).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}</Group>)}
-    <h4>Analysis</h4>
-    <Group k="risk" label="Risk" color={STAGE_COLOR['Risk (derived)']} n={project.fmea_counts.assessed}>
-      <Item to={`/p/${pid}/form/dfmea`} label="DFMEA" /><Item to={`/p/${pid}/collection/unassessed`} label="Unassessed candidates" n={project.coverage.unassessed_candidates} /><Item to={`/p/${pid}/form/hazards`} label="Hazard register" /><Item to={`/p/${pid}/form/fta`} label="Fault trees" /><Item to={`/p/${pid}/form/drbfm`} label="DRBFM" />
-    </Group>
-    <Group k="arch" label="Architecture" color={STAGE_COLOR['4 Physical architecture']}>
-      <Item to={`/p/${pid}/form/n2`} label="N² — physical" /><Item to={`/p/${pid}/form/n2l`} label="N² — logical" /><Item to={`/p/${pid}/form/icd`} label="ICD index" /><Item to={`/p/${pid}/form/pugh`} label="Trade matrices" /><Item to={`/p/${pid}/matrix/requirements/functions`} label="Dependency matrices" />
-    </Group>
-    <Group k="ver" label="Verification" color={STAGE_COLOR['6 Verification']} n={project.counts.tests}>
-      <Item to={`/p/${pid}/form/dvpr`} label="DVP&R" /><Item to={`/p/${pid}/form/vcrm`} label="VCRM / RTM" /><Item to={`/p/${pid}/form/reqspec`} label="Requirements spec" /><Item to={`/p/${pid}/collection/certification_plan`} label="Certification plan" />
-    </Group>
-    <h4>Teams & program</h4>
-    <Group k="program" label="Program" color={STAGE_COLOR['Program']} n={(project.counts.work_items || 0) + (project.counts.findings || 0)}>
-      <Item to={`/p/${pid}/teams`} label="Teams & handoffs" /><Item to={`/p/${pid}/form/work_items`} label="Work items" n={project.counts.work_items} /><Item to={`/p/${pid}/form/findings`} label="Findings" n={project.counts.findings} /><Item to={`/p/${pid}/form/risks`} label="Program risks" n={project.counts.risks} /><Item to={`/p/${pid}/collection/reviews`} label="Design reviews" n={project.counts.reviews} /><Item to={`/p/${pid}/collection/gates`} label="Gates" n={project.counts.gates} />
-    </Group>
-    <Group k="mfg" label="Manufacturing" color={STAGE_COLOR['Manufacturing']} n={project.counts.process_steps}>
-      <Item to={`/p/${pid}/collection/process_steps`} label="Process flow" n={project.counts.process_steps} /><Item to={`/p/${pid}/form/pfmea`} label="PFMEA" /><Item to={`/p/${pid}/form/control_plan`} label="Control plan" />
-    </Group>
-    <Group k="sc" label="Supply chain" color={STAGE_COLOR['Supply chain']} n={project.counts.suppliers}>
-      <Item to={`/p/${pid}/form/avl`} label="AVL / sourcing" /><Item to={`/p/${pid}/collection/suppliers`} label="Suppliers" n={project.counts.suppliers} /><Item to={`/p/${pid}/budgets`} label="Cost & mass budgets" />
-    </Group>
-    <Group k="ops" label="Operations" color={STAGE_COLOR['Operations']} n={project.counts.field_events}>
-      <Item to={`/p/${pid}/form/fracas`} label="FRACAS" n={project.counts.field_events} />
-    </Group>
-    <h4>Quality</h4>
-    <Item to={`/p/${pid}/scorecard`} label="Scorecard" icon={<ShieldCheck size={17} />} />
-    <Item to={`/p/${pid}/gaps`} label="Open gaps" icon={<ListChecks size={17} />} n={Object.entries(project.coverage).filter(([k, v]) => k !== 'clean' && v).length} />
-    <h4>Outputs</h4>
-    <Item to={`/p/${pid}/views`} label="Diagrams" icon={<Image size={17} />} /><Item to={`/p/${pid}/docs`} label="Design documentation" icon={<FileText size={17} />} /><Item to={`/p/${pid}/sysml`} label="SysML v2 text" icon={<Code2 size={17} />} /><Item to={`/p/${pid}/history`} label="History & baselines" icon={<History size={17} />} />
+    {/* Life cycle per INCOSE SE Handbook / ISO 15288: stage → technical process → artifacts */}
+    <h4>Life cycle</h4>
+    {LIFECYCLE.map(st => { const procs = project.processes.filter(p => p.stage === st); const n = procs.reduce((a, p) => a + p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0), 0)
+      return <Group key={st} k={'lc:' + st} label={st} color={STAGE_COLOR[st]} n={n} current={project.stage === st}>
+        {procs.map(p => <Group key={p.name} k={'pr:' + p.name} label={p.name} color={stageColor(p.name)} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
+          {p.kinds.map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+          {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? (nk === 'fmea' ? project.fmea_counts.assessed : nk === 'unassessed' ? project.coverage.unassessed_candidates : project.counts[nk]) : undefined} />)}
+        </Group>)}
+      </Group> })}
+    <h4>Technical management</h4>
+    {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
+      {p.kinds.map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
+    </Group>)}
     <div className="sep" />
     <Item to={`/p/${pid}/documents`} label="Source documents" icon={<FolderOpen size={17} />} />
     <Item to={`/p/${pid}/integrations`} label="Integrations" icon={<Plug size={17} />} />

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProject } from '../state'
-import { P, FORMS, MATRIX_PAIRS, KIND_LABEL, STAGE_COLOR, type Form } from '../api'
+import { P, FORMS, MATRIX_PAIRS, KIND_LABEL, stageColor, type Form } from '../api'
 import { Grid } from '../components/Grid'
 import { marked } from 'marked'
 
@@ -21,7 +21,7 @@ export function Artifacts() {
     for (const s of art?.sysml || []) out.push({ id: 'sysml:' + s, title: s.replace('.sysml', '').replace(/^\d+_/, '').replace(/_/g, ' '), type: 'SysML v2', stage: '', sub: s, path: `/p/${pid}/sysml#${s}`, fresh: 'built' })
     if (art?.docs?.length) out.push({ id: 'docs', title: 'System design documentation', type: 'Document', stage: '', sub: 'OOSEM-ordered, every table with provenance', path: `/p/${pid}/docs`, fresh: 'built' })
     for (const d of art?.docx || []) out.push({ id: 'docx:' + d, title: d, type: 'Document', stage: '', sub: 'Word export', path: `/p/${pid}/out/${d}`, fresh: 'built' })
-    for (const d of art?.documents || []) out.push({ id: 'src:' + d, title: d, type: 'Source document', stage: '1 Needs', sub: 'uploaded input', path: `/api/p/${pid}/file?path=docs/${encodeURIComponent(d)}` })
+    for (const d of art?.documents || []) out.push({ id: 'src:' + d, title: d, type: 'Source document', stage: 'Business or mission analysis', sub: 'uploaded input', path: `/api/p/${pid}/file?path=docs/${encodeURIComponent(d)}` })
     for (const [k, s] of Object.entries(project?.stage_of || {})) if (k !== 'fm_assessments') out.push({ id: 'col:' + k, title: KIND_LABEL[k], type: 'Collection', stage: s, sub: `${project?.counts[k]} elements`, path: `/p/${pid}/collection/${k}`, fresh: 'live' })
     return out
   }, [art, project, pid])
@@ -33,14 +33,14 @@ export function Artifacts() {
       <input className="field" style={{ width: 280 }} placeholder="search artifacts…" value={q} onChange={e => setQ(e.target.value)} /></div>
     <div className="row" style={{ marginBottom: 14 }}>
       <button className="chip" style={!type ? sel : {}} onClick={() => setType('')}>All types</button>{types.map(t => <button key={t} className="chip" style={type === t ? sel : {}} onClick={() => setType(t)}>{t}</button>)}
-      <span style={{ width: 12 }} />{stages.map(s => <button key={s} className="chip" style={stage === s ? sel : {}} onClick={() => setStage(stage === s ? '' : s)}><span className="sw" style={{ width: 7, height: 7, borderRadius: 2, background: STAGE_COLOR[s] }} />{s}</button>)}</div>
+      <span style={{ width: 12 }} />{stages.map(s => <button key={s} className="chip" style={stage === s ? sel : {}} onClick={() => setStage(stage === s ? '' : s)}><span className="sw" style={{ width: 7, height: 7, borderRadius: 2, background: stageColor(s) }} />{s}</button>)}</div>
     <div className="gallery" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))' }}>{view.map(a => <div key={a.id} className="artcard" onClick={() => go(a)}>
       <div className="row between"><span className="pill">{a.type}</span>{a.fresh && <span className={'pill ' + (a.fresh === 'live' ? 'good' : '')}>{a.fresh}</span>}</div>
-      <div className="t">{a.title}</div><div className="d">{a.sub}</div>{a.stage && <div className="row small" style={{ gap: 6, marginTop: 'auto' }}><span className="sw" style={{ width: 7, height: 7, borderRadius: 2, background: STAGE_COLOR[a.stage] }} /><span className="muted">{a.stage}</span></div>}</div>)}</div>
+      <div className="t">{a.title}</div><div className="d">{a.sub}</div>{a.stage && <div className="row small" style={{ gap: 6, marginTop: 'auto' }}><span className="sw" style={{ width: 7, height: 7, borderRadius: 2, background: stageColor(a.stage) }} /><span className="muted">{a.stage}</span></div>}</div>)}</div>
   </div>
 }
 const sel = { borderColor: 'var(--accent)', color: 'var(--accent-ink)', background: 'var(--accent-soft)' }
-function viewStage(v: string) { const n = parseInt(v.slice(1, 3)); return n <= 2 ? '1 Needs' : n <= 4 ? '2 Requirements' : n <= 6 ? '3 Logical architecture' : n <= 11 ? '4 Physical architecture' : n === 12 ? '5 Analysis' : n === 13 ? 'Risk (derived)' : '6 Verification' }
+function viewStage(v: string) { const n = parseInt(v.slice(1, 3)); return n <= 2 ? 'Stakeholder needs and requirements definition' : n <= 4 ? 'System requirements definition' : n <= 11 ? 'System architecture definition' : n <= 13 ? 'System analysis' : 'Verification' }
 
 export function FormPage() {
   const { name = '' } = useParams(); const { pid, send, patches, project, openTab } = useProject(); const [form, setForm] = useState<Form | null>(null); const [showRatings, setShowRatings] = useState(false)

@@ -75,6 +75,8 @@ Launch is built for every stakeholder of a hardware launch — a 1,000-person co
 | Field / service / customer quality | FRACAS: field events linked to failure modes, corrective-action work items | `field_events`, `fmea`, `work_items` |
 | Reviewers / leadership | Review inbox, convergence state per stage, blocking alerts, comments and @mentions | patches, `reviews`, comments, notifications |
 
+**The app is arranged by the INCOSE SE Handbook / ISO/IEC/IEEE 15288 life cycle.** The sidebar is *stage → technical process → artifacts*: Concept (business or mission analysis; stakeholder needs and requirements definition) → Development (system requirements definition; system architecture definition; design definition; system analysis; implementation; integration; verification) → Production (transition; validation) → Utilization (operation) → Support (maintenance) → Retirement (disposal), with the ISO 15288 technical-management processes (project planning, assessment and control, decision, risk, configuration, information management, measurement, quality assurance) as a cross-cutting group. Every collection and form lives under the process that produces it, and the convergence panel names both the stage and the process the model is currently converging on. Gates are placed by the stage they close (SRR/SDR → Concept, PDR/CDR/TRR/EVT/DVT → Development, PRR/PVT → Production, ORR/SOP → Utilization).
+
 The lifecycle layer (`sethread/lifecycle.py`) computes, from the model alone:
 
 - **Convergence** per stage — how settled Requirements, Architecture, Detailed Design, V&V and Manufacturing are, from change rate and open gaps.

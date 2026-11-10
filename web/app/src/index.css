@@ -113,3 +113,7 @@ pre.diff{font:11.5px/1.35 var(--mono);background:#0f172a;color:#e2e8f0;padding:8
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px;background:var(--surface-2)} .seg button{border:0;background:transparent;padding:7px 14px;border-radius:8px;font-size:14.5px;color:var(--ink-2);cursor:pointer} .seg button.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:500}
 .list{border-top:1px solid var(--line)} .list .li{display:grid;grid-template-columns:1fr 140px 160px 120px;gap:12px;align-items:center;padding:12px 8px;border-bottom:1px solid var(--line);cursor:pointer} .list .li:hover{background:var(--surface-2)} .list .li .t{font-weight:500} .list .lh{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;padding:8px}
 .sechead{display:flex;align-items:center;justify-content:space-between;margin:26px 0 8px} .sechead h3{font-size:16px}
+
+.tree .group.small{padding-left:22px;font-size:12.5px;font-weight:500}
+.tree .group.small+.sub{padding-left:14px}
+.tree .group.current{background:var(--accent-soft);border-radius:8px}

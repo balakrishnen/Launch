@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProject } from '../state'
-import { FORMS, KIND_LABEL, MATRIX_PAIRS, STAGE_COLOR } from '../api'
+import { FORMS, KIND_LABEL, MATRIX_PAIRS, stageColor } from '../api'
 
 type Hit = { section: string; label: string; sub?: string; color?: string; run: () => void }
 
@@ -15,8 +15,8 @@ export function Palette() {
     if (!project) return []
     const out: Hit[] = []
     out.push({ section: 'Pages', label: 'Overview', run: () => go(`/p/${pid}`) }, { section: 'Pages', label: 'Artifact library', run: () => go(`/p/${pid}/artifacts`) }, { section: 'Pages', label: 'Graph', run: () => go(`/p/${pid}/graph`) }, { section: 'Pages', label: 'Scorecard', run: () => go(`/p/${pid}/scorecard`) }, { section: 'Pages', label: 'Open gaps', run: () => go(`/p/${pid}/gaps`) }, { section: 'Pages', label: 'Review inbox', run: () => go(`/p/${pid}/inbox`) }, { section: 'Pages', label: 'Integrations (OSLC, tools)', run: () => go(`/p/${pid}/integrations`) }, { section: 'Pages', label: 'History & baselines', run: () => go(`/p/${pid}/history`) })
-    for (const [k, s] of Object.entries(project.stage_of)) out.push({ section: 'Collections', label: KIND_LABEL[k] || k, sub: `${project.counts[k]} · ${s}`, color: STAGE_COLOR[s], run: () => go(`/p/${pid}/collection/${k}`) })
-    for (const f of FORMS) out.push({ section: 'Artifacts', label: f.title, sub: f.std, color: STAGE_COLOR[f.stage], run: () => go(`/p/${pid}/form/${f.id}`) })
+    for (const [k, s] of Object.entries(project.stage_of)) out.push({ section: 'Collections', label: KIND_LABEL[k] || k, sub: `${project.counts[k]} · ${s}`, color: stageColor(s), run: () => go(`/p/${pid}/collection/${k}`) })
+    for (const f of FORMS) out.push({ section: 'Artifacts', label: f.title, sub: f.std, color: stageColor(f.stage), run: () => go(`/p/${pid}/form/${f.id}`) })
     for (const [a, b] of MATRIX_PAIRS) out.push({ section: 'Artifacts', label: `Matrix ${KIND_LABEL[a]} × ${KIND_LABEL[b]}`, run: () => go(`/p/${pid}/matrix/${a}/${b}`) })
     out.push({ section: 'Artifacts', label: 'Diagrams', run: () => go(`/p/${pid}/views`) }, { section: 'Artifacts', label: 'Design documentation', run: () => go(`/p/${pid}/docs`) }, { section: 'Artifacts', label: 'SysML v2 text', run: () => go(`/p/${pid}/sysml`) })
     for (const r of project.role_order) out.push({ section: 'Agent', label: `Run ${project.roles[r]}`, run: () => { setPalette(false); send('', r) } })
@@ -29,7 +29,7 @@ export function Palette() {
     const local = statics.filter(h => !ql || (h.label + ' ' + (h.sub || '')).toLowerCase().includes(ql)).slice(0, ql ? 12 : 40)
     if (!ql) { setHits(local); return }
     fetch(`/api/p/${pid}/search?q=${encodeURIComponent(ql)}`).then(r => r.json()).then((rows: any[]) => { if (!alive) return
-      const el: Hit[] = rows.slice(0, 30).map(h => ({ section: 'Elements', label: `${h.id}  ${h.name || ''}`, sub: KIND_LABEL[h.kind] || h.kind, color: STAGE_COLOR[project?.stage_of[h.kind] || ''], run: () => { setPalette(false); openTab({ key: `el:${h.kind}:${h.id}`, title: h.id, path: `/p/${pid}/element/${h.kind}/${encodeURIComponent(h.id)}`, stage: project?.stage_of[h.kind] }) } }))
+      const el: Hit[] = rows.slice(0, 30).map(h => ({ section: 'Elements', label: `${h.id}  ${h.name || ''}`, sub: KIND_LABEL[h.kind] || h.kind, color: stageColor(project?.stage_of[h.kind]), run: () => { setPalette(false); openTab({ key: `el:${h.kind}:${h.id}`, title: h.id, path: `/p/${pid}/element/${h.kind}/${encodeURIComponent(h.id)}`, stage: project?.stage_of[h.kind] }) } }))
       const ask: Hit = { section: 'Agent', label: `Ask the agent: “${q}”`, run: () => { setPalette(false); send(q) } }
       setHits([...el, ...local, ask]); setSel(0) }).catch(() => setHits(local))
     return () => { alive = false }

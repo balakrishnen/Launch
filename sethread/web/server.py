@@ -29,14 +29,7 @@ STATIC = os.path.join(os.path.dirname(__file__), "static")
 SAFE_TOOLS = {"Read", "Glob", "Grep", "LS", "WebSearch", "WebFetch", "TodoWrite", "Task", "ToolSearch"}
 BUILTIN = ["Read", "Write", "Edit", "MultiEdit", "Bash", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite"]
 
-STAGE_OF = {  # which OOSEM stage each collection belongs to (drives the navigation)
-    "stakeholders": "1 Needs", "needs": "1 Needs", "moes": "1 Needs",
-    "actors": "2 Requirements", "use_cases": "2 Requirements", "scenarios": "2 Requirements", "regulations": "2 Requirements", "requirements": "2 Requirements",
-    "functions": "3 Logical architecture", "logical_components": "3 Logical architecture", "logical_interfaces": "3 Logical architecture",
-    "parts": "4 Physical architecture", "nodes": "4 Physical architecture", "interfaces": "4 Physical architecture", "states": "4 Physical architecture",
-    "transitions": "4 Physical architecture", "arch_decisions": "4 Physical architecture", "trades": "5 Analysis", "constraints": "5 Analysis",
-    "tests": "6 Verification", "gates": "6 Verification", "fm_assessments": "Risk (derived)",
-}
+STAGE_OF = schema.STAGE_OF  # kind → ISO 15288 process (drives the navigation)
 
 def _kind_of(m, eid: str) -> str | None:
     for k in schema.KINDS:
@@ -324,7 +317,7 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def project(pid: str, user: str = U):
         S = W.get(pid)
         m = S.store.load(); rep = derive.coverage_report(m)
-        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": m.get("program", {}).get("stage"), "stage_of": STAGE_OF, "fmea_counts": rep["counts"],
+        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": lifecycle.convergence(m), "stage_of": STAGE_OF, "lifecycle": schema.LIFECYCLE, "processes": [{"name": n, "stage": st, "kinds": ks} for n, st, ks in schema.PROCESSES], "management": [{"name": n, "kinds": ks} for n, ks in schema.MANAGEMENT], "fmea_counts": rep["counts"],
                 "coverage": {k: (len(v) if hasattr(v, "__len__") and not isinstance(v, dict) else v) for k, v in rep.items() if k != "counts"},
                 "staged": len(S.store.list_patches("staged")), "busy": S.busy, "auto": S.auto, "toolchain": S.tc, "roles": {k: v["title"] for k, v in R.ROLES.items()}, "role_order": R.ORDER}
 

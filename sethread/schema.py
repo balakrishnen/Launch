@@ -54,7 +54,39 @@ KINDS: dict[str, dict[str, Any]] = {
     "reviews": dict(req=["name", "gate", "date"], opt={"attendees": [], "findings": [], "decision": "", "notes": ""}, refs={"gate": "gates", "findings": "findings"}),
 }
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]
-LIFECYCLE = ["Concept", "Requirements", "Architecture and detailed design", "Verification", "Production readiness", "Launch", "Operations"]
+# INCOSE SE Handbook / ISO/IEC/IEEE 15288 generic life-cycle stages
+LIFECYCLE = ["Concept", "Development", "Production", "Utilization", "Support", "Retirement"]
+# ISO 15288 technical processes (in handbook order), the stage where each is primarily exercised, and the model collections it owns.
+# This drives navigation: the app is arranged by life-cycle stage → technical process → artifacts.
+PROCESSES = [
+    ("Business or mission analysis", "Concept", ["stakeholders", "moes"]),
+    ("Stakeholder needs and requirements definition", "Concept", ["needs", "actors", "use_cases", "scenarios"]),
+    ("System requirements definition", "Development", ["regulations", "requirements", "constraints"]),
+    ("System architecture definition", "Development", ["functions", "logical_components", "logical_interfaces", "nodes", "interfaces", "states", "transitions", "arch_decisions"]),
+    ("Design definition", "Development", ["parts"]),
+    ("System analysis", "Development", ["trades", "fm_assessments"]),
+    ("Implementation", "Development", ["suppliers"]),
+    ("Integration", "Development", []),
+    ("Verification", "Development", ["tests"]),
+    ("Transition", "Production", ["process_steps"]),
+    ("Validation", "Production", []),
+    ("Operation", "Utilization", ["field_events"]),
+    ("Maintenance", "Support", []),
+    ("Disposal", "Retirement", []),
+]
+# ISO 15288 technical management processes (cross-cutting) and the collections they own
+MANAGEMENT = [
+    ("Project planning", ["gates", "work_items"]),
+    ("Project assessment and control", ["teams", "handoffs"]),
+    ("Decision management", []),
+    ("Risk management", ["risks"]),
+    ("Configuration management", []),
+    ("Information management", []),
+    ("Measurement", []),
+    ("Quality assurance", ["findings", "reviews"]),
+]
+PROCESS_STAGE = {name: stage for name, stage, _ in PROCESSES}
+STAGE_OF = {k: name for name, _, kinds in PROCESSES for k in kinds} | {k: name for name, kinds in MANAGEMENT for k in kinds}
 GATE_CRITERIA_KEYS = ["requirements_without_tests", "unassessed_candidates", "high_ap_fm_without_tests", "functions_without_allocation", "open_findings_critical", "pending_handoffs", "stale_verification", "tests_passed_share", "process_steps_without_pfmea", "parts_without_supplier"]
 
 def empty_model(name: str = "New system") -> dict:

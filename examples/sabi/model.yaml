@@ -2595,12 +2595,12 @@ gates:
   PDR:
     date: '2026-11-20'
     exit: Architecture frozen; all High-AP modes have tests; handoffs to test accepted
-    stage: Architecture and detailed design
+    stage: Development
     status: planned
   CDR:
     date: '2027-01-15'
     exit: Detailed design released; DV plan approved; sourcing complete
-    stage: Architecture and detailed design
+    stage: Development
     status: planned
 fm_assessments:
   FA-F01-loss:
@@ -4457,7 +4457,7 @@ program:
   - name: HASS + EoL screen at CM
     start: '2026-12-14'
     end: '2026-12-23'
-  stage: Architecture and detailed design
+  stage: Development
 teams:
   TM-SE:
     name: Systems engineering

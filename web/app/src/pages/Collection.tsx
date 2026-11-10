@@ -12,7 +12,7 @@ export function Collection() {
   useEffect(() => { P(pid).get('/collection/' + kind).then(setRows).catch(() => setRows([])) }, [pid, kind, patches.length, project?.meta?.rev])
   const cols = useMemo(() => [...new Set(rows.flatMap(r => Object.keys(r)))].filter(k => !['disciplines', 'attrs', 'higher', 'focus', 'lower'].includes(k)).slice(0, 12), [rows])
   const view = useMemo(() => { let v = rows; const ql = q.toLowerCase(); if (ql) v = v.filter(r => JSON.stringify(r).toLowerCase().includes(ql)); if (sort) { const { c, d } = sort; v = [...v].sort((a, b) => { const x = a[c], y = b[c]; const nx = parseFloat(x), ny = parseFloat(y); return d * (!isNaN(nx) && !isNaN(ny) ? nx - ny : String(x ?? '').localeCompare(String(y ?? ''))) }) } return v }, [rows, q, sort])
-  const stage = project?.stage_of[kind] || 'Risk (derived)'
+  const stage = project?.stage_of[kind] || 'System analysis'
   const open = (r: any) => { const t = DERIVED_LINK[kind] ? DERIVED_LINK[kind](r) : { kind, id: r.id }; openTab({ key: `el:${t.kind}:${t.id}`, title: t.id, path: `/p/${pid}/element/${t.kind}/${encodeURIComponent(t.id)}`, stage: project?.stage_of[t.kind] || stage }) }
   return <div>
     <div className="row between" style={{ marginBottom: 10 }}><div><h2>{KIND_LABEL[kind] || kind.replace(/_/g, ' ')} <span className="pill">{view.length}{view.length !== rows.length ? ` of ${rows.length}` : ''}</span></h2><div className="muted small"><StagePill stage={stage} /> click a row to open the element with everything linked to it</div></div>

@@ -7,7 +7,7 @@ import { api, P, KIND_LABEL } from '../api'
 import { Bar, IdLink, StagePill } from '../components/common'
 import { PatchCard } from '../components/Agent'
 
-const HEX: Record<string, string> = { '1 Needs': '#c2410c', '2 Requirements': '#b45309', '3 Logical architecture': '#1d4ed8', '4 Physical architecture': '#0f766e', '5 Analysis': '#7e22ce', '6 Verification': '#15803d', 'Risk (derived)': '#b91c1c' }
+const HEX: Record<string, string> = { 'Concept': '#c2410c', 'Stakeholder needs and requirements definition': '#c2410c', 'Business or mission analysis': '#9a3412', 'System requirements definition': '#b45309', 'System architecture definition': '#1d4ed8', 'Design definition': '#0f766e', 'System analysis': '#7e22ce', 'Verification': '#15803d', 'Implementation': '#6d28d9', 'Transition': '#7c5c2b', 'Operation': '#15803d', 'Project planning': '#0e7490', 'Risk management': '#0e7490', 'Quality assurance': '#9f1239', 'Project assessment and control': '#0e7490', 'Risk (derived)': '#b91c1c' }
 
 export function Graph() {
   const { focus } = useParams(); const { pid, openTab, theme } = useProject(); const nav = useNavigate(); const el = useRef<HTMLDivElement>(null); const [q, setQ] = useState(focus || ''); const [n, setN] = useState(0)

@@ -13,14 +13,18 @@ from . import derive as D
 from .schema import LIFECYCLE
 
 DEFAULT_CRITERIA = {   # stage → {coverage key: max allowed} ; "tests_passed_share" is a minimum share
-    "Requirements": {"needs_without_requirements": 0, "regulations_without_requirements": 0, "requirements_without_tests": 0, "open_findings_critical": 0},
-    "Architecture and detailed design": {"functions_without_allocation": 0, "logical_components_without_parts": 0, "interfaces_without_functions": 0, "unassessed_candidates": 0, "high_ap_fm_without_tests": 0, "open_findings_critical": 0, "pending_handoffs": 0, "stale_verification": 0},
-    "Verification": {"tests_unreferenced": 0, "fm_without_tests": 0, "stale_verification": 0, "open_findings_critical": 0, "tests_passed_share": 0.9},
-    "Production readiness": {"process_steps_without_pfmea": 0, "unassessed_process_candidates": 0, "buy_parts_without_supplier": 0, "pending_handoffs": 0, "tests_passed_share": 1.0, "open_findings_critical": 0},
-    "Launch": {"open_findings_critical": 0, "pending_handoffs": 0, "tests_passed_share": 1.0},
-    "Operations": {"field_events_without_fm": 0},
+    "Concept": {"needs_without_requirements": 0, "regulations_without_requirements": 0, "open_findings_critical": 0},
+    "Development": {"requirements_without_tests": 0, "functions_without_allocation": 0, "logical_components_without_parts": 0, "interfaces_without_functions": 0, "unassessed_candidates": 0, "high_ap_fm_without_tests": 0,
+                    "fm_without_tests": 0, "tests_unreferenced": 0, "stale_verification": 0, "open_findings_critical": 0, "pending_handoffs": 0, "tests_passed_share": 0.9},
+    "Production": {"process_steps_without_pfmea": 0, "unassessed_process_candidates": 0, "buy_parts_without_supplier": 0, "pending_handoffs": 0, "tests_passed_share": 1.0, "open_findings_critical": 0, "stale_verification": 0},
+    "Utilization": {"open_findings_critical": 0, "pending_handoffs": 0, "field_events_without_fm": 0},
+    "Support": {"field_events_without_fm": 0, "open_findings_critical": 0},
+    "Retirement": {"open_findings_critical": 0},
 }
-STAGE_GATES = {"Requirements": ["SRR"], "Architecture and detailed design": ["PDR", "CDR"], "Verification": ["TRR", "DV"], "Production readiness": ["PRR", "PV"], "Launch": ["MRR", "SOP"]}
+# INCOSE decision gates (handbook ch. 3) and common industry equivalents, by the stage they close or open
+STAGE_GATES = {"Concept": ["MCR", "MDR", "SRR", "SDR", "SFR"], "Development": ["PDR", "CDR", "TRR", "SVR", "FCA", "PCA", "EVT", "DVT", "DV"],
+               "Production": ["PRR", "PV", "PVT", "MRR"], "Utilization": ["ORR", "SOP", "LAUNCH", "LRR"], "Support": ["ISR"], "Retirement": ["DRR", "DR"]}
+# which technical process the model is converging on inside the stage (shown as the sub-phase)
 
 def _last_change(store) -> dict[str, float]:
     """element id → last applied-patch time (0 for seeded elements)."""
@@ -50,27 +54,32 @@ def staleness(m, store=None):
             upstream.append({"from": a, "rel": rel, "to": b, "changed": ta, "downstream_last": tb})
     return {"stale_verification": stale_ver, "upstream_evolved": upstream}
 
-def convergence(m):
+def convergence(m, detail=False):
+    """Life-cycle stage (INCOSE/ISO 15288) the product is in, inferred from the model, and the technical process it is converging on.
+    meta/program.stage overrides the stage; the process is always inferred."""
     prog = m.get("program") or {}
-    if prog.get("stage") in LIFECYCLE: return prog["stage"]
-    rep = D.coverage_report(m); c = rep["counts"]
-    if not m["requirements"]: return "Concept"
-    if rep["needs_without_requirements"] or rep["requirements_without_tests"]: return "Requirements"
-    if rep["functions_without_allocation"] or rep["unassessed_candidates"] or not m["parts"]: return "Architecture and detailed design"
+    rep = D.coverage_report(m)
     tests = list(m["tests"].values()); passed = sum(1 for t in tests if t.get("status") == "passed")
-    if tests and passed < len(tests): return "Verification"
-    if m.get("process_steps") and rep["process_steps_without_pfmea"]: return "Production readiness"
-    if m.get("field_events"): return "Operations"
-    return "Launch"
+    if not m["requirements"] or rep["needs_without_requirements"]: stage, proc = "Concept", "Stakeholder needs and requirements definition" if m["needs"] else "Business or mission analysis"
+    elif rep["requirements_without_tests"] and not m["functions"]: stage, proc = "Development", "System requirements definition"
+    elif rep["functions_without_allocation"] or not m["parts"]: stage, proc = "Development", "System architecture definition" if not m["logical_components"] else "Design definition"
+    elif rep["unassessed_candidates"] or rep["high_ap_fm_without_tests"]: stage, proc = "Development", "System analysis"
+    elif rep.get("buy_parts_without_supplier"): stage, proc = "Development", "Implementation"
+    elif tests and passed < len(tests): stage, proc = "Development", "Verification"
+    elif m.get("process_steps") and (rep["process_steps_without_pfmea"] or rep.get("unassessed_process_candidates")): stage, proc = "Production", "Transition"
+    elif m.get("field_events"): stage, proc = ("Support", "Maintenance") if rep["field_events_without_fm"] else ("Utilization", "Operation")
+    else: stage, proc = "Production", "Validation"
+    if prog.get("stage") in LIFECYCLE: stage = prog["stage"]
+    return (stage, proc) if detail else stage
 
 def gate_readiness(m, store=None):
-    rep = D.coverage_report(m); st = staleness(m, store); stage = convergence(m)
+    rep = D.coverage_report(m); st = staleness(m, store); stage, phase = convergence(m, detail=True)
     tests = list(m["tests"].values()); passed = sum(1 for t in tests if t.get("status") == "passed"); share = passed / len(tests) if tests else 0.0
     measured = {k: (len(v) if hasattr(v, "__len__") and not isinstance(v, dict) else v) for k, v in rep.items() if k not in ("counts", "clean")}
     measured["stale_verification"] = len(st["stale_verification"]); measured["upstream_evolved"] = len(st["upstream_evolved"]); measured["tests_passed_share"] = round(share, 3)
     gates = []
     for g, gv in m["gates"].items():
-        gstage = gv.get("stage") or next((s for s, names in STAGE_GATES.items() if g.upper() in names), stage)
+        gstage = (gv.get("stage") if gv.get("stage") in LIFECYCLE else None) or next((s for s, names in STAGE_GATES.items() if g.upper() in names), stage)
         crit = gv.get("criteria") or DEFAULT_CRITERIA.get(gstage, {})
         rows = []
         for k, limit in crit.items():
@@ -84,7 +93,7 @@ def gate_readiness(m, store=None):
                       "score": round(100 * sum(1 for r in rows if r["ok"]) / max(1, len(rows)))})
     gates.sort(key=lambda g: g["date"])
     nxt = next((g for g in gates if g["status"] != "passed"), gates[-1] if gates else None)
-    return {"stage": stage, "stages": LIFECYCLE, "stage_index": LIFECYCLE.index(stage), "gates": gates, "next_gate": nxt, "measured": measured,
+    return {"stage": stage, "phase": phase, "stages": LIFECYCLE, "stage_index": LIFECYCLE.index(stage), "gates": gates, "next_gate": nxt, "measured": measured,
             "alerts": _alerts(m, rep, st), "verification": {"coverage": [len(m["requirements"]) - len(rep["requirements_without_tests"]), len(m["requirements"])], "passed": [passed, len(tests)], "fresh": [len(tests) - len(st["stale_verification"]), len(tests)]}}
 
 def _alerts(m, rep, st):
