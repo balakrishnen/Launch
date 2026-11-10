@@ -5,10 +5,11 @@ export const KIND_LABEL: Record<string, string> = {
   regulations: 'Regulations', requirements: 'Requirements', functions: 'Functions', logical_components: 'Logical components', logical_interfaces: 'Logical interfaces',
   parts: 'Parts', nodes: 'Physical nodes', interfaces: 'Interfaces', states: 'States', transitions: 'Transitions', arch_decisions: 'Architecture decisions',
   trades: 'Trade studies', constraints: 'Constraints', tests: 'Tests', gates: 'Gates', fm_assessments: 'FMEA assessments', fmea: 'Failure modes',
+  teams: 'Teams', process_steps: 'Process steps', suppliers: 'Suppliers', work_items: 'Work items', findings: 'Findings', handoffs: 'Handoffs', field_events: 'Field events', risks: 'Program risks', reviews: 'Design reviews',
 }
 export const STAGE_COLOR: Record<string, string> = {
   '1 Needs': 'var(--s1)', '2 Requirements': 'var(--s2)', '3 Logical architecture': 'var(--s3)', '4 Physical architecture': 'var(--s4)',
-  '5 Analysis': 'var(--s5)', '6 Verification': 'var(--s6)', 'Risk (derived)': 'var(--sr)',
+  '5 Analysis': 'var(--s5)', '6 Verification': 'var(--s6)', 'Risk (derived)': 'var(--sr)', 'Manufacturing': '#7c5c2b', 'Supply chain': '#6d28d9', 'Program': '#0e7490', 'Operations': '#9f1239',
 }
 export const FORMS: { id: string; title: string; std: string; stage: string; group: string }[] = [
   { id: 'reqspec', title: 'Requirements specification', std: 'ISO/IEC/IEEE 29148', stage: '2 Requirements', group: 'Requirements' },
@@ -22,6 +23,14 @@ export const FORMS: { id: string; title: string; std: string; stage: string; gro
   { id: 'n2l', title: 'N² — logical', std: 'NASA SE Handbook', stage: '3 Logical architecture', group: 'Architecture' },
   { id: 'icd', title: 'ICD index', std: 'MIL-STD-961 outline', stage: '4 Physical architecture', group: 'Architecture' },
   { id: 'pugh', title: 'Trade matrices', std: 'Pugh / weighted', stage: '5 Analysis', group: 'Analysis' },
+  { id: 'pfmea', title: 'PFMEA', std: 'AIAG & VDA 2019', stage: 'Manufacturing', group: 'Manufacturing' },
+  { id: 'control_plan', title: 'Control plan', std: 'AIAG APQP', stage: 'Manufacturing', group: 'Manufacturing' },
+  { id: 'avl', title: 'AVL / sourcing', std: 'approved vendor list', stage: 'Supply chain', group: 'Supply chain' },
+  { id: 'work_items', title: 'Work items', std: 'program tasks', stage: 'Program', group: 'Program' },
+  { id: 'findings', title: 'Findings', std: 'reviews, audits, tests, field', stage: 'Program', group: 'Program' },
+  { id: 'handoffs', title: 'Handoffs', std: 'cross-functional evidence', stage: 'Program', group: 'Program' },
+  { id: 'risks', title: 'Program risk register', std: '5×5', stage: 'Program', group: 'Program' },
+  { id: 'fracas', title: 'FRACAS', std: 'field failures → DFMEA', stage: 'Operations', group: 'Operations' },
 ]
 export const MATRIX_PAIRS: [string, string][] = [['requirements', 'functions'], ['functions', 'parts'], ['requirements', 'tests'], ['needs', 'requirements'], ['regulations', 'requirements'], ['logical_components', 'parts'], ['functions', 'logical_components'], ['constraints', 'tests']]
 

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, sysml, views, docs, forms, quality, oslc, oslc_oauth
+from .. import derive, schema, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -102,7 +102,15 @@ class Session:
             new = [p.id for p in self.store.list_patches("staged") if p.id not in staged0]
             for pid in new:
                 if self.auto: self.store.approve(pid, approver="auto"); self.emit("patch_applied", id=pid)
-                else: self.emit("patch_staged", id=pid, patch=patch_summary(self.store, pid))
+                else:
+                    self.emit("patch_staged", id=pid, patch=patch_summary(self.store, pid))
+                    try:
+                        p = self.store.get_patch(pid)
+                        for op in p.ops:
+                            v = op.value or {}
+                            who = v.get("owner") or v.get("accepted_by") or ""
+                            if op.kind in ("work_items", "findings") and who: C.notify(os.path.dirname(self.root), who, "assignment", f"agent proposed {op.kind[:-1]} {op.id}: {v.get('title','')}", f"/p/{self.pid}/inbox", self.pid)
+                    except Exception: pass
             if new: self.emit("model_changed")
         except Exception as e:
             self.emit("error", text=f"{type(e).__name__}: {e}")
@@ -181,6 +189,11 @@ class Sync(BaseModel):
     parent: str | None = None
 class Baseline(BaseModel):
     name: str
+class CommentIn(BaseModel):
+    element: str
+    text: str
+    parent: str | None = None
+    assign: str | None = None
 class Perm(BaseModel):
     answer: str
 class Settings(BaseModel):
@@ -311,7 +324,7 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def project(pid: str, user: str = U):
         S = W.get(pid)
         m = S.store.load(); rep = derive.coverage_report(m)
-        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "stage_of": STAGE_OF, "fmea_counts": rep["counts"],
+        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": m.get("program", {}).get("stage"), "stage_of": STAGE_OF, "fmea_counts": rep["counts"],
                 "coverage": {k: (len(v) if hasattr(v, "__len__") and not isinstance(v, dict) else v) for k, v in rep.items() if k != "counts"},
                 "staged": len(S.store.list_patches("staged")), "busy": S.busy, "auto": S.auto, "toolchain": S.tc, "roles": {k: v["title"] for k, v in R.ROLES.items()}, "role_order": R.ORDER}
 
@@ -360,6 +373,29 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         S = W.get(pid)
         if not hasattr(S.store, "diff"): raise HTTPException(400, "history needs the database store")
         return S.store.diff(rev_a, rev_b)
+
+    @app.get("/api/p/{pid}/lifecycle")
+    def lifecycle_state(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        return {**lifecycle.gate_readiness(m, S.store), "workflows": lifecycle.workflows(m), "teams": lifecycle.team_workload(m), "staleness": lifecycle.staleness(m, S.store)}
+
+    @app.get("/api/p/{pid}/comments")
+    def list_comments(pid: str, element: str | None = None, user: str = U):
+        S = W.get(pid); return C.list_comments(S.root, element)
+    @app.post("/api/p/{pid}/comments")
+    def add_comment(pid: str, c: CommentIn, user: str = U):
+        S = W.get(pid); rec = C.add(S.root, c.element, user, c.text, c.parent, c.assign)
+        for who in rec["mentions"] + ([c.assign] if c.assign else []): C.notify(S.root, who, "mention" if who in rec["mentions"] else "assignment", f"{user} on {c.element}: {c.text[:120]}", f"/p/{pid}/element/{{kind}}/{c.element}", pid)
+        S.emit("comment", **rec); return rec
+    @app.post("/api/p/{pid}/comments/{cid}/resolve")
+    def resolve_comment(pid: str, cid: str, user: str = U):
+        S = W.get(pid); return C.resolve(S.root, cid, user)
+    @app.get("/api/notifications")
+    def notifications(request: Request, user: str = U):
+        return C.notifications_for(W.data_root or os.path.dirname(W.single), user)
+    @app.post("/api/notifications/read")
+    def notifications_read(request: Request, user: str = U):
+        C.mark_read(W.data_root or os.path.dirname(W.single), user); return {"ok": True}
 
     @app.get("/api/p/{pid}/scorecard")
     def scorecard(pid: str, user: str = U):

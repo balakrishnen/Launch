@@ -4,6 +4,7 @@ import { GitBranch, MessageSquare, Search } from 'lucide-react'
 import { useProject } from '../state'
 import { P, KIND_LABEL, type ElementPage } from '../api'
 import { Cell, IdLink, StagePill, Linkified } from '../components/common'
+import { Comments } from './Lifecycle'
 
 export function Element() {
   const { kind = '', id = '' } = useParams(); const { pid, send, openTab, project, patches } = useProject(); const nav = useNavigate()
@@ -45,6 +46,7 @@ export function Element() {
       {(e.unassessed || []).length > 0 && <div style={{ marginTop: 8 }}><b style={{ color: 'var(--warn)' }}>{e.unassessed!.length} unassessed</b>: {e.unassessed!.map(u => u.guide).join(', ')} <button className="chip" onClick={() => send(`Assess or screen every remaining failure-mode candidate of ${eid} with causes derived from the architecture`)}>ask the agent</button></div>}</div>}
     {tab === 'impact' && (im ? <div className="card" style={{ borderColor: '#f5d78e' }}><div className="row between"><h4>If {eid} changes — {im.affected.length} elements within 3 hops</h4>{highAp > 0 && <span className="pill bad">{highAp} High-AP failure modes</span>}</div>
       <div className="link"><span className="rel">requirements</span>{lst(im.requirements)}</div><div className="link"><span className="rel">functions</span>{lst(im.functions)}</div><div className="link"><span className="rel">parts</span>{lst(im.parts)}</div><div className="link"><span className="rel">decisions</span>{lst(im.arch_decisions)}</div><div className="link"><span className="rel">failure modes</span>{lst(im.failure_modes)}</div><div className="link"><span className="rel"><b>tests to re-run</b></span>{lst(im.tests_to_rerun)}</div></div> : <div className="empty">no impact data</div>)}
+    {tab !== 'history' && <Comments element={eid} />}
     {tab === 'history' && <div className="card">{e.provenance.length ? e.provenance.map((p: any, i: number) => <div key={i} className="link"><span className="rel">{new Date(p.ts * 1000).toLocaleString()}</span><span><b>{p.author}</b> → approved by {p.approver} · {p.rationale}{p.sources?.length ? <span className="muted"> · sources: {p.sources.join(', ')}</span> : null}{p.rev ? <span className="muted"> · rev {p.rev}</span> : null}</span></div>) : <span className="muted">No patch history (seeded element).</span>}</div>}
   </div>
 }

@@ -59,6 +59,31 @@ drawer that pushes the content rather than covering it, with a review inbox for 
 The single-file UI remains at `/legacy`. A read-only review build (`VITE_REVIEW=1 npm run build`) runs the same app over
 a frozen `data.json` for sharing without a backend.
 
+## Whole company, one thread
+
+Launch is built for every stakeholder of a hardware launch — a 1,000-person company shipping a humanoid robot or a smart coffee maker — not only the systems engineers. The model carries the program layer as first-class elements, so each team sees its own forms while the agent keeps them consistent with the engineering thread.
+
+| Stakeholder | What they work in | Model elements |
+|---|---|---|
+| Product / program management | Lifecycle overview, gate readiness (PDR/CDR/EVT/DVT/PVT/MP), risk register, work items, handoffs board | `gates`, `risks`, `work_items`, `handoffs`, `teams`, `program.stage` |
+| Systems engineering | Needs → requirements → logical → physical, N², ICD, trade studies, budgets, impact | the digital thread |
+| Mechanical / electrical / firmware | Parts by discipline, interfaces, design decisions, DFMEA rows for their functions | `parts`, `interfaces`, `arch_decisions`, `fmea` |
+| Safety / reliability / quality | AIAG-VDA DFMEA, hazard register, FTA, DRBFM, findings log, scorecard | `fmea`, `hazards`, `findings`, `reviews` |
+| Manufacturing / NPI | Process flow, PFMEA (process steps × process guide words), control plan | `process_steps`, `fmea` (process), `work_items` |
+| Sourcing / supply chain | Approved vendor list, make/buy, supplier risk and lifecycle | `suppliers`, `parts.supplier`, `parts.make_buy` |
+| Test / V&V | DVP&R, VCRM, test status and freshness vs. the requirement revision | `tests.status`, `tests.result_rev`, `tests.samples` |
+| Field / service / customer quality | FRACAS: field events linked to failure modes, corrective-action work items | `field_events`, `fmea`, `work_items` |
+| Reviewers / leadership | Review inbox, convergence state per stage, blocking alerts, comments and @mentions | patches, `reviews`, comments, notifications |
+
+The lifecycle layer (`sethread/lifecycle.py`) computes, from the model alone:
+
+- **Convergence** per stage — how settled Requirements, Architecture, Detailed Design, V&V and Manufacturing are, from change rate and open gaps.
+- **Evidence readiness** for the next gate — exit criteria per stage, verification coverage, verification *freshness* (tests whose result predates the requirement's last revision are stale), finding closure, accepted handoffs.
+- **Alerts** — stale items whose upstream evolved, stale verification links, blocking conformance findings, required handoffs not yet accepted.
+- **Concurrent workflows** — cross-team handoffs and who is waiting on whom; **team workload** — open items per team.
+
+Each team has an agent role (`manufacturing`, `sourcing`, `program`, `field_quality`, plus the engineering roles), and every change any of them proposes lands in the same review inbox as a patch.
+
 ## Two front ends, one engine
 
 * **`launch ui <dir>`** (one local project) / **`launch serve --data <root>`** (hosted, many projects and users) — the app most people use. A browser window with three panes: the digital thread on the left

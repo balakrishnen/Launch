@@ -163,8 +163,9 @@ class DbStore:
         with self.db.connect() as c:
             for r in self.db.exec(c, "SELECT id,author,approver,rationale,sources,ops,applied,rev FROM patches WHERE tenant=? AND project=? AND status='applied' ORDER BY rev DESC", (self.tenant, self.project)):
                 ops = json.loads(r[5])
-                if any(o["kind"] == kind and o["id"] == eid for o in ops):
-                    out.append({"ts": r[6], "patch": r[0], "author": r[1], "approver": r[2], "rationale": r[3], "sources": json.loads(r[4]), "ops": ops, "rev": r[7]})
+                mine = [o for o in ops if o["kind"] == kind and o["id"] == eid]
+                if mine:
+                    out.append({"ts": r[6], "patch": r[0], "author": r[1], "approver": r[2], "rationale": r[3], "sources": json.loads(r[4]), "ops": mine, "n_ops": len(ops), "rev": r[7]})
         return out
 
     # ---- history ----

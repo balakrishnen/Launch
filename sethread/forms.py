@@ -125,6 +125,20 @@ def form(m, name):
             ("3. Failure Cause (FC) of the Next Lower Element or Characteristic", "cause"), ("Current Prevention Control (PC) of FC", "controls"), ("Occurrence (O) of FC", "O"), ("Detection (D) of FC/FM", "D")]}
         out["merge_cols"] = [3, 4, 5, 6, 7]   # structure/function cells merge across consecutive rows of the same element
         out["row_elements"] = [f["element"] for f in fm]
+    if name in ("work_items", "findings", "handoffs", "risks", "fracas"):
+        kind = {"work_items": "work_items", "findings": "findings", "handoffs": "handoffs", "risks": "risks", "fracas": "field_events"}[name]
+        out["row_keys"] = [r[0] for r in rows]; out["kind"] = kind
+        ed = {"work_items": {"Title": "title", "Priority": "priority", "Status": "status", "Owner": "owner", "Due": "due", "Notes": "notes"},
+              "findings": {"Title": "title", "Severity": "severity", "Status": "status", "Owner": "owner", "Action": "action", "Due": "due", "Closed": "closed"},
+              "handoffs": {"Evidence / deliverable": "what", "Due": "due", "Status": "status", "Accepted by": "accepted_by", "Note": "note"},
+              "risks": {"Title": "title", "Probability (1-5)": "prob", "Impact (1-5)": "impact", "Owner": "owner", "Mitigation": "mitigation", "Status": "status"},
+              "fracas": {"Symptom": "symptom", "Disposition": "disposition", "8D status": "eight_d", "Status": "status", "FM id": "fm"}}[name]
+        out["editable"] = {headers.index(h): f for h, f in ed.items() if h in headers}
+    if name == "pfmea":
+        fm = [f for f in D.fmea(m) if f["kind"] == "process"]; idx = {(a["element"], a["guide"]): k for k, a in m["fm_assessments"].items()}
+        out["row_keys"] = [idx.get((f["element"], f["guide"])) for f in fm]; out["kind"] = "fm_assessments"
+        out["editable"] = {headers.index(h): fld for h, fld in [("Failure effect (FE)", "effect"), ("S", "S"), ("Failure mode (FM)", "mode"), ("Failure cause (FC)", "cause"), ("O", "O"), ("D", "D")]}
+        out["rating_tables"] = RATING_TABLES; out["merge_cols"] = [2, 3, 4]; out["row_elements"] = [f["element"] for f in fm]
     if name == "reqspec":
         out["row_keys"] = list(m["requirements"]); out["kind"] = "requirements"
         out["editable"] = {headers.index("Statement"): "text", headers.index("Attribute / measurable condition"): "attr", headers.index("Type"): "type", headers.index("Verification method"): "verify"}
@@ -256,3 +270,89 @@ FORMS.update({
 })
 
 MATRIX_PAIRS = [("requirements", "functions"), ("functions", "parts"), ("requirements", "tests"), ("needs", "requirements"), ("regulations", "requirements"), ("logical_components", "parts"), ("functions", "logical_components"), ("constraints", "tests")]
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Whole-company forms: manufacturing, supply chain, program, quality/field
+
+def pfmea(m):
+    """AIAG-VDA PFMEA: process steps × process guide words (candidates), rows from fm_assessments with element = process step."""
+    fm = [f for f in D.fmea(m) if f["kind"] == "process"]; rows = []
+    for i, f in enumerate(fm, 1):
+        ps = m["process_steps"][f["element"]]
+        rows.append([i, f["id"], ps["station"], ps["name"], ", ".join(ps.get("characteristics", [])), f["effect"], f["S"], f["mode"], f["cause"], ps.get("controls", "") or f["controls"], f["O"],
+                     "; ".join(f"{t} {m['tests'][t]['name']}" for t in f["tests"] if t in m["tests"]) or (f"EOL {ps['eol_test']}" if ps.get("eol_test") else "—"), f["D"], f["AP"], "SC" if f["S"] >= 9 else "", f["guide"]])
+    groups = [("", 2), ("STRUCTURE / PROCESS STEP", 3), ("FAILURE ANALYSIS", 4), ("RISK ANALYSIS", 6), ("", 1)]
+    headers = ["#", "FM id", "Station / work element", "Process step", "Product / process characteristics", "Failure effect (FE)", "S", "Failure mode (FM)", "Failure cause (FC)", "Prevention control", "O", "Detection control (incl. EOL test)", "D", "AP", "SC", "Guide word"]
+    return groups, headers, [4, 8, 16, 24, 26, 30, 5, 28, 30, 28, 5, 28, 5, 5, 5, 12], rows
+
+def control_plan(m):
+    rows = []
+    for p, ps in sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("seq", 0)):
+        fms = [f for f in D.fmea(m) if f["element"] == p]
+        chars = ps.get("characteristics") or ["—"]
+        for c in chars:
+            rows.append([ps.get("seq", ""), p, ps["station"], ps["name"], c, "SC" if any(f["S"] >= 9 for f in fms) else "", ", ".join(m["parts"][x]["name"] for x in ps.get("parts", []) if x in m["parts"]),
+                         ps.get("controls", ""), (m["tests"][ps["eol_test"]]["name"] if ps.get("eol_test") in m["tests"] else "—"), (m["tests"][ps["eol_test"]].get("passfail", "") if ps.get("eol_test") in m["tests"] else ""), ps.get("cycle_s", ""), m.get("teams", {}).get(ps.get("team"), {}).get("name", ""), ", ".join(f["id"] for f in fms)])
+    headers = ["Seq", "Step id", "Station", "Process step", "Characteristic", "Special char.", "Parts", "Control method (prevention)", "Measurement / EOL test", "Spec / pass-fail", "Cycle (s)", "Owner team", "PFMEA rows"]
+    return [("CONTROL PLAN (AIAG APQP)", len(headers))], headers, [4, 7, 14, 24, 22, 7, 22, 30, 24, 20, 7, 12, 14], rows
+
+def avl(m):
+    rows = []
+    for p, pv in m["parts"].items():
+        if pv.get("parent") is None and not pv.get("make_buy"): continue
+        sp = m.get("suppliers", {}).get(pv.get("supplier") or "", {})
+        rows.append([p, pv["name"], pv.get("discipline", ""), pv.get("make_buy", ""), pv.get("lifecycle", "active"), pv.get("supplier") or "", sp.get("name", ""), sp.get("status", ""), sp.get("country", ""), sp.get("lead_time_d", ""), (m["suppliers"][sp["second_source"]]["name"] if sp.get("second_source") in m.get("suppliers", {}) else ""), pv.get("attrs", {}).get("cost_usd", ""), pv.get("attrs", {}).get("mass_g", ""), sp.get("risk", "")])
+    headers = ["Part", "Name", "Discipline", "Make/buy", "Lifecycle", "Supplier id", "Supplier", "Status", "Country", "Lead time (d)", "Second source", "Cost (USD)", "Mass (g)", "Supply risk"]
+    return [("APPROVED VENDOR LIST / SOURCING", len(headers))], headers, [7, 22, 10, 8, 9, 9, 20, 9, 9, 9, 18, 9, 8, 20], rows
+
+def risk_register(m):
+    rows = []
+    for r, rv in m.get("risks", {}).items():
+        score = int(rv["prob"]) * int(rv["impact"]); lvl = "H" if score >= 15 else "M" if score >= 8 else "L"
+        rows.append([r, rv["title"], rv["prob"], rv["impact"], score, lvl, rv.get("owner", ""), m.get("teams", {}).get(rv.get("team"), {}).get("name", ""), rv.get("mitigation", ""), rv.get("status", "open"), ", ".join(rv.get("links", []))])
+    headers = ["Risk", "Title", "Probability (1-5)", "Impact (1-5)", "Score", "Level", "Owner", "Team", "Mitigation", "Status", "Linked elements"]
+    rows.sort(key=lambda r: -r[4])
+    return [("PROGRAM RISK REGISTER (5×5)", len(headers))], headers, [7, 30, 8, 8, 6, 5, 12, 12, 36, 8, 18], rows
+
+def fracas(m):
+    rows = []
+    for e, ev in sorted(m.get("field_events", {}).items(), key=lambda kv: kv[1]["date"], reverse=True):
+        fm = next((f for f in D.fmea(m) if f["id"] == ev.get("fm")), None)
+        rows.append([e, ev["date"], ev.get("unit", ""), ev["symptom"], ev.get("count", 1), ev.get("severity", ""), ", ".join(m["parts"][p]["name"] for p in ev.get("parts", []) if p in m["parts"]), ev.get("fm", ""), fm["mode"] if fm else "— not tied to a failure mode", fm["AP"] if fm else "", ev.get("disposition", ""), ev.get("eight_d", ""), ev.get("status", "open")])
+    headers = ["Event", "Date", "Unit / lot", "Symptom", "Count", "Severity", "Parts", "FM id", "Failure mode (DFMEA)", "AP", "Disposition", "8D status", "Status"]
+    return [("FRACAS — FIELD FAILURE LOG", len(headers))], headers, [7, 10, 12, 34, 6, 8, 22, 8, 30, 5, 24, 10, 8], rows
+
+def work_items(m):
+    rows = []
+    order = {"blocked": 0, "open": 1, "in_progress": 2, "done": 3}
+    for w, wv in sorted(m.get("work_items", {}).items(), key=lambda kv: (order.get(kv[1]["status"], 9), kv[1].get("due", ""))):
+        rows.append([w, wv["title"], wv.get("priority", "P2"), wv["status"], wv["owner"], m.get("teams", {}).get(wv.get("team"), {}).get("name", ""), wv.get("due", ""), wv.get("gate") or "", ", ".join(wv.get("links", [])), wv.get("notes", "")])
+    headers = ["Item", "Title", "Priority", "Status", "Owner", "Team", "Due", "Gate", "Linked elements", "Notes"]
+    return [("WORK ITEMS", len(headers))], headers, [7, 34, 6, 10, 12, 12, 10, 6, 20, 24], rows
+
+def findings_log(m):
+    rows = []
+    sev = {"critical": 0, "major": 1, "minor": 2}
+    for f, fv in sorted(m.get("findings", {}).items(), key=lambda kv: (kv[1]["status"] == "closed", sev.get(kv[1]["severity"], 9))):
+        rows.append([f, fv["title"], fv["severity"], fv["status"], fv.get("source", ""), fv.get("element", ""), fv.get("owner", ""), fv.get("action", ""), fv.get("due", ""), fv.get("gate") or "", fv.get("closed", "")])
+    headers = ["Finding", "Title", "Severity", "Status", "Source", "Element", "Owner", "Action", "Due", "Gate", "Closed"]
+    return [("FINDINGS (REVIEWS, AUDITS, TESTS, FIELD)", len(headers))], headers, [7, 34, 8, 8, 9, 10, 12, 30, 10, 6, 10], rows
+
+def handoffs_board(m):
+    rows = []; teams = m.get("teams", {})
+    for h, hv in sorted(m.get("handoffs", {}).items(), key=lambda kv: (kv[1]["status"] != "pending", kv[1].get("due", ""))):
+        rows.append([h, teams.get(hv["from_team"], {}).get("name", hv["from_team"]), teams.get(hv["to_team"], {}).get("name", hv["to_team"]), hv["what"], ", ".join(hv.get("elements", [])), hv.get("gate") or "", hv.get("due", ""), hv["status"], hv.get("accepted_by", ""), hv.get("note", "")])
+    headers = ["Handoff", "From team", "To team", "Evidence / deliverable", "Elements", "Gate", "Due", "Status", "Accepted by", "Note"]
+    return [("CROSS-FUNCTIONAL HANDOFFS", len(headers))], headers, [7, 14, 14, 32, 20, 6, 10, 9, 14, 24], rows
+
+FORMS.update({
+    "pfmea": ("PFMEA — AIAG & VDA", "Process FMEA over the process flow (process steps × process guide words)", pfmea),
+    "control_plan": ("Control plan", "AIAG APQP control plan from process steps, characteristics and EOL tests", control_plan),
+    "avl": ("AVL / sourcing", "Approved vendor list: supplier, status, lead time, second source, cost, lifecycle", avl),
+    "risks": ("Program risk register", "5×5 probability × impact with owners and mitigations", risk_register),
+    "fracas": ("FRACAS", "Field failure reporting, analysis and corrective action, tied to the DFMEA", fracas),
+    "work_items": ("Work items", "Program tasks with owners, teams, due dates, gates and linked elements", work_items),
+    "findings": ("Findings", "Review, audit, test and field findings with closure", findings_log),
+    "handoffs": ("Handoffs", "Cross-functional evidence handoffs between teams, pending until accepted", handoffs_board),
+})

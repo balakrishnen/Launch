@@ -128,5 +128,6 @@ class Store:
         hits = []
         for line in open(self.log_path):
             rec = json.loads(line)
-            if any(o["kind"] == kind and o["id"] == eid for o in rec["ops"]): hits.append(rec)
+            mine = [o for o in rec["ops"] if o["kind"] == kind and o["id"] == eid]
+            if mine: hits.append({**rec, "ops": mine, "n_ops": len(rec["ops"])})
         return list(reversed(hits))

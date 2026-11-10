@@ -1341,6 +1341,7 @@ parts:
       sizes: 54–62 cm
     discipline: textile
     context: false
+    owner_team: TM-ME
   P-KNIT:
     name: knitYarnDyes
     type: KnitMaterial
@@ -1348,6 +1349,9 @@ parts:
     attrs: {}
     discipline: textile
     context: false
+    owner_team: TM-ME
+    make_buy: buy
+    supplier: SUP-01
   P-TRIM:
     name: sweatbandTrim
     type: Trim
@@ -1355,6 +1359,7 @@ parts:
     attrs: {}
     discipline: textile
     context: false
+    owner_team: TM-ME
   P-ARRAY:
     name: array
     type: SensorArray
@@ -1364,6 +1369,7 @@ parts:
       siteFootprint: ~1 mm
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-ASIC:
     name: asic[*]
     type: SensorASIC
@@ -1373,6 +1379,9 @@ parts:
       qual: JESD47 by vendor
     discipline: electrical
     context: false
+    owner_team: TM-EE
+    make_buy: buy
+    supplier: null
   P-FLEX:
     name: flex
     type: FlexInterconnect
@@ -1383,6 +1392,9 @@ parts:
       class: IPC-6013 class 2
     discipline: electrical
     context: false
+    owner_team: TM-EE
+    make_buy: buy
+    supplier: null
   P-COATING:
     name: electrodeCoating
     type: Coating
@@ -1391,6 +1403,7 @@ parts:
       nickelFree: required
     discipline: chemical
     context: false
+    owner_team: TM-ME
   P-ENCAP:
     name: encapsulant
     type: Encapsulant
@@ -1398,6 +1411,7 @@ parts:
     attrs: {}
     discipline: chemical
     context: false
+    owner_team: TM-ME
   P-MODULE:
     name: module
     type: ElectronicsModule
@@ -1407,6 +1421,9 @@ parts:
       location: crown
     discipline: electrical
     context: false
+    owner_team: TM-EE
+    supplier: SUP-02
+    make_buy: buy
   P-MCU:
     name: mcu
     type: MCU
@@ -1414,6 +1431,7 @@ parts:
     attrs: {}
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-RADIO:
     name: radioIC
     type: RadioIC
@@ -1423,6 +1441,7 @@ parts:
       modular: preferred
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-CHARGER:
     name: charger
     type: ChargerIC
@@ -1433,6 +1452,7 @@ parts:
       OVP: 6 V
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-GAUGE:
     name: gauge
     type: FuelGauge
@@ -1440,6 +1460,7 @@ parts:
     attrs: {}
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-NTC:
     name: cellThermistor
     type: NTC
@@ -1448,6 +1469,7 @@ parts:
       faultDetect: open/short
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-NTC2:
     name: scalpThermistor
     type: NTC
@@ -1456,6 +1478,7 @@ parts:
       placement: hottest scalp-side point (from thermal map)
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-HOUSING:
     name: housing
     type: Housing
@@ -1466,6 +1489,7 @@ parts:
       R_th_scalp: TBD
     discipline: mechanical
     context: false
+    owner_team: TM-ME
   P-BATT:
     name: battery
     type: BatteryPack
@@ -1475,6 +1499,7 @@ parts:
       cycleLife: 500 @ 80 %
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-CELL:
     name: cell
     type: LiPoCell
@@ -1483,6 +1508,9 @@ parts:
       cert: UL 1642 / 62133-2
     discipline: chemical
     context: false
+    owner_team: TM-EE
+    make_buy: buy
+    supplier: SUP-03
   P-PCM:
     name: pcm
     type: ProtectionCircuit
@@ -1491,6 +1519,7 @@ parts:
       OVtrip: ≤ 4.3 V
     discipline: electrical
     context: false
+    owner_team: TM-EE
   P-FW:
     name: fw
     type: Firmware
@@ -1498,6 +1527,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-FW-ACQ:
     name: acquire
     type: AcquisitionService
@@ -1505,6 +1536,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-FW-DEC:
     name: decode
     type: DecodePipeline
@@ -1512,6 +1545,8 @@ parts:
     attrs: {}
     discipline: software
     context: false
+    owner_team: TM-SW
+    make_buy: make
   P-FW-BLE:
     name: ble
     type: BLEStack
@@ -1519,6 +1554,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-FW-DIAG:
     name: diag
     type: Diagnostics
@@ -1526,6 +1563,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-FW-CHG:
     name: chargeCtl
     type: ChargeController
@@ -1533,6 +1572,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-FW-PWR:
     name: powerMgr
     type: PowerManager
@@ -1540,6 +1581,8 @@ parts:
     attrs: {}
     discipline: firmware
     context: false
+    owner_team: TM-FW
+    make_buy: make
   P-HEAD:
     name: head
     type: Head
@@ -1575,6 +1618,7 @@ parts:
     attrs: {}
     discipline: mechanical
     context: true
+    owner_team: TM-ME
 nodes:
   ND-TEXTILE:
     name: Textile node
@@ -2128,6 +2172,9 @@ tests:
     units: '8'
     passfail: Functional; ≤ 0.5 % channels drift > 20 %; no opens on X-ray of 2 units
     kind: test
+    status: passed
+    result: pass
+    owner_team: TM-TEST
   T-E2:
     name: Damp heat, cyclic
     method: IEC 60068-2-30 Db, 25/55 °C, 93 % RH, 6 cycles
@@ -2135,6 +2182,7 @@ tests:
     units: '8'
     passfail: Functional; no corrosion; leakage < 10 µA
     kind: test
+    status: planned
   T-E3:
     name: Damp heat, steady
     method: IEC 60068-2-78, 40 °C/93 % RH, 500 h powered
@@ -2142,6 +2190,7 @@ tests:
     units: '8'
     passfail: As E2; self-discharge < 3 %/month
     kind: test
+    status: planned
   T-E4:
     name: Cold operation and pulse load
     method: IEC 60068-2-1 Ab, −10 °C, 2 h; TX pulse load at −10 °C and EoL
@@ -2149,6 +2198,7 @@ tests:
     units: '4'
     passfail: Boots; BLE holds; no brown-out
     kind: test
+    status: planned
   T-E5:
     name: Hot operation and thermal map
     method: IEC 60068-2-2 Bb, +45 °C, 4 h; thermocouples at scalp interface
@@ -2156,6 +2206,7 @@ tests:
     units: '4'
     passfail: Skin-side ≤ 41 °C; hottest point found; thermistor placed there
     kind: test
+    status: planned
   T-M1:
     name: Random vibration (packaged)
     method: IEC 60068-2-64, 10–500 Hz, 1.5 Grms, 1 h/axis
@@ -2163,6 +2214,9 @@ tests:
     units: '4'
     passfail: Functional; no unseat
     kind: test
+    status: passed
+    result: pass
+    owner_team: TM-TEST
   T-M2:
     name: Shock
     method: IEC 60068-2-27, 50 g 11 ms, 3/direction
@@ -2170,6 +2224,7 @@ tests:
     units: '4'
     passfail: Functional
     kind: test
+    status: planned
   T-M3:
     name: Drop
     method: 1.0 m onto concrete, 6 orientations + 2 edges, powered
@@ -2177,6 +2232,7 @@ tests:
     units: '6'
     passfail: Functional; no housing crack; battery no deformation; ≤ 0.2 % new channel loss
     kind: test
+    status: planned
   T-M4:
     name: Tumble
     method: IEC 60068-2-32 Method 2, 0.5 m, 50 falls
@@ -2184,6 +2240,7 @@ tests:
     units: '4'
     passfail: As M3
     kind: test
+    status: planned
   T-M5:
     name: Don/doff and stretch cycling with BER
     method: Head form 54–62 cm, 2,000 don/doff; +20 % stretch 5,000 cycles; BER logged; knit vs flex stretch measured
@@ -2191,6 +2248,7 @@ tests:
     units: '6'
     passfail: ≤ 0.5 % channel loss; BER ≤ 1e-9; no cracks on cross-section; knit stretch ≤ flex limit
     kind: test
+    status: planned
   T-M6:
     name: Flex endurance
     method: IPC-TM-650 2.4.3 dynamic flex, 3 tightest radii, 10,000 cycles, continuity + BER
@@ -2198,6 +2256,7 @@ tests:
     units: 5 coupons
     passfail: No opens; ΔR < 10 %
     kind: test
+    status: planned
   T-M7:
     name: Knit abrasion
     method: ISO 12947 Martindale, 20,000 rubs
@@ -2205,6 +2264,7 @@ tests:
     units: '4'
     passfail: No exposed conductor; pilling ≥ grade 3
     kind: test
+    status: planned
   T-M8:
     name: Charge contact mate cycling
     method: 1,500 mate cycles after abrasion
@@ -2212,6 +2272,7 @@ tests:
     units: '4'
     passfail: ΔR < 50 mΩ; retention ≥ 70 %
     kind: test
+    status: planned
   T-I1:
     name: Water spray
     method: IEC 60529 IPX4, 10 min, powered
@@ -2219,6 +2280,7 @@ tests:
     units: '4'
     passfail: Functional; no ingress
     kind: test
+    status: planned
   T-I2:
     name: Artificial sweat
     method: ISO 105-E04 acid + alkaline, 24 h soak ×5, biased
@@ -2226,6 +2288,7 @@ tests:
     units: '8'
     passfail: Impedance drift ≤ 15 %; no corrosion; no discoloration
     kind: test
+    status: planned
   T-I3:
     name: Salt mist
     method: IEC 60068-2-52 Kb, 2 cycles
@@ -2233,6 +2296,7 @@ tests:
     units: '4'
     passfail: No corrosion on contacts
     kind: test
+    status: planned
   T-I4:
     name: Cleaning cycles
     method: Hand wash per care label, 20 cycles
@@ -2240,6 +2304,7 @@ tests:
     units: '4'
     passfail: Functional; label legible; no delamination
     kind: test
+    status: planned
   T-X1:
     name: ESD
     method: IEC 61000-4-2, ±8 kV contact, ±15 kV air, electrode field included
@@ -2247,6 +2312,7 @@ tests:
     units: '3'
     passfail: Criterion B at ±8/±15; A at ±4/±8
     kind: test
+    status: planned
   T-X2:
     name: Radiated immunity and latency
     method: IEC 61000-4-3, 3 V/m 80 MHz–6 GHz with decode running; latency measured
@@ -2254,6 +2320,7 @@ tests:
     units: '2'
     passfail: Noise floor rise < 2×; latency ≤ 1 s
     kind: test
+    status: planned
   T-X3:
     name: Charger conducted immunity/surge
     method: IEC 61000-4-4/-5/-6 on charger input
@@ -2261,6 +2328,7 @@ tests:
     units: '2'
     passfail: Criterion B
     kind: test
+    status: planned
   T-X4:
     name: Emissions pre-scan
     method: CISPR 32 Class B / FCC 15B
@@ -2268,6 +2336,7 @@ tests:
     units: '2'
     passfail: ≥ 6 dB margin
     kind: test
+    status: planned
   T-X5:
     name: Charging abuse
     method: 12 V on 5 V input; hot plug 100×; charge at −5 and +45 °C
@@ -2275,6 +2344,7 @@ tests:
     units: '4'
     passfail: No fire/vent; charger refuses and logs
     kind: test
+    status: planned
   T-X6:
     name: Skin leakage current
     method: Electrode DC leakage under single front-end fault, wet skin model; IEC 60601-1 patient-leakage values as target
@@ -2282,6 +2352,7 @@ tests:
     units: '4'
     passfail: ≤ 10 µA
     kind: test
+    status: planned
   T-H1:
     name: Fit and motion
     method: Head-form retention with walk/nod/lie-down profile; 20-wearer slip and pressure scoring
@@ -2289,6 +2360,7 @@ tests:
     units: '6'
     passfail: No slip; no pressure points; motion artefact rate ≤ spec
     kind: test
+    status: planned
   T-R1:
     name: Link robustness
     method: Range/reconnect with phone in pocket positions; 4 h soak with interference; protocol compatibility
@@ -2296,6 +2368,7 @@ tests:
     units: '4'
     passfail: Reconnect ≤ 5 s; loss ≤ 0.1 %
     kind: test
+    status: planned
   T-F1:
     name: Firmware fault injection and threshold sweep
     method: Inject every fault class; worn-detect on dry/wet/hair/conductive-stand forms; timers; fault handler cuts charger
@@ -2303,6 +2376,7 @@ tests:
     units: '2'
     passfail: Each class detected and correctly attributed; no charge while worn; cut ≤ 1 s
     kind: test
+    status: planned
   T-F2:
     name: Update robustness
     method: Power cut at 10 points in write sequence; low-SoC attempt
@@ -2310,6 +2384,7 @@ tests:
     units: '20'
     passfail: Always bootable; low-SoC refused
     kind: test
+    status: planned
   T-S1:
     name: Ship mode and storage
     method: 6-month storage simulation (45 °C accelerated) from ship mode; first-dock wake, 30 units/lot
@@ -2317,6 +2392,7 @@ tests:
     units: '30'
     passfail: SoC 40–60 % at unbox; wakes
     kind: test
+    status: planned
   T-B1:
     name: Cycle life 25 °C
     method: 0.5 C/0.5 C, 100 % DoD, 500 cycles
@@ -2324,6 +2400,7 @@ tests:
     units: 10 cells
     passfail: ≥ 80 % capacity; impedance rise ≤ 50 %
     kind: test
+    status: planned
   T-B2:
     name: Cycle life 45 °C
     method: As B1, 300 cycles
@@ -2331,6 +2408,7 @@ tests:
     units: 5 cells
     passfail: ≥ 80 %; no venting
     kind: test
+    status: planned
   T-B3:
     name: Calendar aging
     method: 100 % SoC 45 °C 500 h; 50 % SoC 25 °C 500 h
@@ -2338,6 +2416,7 @@ tests:
     units: 10 cells
     passfail: ≤ 10 % irreversible loss
     kind: test
+    status: planned
   T-B4:
     name: Swelling
     method: Thickness at capacity-fade steps
@@ -2345,6 +2424,7 @@ tests:
     units: same cells
     passfail: ≤ 8 %; housing headroom ≥ 10 %
     kind: test
+    status: planned
   T-B11:
     name: Charging-system functional
     method: Termination C/20; JEITA window; NTC open/short → no charge; OVP 6 V; CV accuracy
@@ -2352,6 +2432,7 @@ tests:
     units: '4'
     passfail: All behaviours as spec and logged
     kind: test
+    status: planned
   T-B12:
     name: Worn-while-charging thermal and inhibit
     method: Charge on head form at 25/35 °C; inhibit when worn, incl. wet knit and conductive stand
@@ -2359,6 +2440,7 @@ tests:
     units: '2'
     passfail: ≤ 41 °C; inhibit works
     kind: test
+    status: planned
   T-B13:
     name: Fuel gauge accuracy
     method: Across B1 cycles and −10/+45 °C
@@ -2366,6 +2448,9 @@ tests:
     units: '4'
     passfail: SoC error ≤ 5 %
     kind: test
+    status: passed
+    result: pass
+    owner_team: TM-TEST
   T-L1:
     name: HALT
     method: 'Module and flex array: cold/hot step, rapid thermal, 6-DoF vibe step, combined'
@@ -2373,6 +2458,7 @@ tests:
     units: 4 + 4
     passfail: Margins recorded; every failure root-caused
     kind: test
+    status: planned
   T-L2:
     name: ALT
     method: Flex fatigue (inverse power), sweat (Peck), solder (Coffin-Manson), battery; Weibull fits
@@ -2380,6 +2466,7 @@ tests:
     units: per ALT
     passfail: Lower 90 % bound R(2 yr) ≥ 0.90
     kind: analysis
+    status: planned
   T-HASS:
     name: HASS proof-of-screen
     method: Screen inside margins; 20 passes then full qualification
@@ -2387,6 +2474,7 @@ tests:
     units: '10'
     passfail: Negligible life consumed
     kind: test
+    status: planned
   T-EOL:
     name: End-of-line functional test
     method: 'FX-01 head form: impedance map, battery, RF, diagnostics, ship-mode set; GR&R'
@@ -2394,6 +2482,7 @@ tests:
     units: all
     passfail: ≤ 90 s; GR&R < 10 %
     kind: demonstration
+    status: planned
   T-WT:
     name: Wear trial (validation)
     method: 20 wearers, 4 h/day, 2 weeks; dermatologist review; decode usability
@@ -2401,6 +2490,7 @@ tests:
     units: '20'
     passfail: Comfort ≥ 4/5; no irritation; decode usable
     kind: demonstration
+    status: planned
   T-BIO:
     name: Biocompatibility
     method: ISO 10993-5, -23, -10 on final processed skin-contact materials; chem characterization -18
@@ -2408,6 +2498,7 @@ tests:
     units: per material
     passfail: No cytotoxicity, irritation, sensitization
     kind: test
+    status: planned
   T-SEC:
     name: Security review
     method: Pairing and link review; penetration test; signed-image check
@@ -2415,6 +2506,7 @@ tests:
     units: '2'
     passfail: No unauthenticated pairing; encrypted link
     kind: inspection
+    status: planned
   T-FCC:
     name: FCC Part 15 testing
     method: 15B SDoC on host; module grant or 15C certification; RF exposure per KDB 447498
@@ -2422,6 +2514,7 @@ tests:
     units: '2'
     passfail: Grant / SDoC
     kind: test
+    status: planned
   T-RED:
     name: RED harmonized testing
     method: EN 300 328; EN 301 489-1/-17; EN IEC 62368-1; EN 62479/50566
@@ -2429,6 +2522,7 @@ tests:
     units: '2'
     passfail: Reports support DoC
     kind: test
+    status: planned
   T-ISED:
     name: ISED certification
     method: RSS-Gen, RSS-247, RSS-102, ICES-003
@@ -2436,6 +2530,7 @@ tests:
     units: same
     passfail: Certificate
     kind: test
+    status: planned
   T-UN383:
     name: UN 38.3
     method: T1–T8 on pack and cells
@@ -2443,6 +2538,7 @@ tests:
     units: per standard
     passfail: Pass; Test Summary
     kind: test
+    status: planned
   T-62133:
     name: IEC 62133-2 / UL 2054
     method: Pack safety
@@ -2450,6 +2546,7 @@ tests:
     units: per standard
     passfail: CB report / recognition
     kind: test
+    status: planned
   T-MAT:
     name: Materials compliance
     method: RoHS supplier declarations + XRF; REACH SVHC; Prop 65 screening
@@ -2457,6 +2554,7 @@ tests:
     units: BOM
     passfail: Declarations complete
     kind: inspection
+    status: planned
   T-LABEL:
     name: Labeling and marks
     method: FCC ID/IC, CE, WEEE, battery marks, Prop 65 artwork review
@@ -2464,6 +2562,7 @@ tests:
     units: artwork
     passfail: Approved
     kind: inspection
+    status: planned
   T-FIELD:
     name: Field telemetry and returns analysis
     method: AFR from unit-years; Pareto; 8D; weekly review
@@ -2471,19 +2570,38 @@ tests:
     units: fleet
     passfail: AFR ≤ 3 % → ≤ 2 %
     kind: analysis
+    status: planned
 gates:
   EVT:
     date: '2026-11-16'
     exit: FMEA complete; HALT done; verification plan baselined; pre-scans passed; long-lead tests started
+    stage: ''
+    status: planned
   DVT:
     date: '2026-11-30'
     exit: Verification matrix run; all High-AP FMs verified; certification testing started on representative units
+    stage: ''
+    status: planned
   PVT:
     date: '2026-12-14'
     exit: Certifications granted or in final report; PFMEA/HASS/EoL at CM; ORT running; telemetry validated
+    stage: ''
+    status: planned
   Launch:
     date: '2026-12-28'
     exit: AFR model and returns loop live; risk register signed
+    stage: ''
+    status: planned
+  PDR:
+    date: '2026-11-20'
+    exit: Architecture frozen; all High-AP modes have tests; handoffs to test accepted
+    stage: Architecture and detailed design
+    status: planned
+  CDR:
+    date: '2027-01-15'
+    exit: Detailed design released; DV plan approved; sourcing complete
+    stage: Architecture and detailed design
+    status: planned
 fm_assessments:
   FA-F01-loss:
     element: F01
@@ -4295,6 +4413,30 @@ fm_assessments:
     element: TR-16
     guide: fires late
     ncr: acceptable
+  FA-PS-03-wrong part:
+    element: PS-03
+    guide: wrong part
+    mode: Rev A cell installed instead of rev B
+    effect: Capacity 20 % low; UN 38.3 report mismatch
+    cause: Mixed bins at station
+    S: 6
+    O: 3
+    D: 4
+    controls: Barcode scan of cell lot before install
+    tests:
+    - T-E1
+  FA-PS-02-insufficient:
+    element: PS-02
+    guide: insufficient
+    mode: Under-cured bond, low peel strength
+    effect: Flex delaminates in wash cycling → channel loss
+    cause: Cure oven profile drift
+    S: 7
+    O: 3
+    D: 5
+    controls: Oven profile logged per lot; peel coupon per shift
+    tests:
+    - T-M4
 program:
   lanes:
   - name: 'HALT: module + flex array'
@@ -4315,3 +4457,338 @@ program:
   - name: HASS + EoL screen at CM
     start: '2026-12-14'
     end: '2026-12-23'
+  stage: Architecture and detailed design
+teams:
+  TM-SE:
+    name: Systems engineering
+    discipline: system
+    lead: maya@sabi.com
+  TM-ME:
+    name: Mechanical & textile
+    discipline: mechanical
+    lead: jon@sabi.com
+  TM-EE:
+    name: Electrical
+    discipline: electrical
+    lead: priya@sabi.com
+  TM-FW:
+    name: Firmware
+    discipline: firmware
+    lead: li@sabi.com
+  TM-SW:
+    name: App & cloud
+    discipline: software
+    lead: sam@sabi.com
+  TM-TEST:
+    name: Test & reliability
+    discipline: system
+    lead: bala@twinmo.ai
+  TM-MFG:
+    name: Manufacturing
+    discipline: manufacturing
+    lead: rosa@sabi.com
+  TM-SC:
+    name: Supply chain
+    discipline: manufacturing
+    lead: dev@sabi.com
+  TM-QA:
+    name: Quality & compliance
+    discipline: system
+    lead: ana@sabi.com
+  TM-PM:
+    name: Program
+    discipline: system
+    lead: kim@sabi.com
+suppliers:
+  SUP-01:
+    name: Shenzhen Knitwear Co.
+    parts:
+    - P-KNIT
+    status: approved
+    lead_time_d: 45
+    country: CN
+    risk: single source, yarn supply
+    second_source: null
+    owner: dev@sabi.com
+  SUP-02:
+    name: Nordic Semiconductor (via Arrow)
+    parts:
+    - P-MODULE
+    status: approved
+    lead_time_d: 20
+    country: 'NO'
+    risk: allocation during shortages
+    second_source: null
+    owner: dev@sabi.com
+  SUP-03:
+    name: Varta Microbattery
+    parts:
+    - P-CELL
+    status: conditional
+    lead_time_d: 60
+    country: DE
+    risk: UN 38.3 report pending for rev B cell
+    second_source: SUP-04
+    owner: dev@sabi.com
+  SUP-04:
+    name: Grepow
+    parts: []
+    status: qualifying
+    lead_time_d: 35
+    country: CN
+    risk: not yet IEC 62133 qualified
+    second_source: null
+    owner: dev@sabi.com
+process_steps:
+  PS-01:
+    name: Knit cap body with conductive yarn routing
+    station: ST-10 Knitting
+    seq: 1
+    parts:
+    - P-KNIT
+    output: null
+    characteristics:
+    - yarn tension 2.0±0.2 cN
+    - sensor-site pitch ±1 mm
+    controls: program lock, first-article check per lot
+    cycle_s: 420
+    team: TM-MFG
+    eol_test: null
+  PS-02:
+    name: Place and bond flex array to knit
+    station: ST-20 Lamination
+    seq: 2
+    parts:
+    - P-FLEX
+    - P-KNIT
+    output: null
+    characteristics:
+    - bond peel strength ≥ 8 N/25 mm
+    - alignment ±0.5 mm
+    controls: fixture with datum pins, cure profile logged
+    cycle_s: 300
+    team: TM-MFG
+    eol_test: null
+  PS-03:
+    name: Mount SoC module and battery pack
+    station: ST-30 Electronics assembly
+    seq: 3
+    parts:
+    - P-MODULE
+    - P-CELL
+    output: null
+    characteristics:
+    - connector fully seated (latch click)
+    - torque 0.15 N·m
+    controls: poka-yoke connector keying, torque driver with log
+    cycle_s: 240
+    team: TM-MFG
+    eol_test: null
+  PS-04:
+    name: Functional and impedance EOL test
+    station: ST-40 EOL test
+    seq: 4
+    parts: []
+    output: P-CAP
+    characteristics:
+    - all channels < 50 kΩ on phantom head
+    - charge current within ±5 %
+    controls: TestRUNS sequence, serialized log
+    cycle_s: 90
+    team: TM-TEST
+    eol_test: T-E1
+work_items:
+  WI-01:
+    title: Release flex array rev C with ESD protection on scalp lines
+    owner: priya@sabi.com
+    status: in_progress
+    team: TM-EE
+    due: '2026-11-18'
+    links:
+    - P-FLEX
+    - FM-010
+    gate: PDR
+    priority: P1
+  WI-02:
+    title: Knit stretch vs. flex strain correlation test plan
+    owner: bala@twinmo.ai
+    status: open
+    team: TM-TEST
+    due: '2026-11-19'
+    links:
+    - R-043
+    - T-M4
+    gate: PDR
+    priority: P1
+  WI-03:
+    title: Qualify second-source cell (Grepow) to IEC 62133
+    owner: dev@sabi.com
+    status: blocked
+    team: TM-SC
+    due: '2026-12-15'
+    links:
+    - P-CELL
+    - SUP-04
+    gate: CDR
+    priority: P1
+    notes: blocked on sample lot delivery
+  WI-04:
+    title: OTA A/B image rollback demo
+    owner: li@sabi.com
+    status: done
+    team: TM-FW
+    due: '2026-11-05'
+    links:
+    - R-051
+    gate: PDR
+    priority: P2
+  WI-05:
+    title: PFMEA for lamination station
+    owner: rosa@sabi.com
+    status: open
+    team: TM-MFG
+    due: '2026-12-20'
+    links:
+    - PS-02
+    gate: CDR
+    priority: P2
+findings:
+  FD-01:
+    title: Scalp temperature requirement has no worst-case ambient stated
+    severity: major
+    status: open
+    element: R-010
+    source: review
+    owner: maya@sabi.com
+    action: Add 35 °C ambient, 4 h wear case to R-010 attr
+    due: '2026-11-17'
+    gate: PDR
+  FD-02:
+    title: Charger inhibit relies on single impedance sensor
+    severity: critical
+    status: open
+    element: F09b
+    source: review
+    owner: priya@sabi.com
+    action: Add second worn-detect feature (capacitive) or justify in hazard register
+    due: '2026-11-19'
+    gate: PDR
+  FD-03:
+    title: Test T-B3 pass criterion not numeric
+    severity: minor
+    status: closed
+    element: T-B3
+    source: audit
+    owner: bala@twinmo.ai
+    action: Set ≤ 2 % SoC error
+    closed: '2026-11-04'
+handoffs:
+  HO-01:
+    from_team: TM-EE
+    to_team: TM-TEST
+    what: Flex array rev C schematic, netlist and ESD design note
+    elements:
+    - P-FLEX
+    status: pending
+    due: '2026-11-18'
+    gate: PDR
+  HO-02:
+    from_team: TM-ME
+    to_team: TM-MFG
+    what: Knit pattern + tolerance stack for sensor-site pitch
+    elements:
+    - P-KNIT
+    - PS-01
+    status: accepted
+    due: '2026-11-10'
+    gate: PDR
+    accepted_by: rosa@sabi.com
+  HO-03:
+    from_team: TM-FW
+    to_team: TM-TEST
+    what: Firmware 0.9 with test hooks for impedance sweep
+    elements:
+    - P-FW
+    status: pending
+    due: '2026-11-15'
+    gate: PDR
+  HO-04:
+    from_team: TM-SE
+    to_team: TM-QA
+    what: Hazard register and safety-class list for PDR
+    elements:
+    - F09b
+    - F03
+    status: pending
+    due: '2026-11-19'
+    gate: PDR
+field_events:
+  FE-01:
+    date: '2026-10-28'
+    unit: alpha-014
+    symptom: Cap reported worn while on desk; battery drained overnight
+    count: 3
+    severity: minor
+    parts:
+    - P-FLEX
+    fm: FM-009
+    disposition: firmware threshold change in 0.9
+    status: open
+    eight_d: D4 root cause
+  FE-02:
+    date: '2026-11-02'
+    unit: alpha-021
+    symptom: Seam irritation after 3 h wear
+    count: 1
+    severity: major
+    parts:
+    - P-KNIT
+    fm: ''
+    disposition: ''
+    status: open
+    eight_d: D2 describe
+risks:
+  RK-01:
+    title: Rev B cell UN 38.3 report slips past CDR
+    prob: 3
+    impact: 5
+    owner: dev@sabi.com
+    mitigation: Qualify Grepow second source in parallel (WI-03)
+    status: open
+    links:
+    - P-CELL
+    - SUP-03
+    team: TM-SC
+  RK-02:
+    title: Single worn-detect sensor fails safety review
+    prob: 3
+    impact: 4
+    owner: priya@sabi.com
+    mitigation: Add capacitive feature (FD-02)
+    status: open
+    links:
+    - F09b
+    team: TM-EE
+  RK-03:
+    title: Knit supplier capacity for 50k/yr
+    prob: 2
+    impact: 4
+    owner: dev@sabi.com
+    mitigation: Second knitter audit Q1
+    status: open
+    links:
+    - SUP-01
+    team: TM-SC
+reviews:
+  RV-01:
+    name: PDR dry run
+    gate: PDR
+    date: '2026-11-06'
+    attendees:
+    - maya@sabi.com
+    - priya@sabi.com
+    - bala@twinmo.ai
+    findings:
+    - FD-01
+    - FD-02
+    decision: conditional — close FD-02 before PDR

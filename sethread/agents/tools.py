@@ -5,7 +5,7 @@ import json, os
 from typing import Any
 from claude_agent_sdk import tool, create_sdk_mcp_server
 from ..store import Store, Patch, Op
-from .. import schema, derive, adapters, quality, library
+from .. import schema, derive, adapters, quality, library, lifecycle
 
 def _txt(obj) -> dict:
     return {"content": [{"type": "text", "text": obj if isinstance(obj, str) else json.dumps(obj, indent=1, ensure_ascii=False, default=str)}]}
@@ -72,6 +72,14 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         if n == "test_methods":
             q = (args.get("query") or "").lower(); return _txt([t for t in library.load("test_methods", root) if not q or q in json.dumps(t).lower()])
         return _txt({"error": "unknown library", "available": ["regulations", "failure_modes", "test_methods"]})
+
+    @tool("gate_readiness", "Lifecycle state: current stage, every gate with its exit criteria measured (pass/fail), blockers (open findings, pending handoffs, stale verification) and alerts. Use to plan work before a gate.", {})
+    async def gate_readiness(args):
+        return _txt(lifecycle.gate_readiness(store.load(), store))
+
+    @tool("team_workload", "Per team: open work items, findings, pending handoffs in/out, owned parts, tests and process steps.", {})
+    async def team_workload(args):
+        return _txt(lifecycle.team_workload(store.load()))
 
     @tool("propose_patch", "Propose a change to the model. ops: list of {op: add|update|remove, kind, id, value}. The patch is validated (schema + references) and STAGED for human approval; it is not applied. Give a rationale and the sources (documents, tool outputs, requirement ids) the change is derived from. Returns validation issues, the resulting coverage delta, and the patch id.",
           {"ops": list, "rationale": str, "sources": list})
@@ -142,7 +150,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

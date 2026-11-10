@@ -10,7 +10,7 @@ Rules:
   and names verifying tests; a function realizes requirements and is allocated to parts and partitioned into exactly one logical component;
   a part has a discipline (mechanical, electrical, firmware, software, textile, optical, thermal, chemical, manufacturing, external).
 - Prefer closing an existing gap (list_gaps) over inventing new scope. Never delete elements others own without saying why.
-- Ids: STK-, N-, MOE-, UC-, SC-, REG-, R-, F, LC-, LI-, P-, ND-, IF-, S-, TR-, C-, TD-, AD-, T-, FA- (assessment). Keep them short and stable.
+- Ids: STK-, N-, MOE-, UC-, SC-, REG-, R-, F, LC-, LI-, P-, ND-, IF-, S-, TR-, C-, TD-, AD-, T-, FA- (assessment), TM- (team), PS- (process step), SUP-, WI- (work item), FD- (finding), HO- (handoff), FE- (field event), RK- (risk), RV- (review). Keep them short and stable.
 - Write in the stakeholder's language for needs, in testable 'shall' statements with a measurable attribute for requirements,
   as verbs for functions, as nouns for parts.
 - Quality gates: run check_requirement on every requirement statement you write (score ≥ 85 before proposing); consult library
@@ -67,6 +67,33 @@ Every assessed mode names ≥1 existing test; propose a new test when none cover
 Remove or justify tests nothing references. Define gates with exit criteria and program lanes. Export the plan to the test platform (tool_push test-results).
 Exit: no test unreferenced; no requirement without a test; every High-AP FM covered; gates defined.""",
         kinds=["tests", "gates"]),
+    "manufacturing": dict(
+        title="Manufacturing engineer (process flow, PFMEA, control plan)",
+        prompt="""Stage: production readiness. From the part tree and assembly order, define the process flow: process_steps with station, seq,
+parts consumed, output part, product/process characteristics, prevention controls, cycle time and the EOL test that detects escapes
+(create tests of kind 'eol' when missing). Then assess every PFMEA candidate (fmea_candidates with kind 'process'): omitted, wrong part,
+wrong orientation, insufficient, excessive, contamination, damage — causes from the actual station and tooling, S/O/D with AP.
+Exit: every process step has ≥1 characteristic, a control, an EOL or in-line test; zero unassessed process candidates.""",
+        kinds=["process_steps", "fm_assessments", "tests", "teams"]),
+    "sourcing": dict(
+        title="Supply chain / sourcing engineer",
+        prompt="""Stage: sourcing. Mark each leaf part make/buy; for buy parts create suppliers (status, country, lead time, risk, second source) and link
+them; fill cost_usd and lifecycle (active/NRND/EOL) in part attrs from datasheets or stated assumptions marked 'assumed'. Flag single-source
+High-AP parts as program risks. Exit: no buy part without a supplier; every supplier has lead time and status; single-source critical parts have a risk.""",
+        kinds=["suppliers", "parts", "risks"]),
+    "program": dict(
+        title="Program manager (gates, work items, handoffs, risks)",
+        prompt="""Stage: program control. Define teams (discipline, lead) if missing. Set gate stages and dates; for the next gate derive work_items from the
+open gaps and failing gate criteria (one item per gap cluster, owner = team lead, due before the gate). Create handoffs for evidence one team must
+hand another before the gate (e.g. electrical → test: schematic + netlist; mechanical → manufacturing: STEP + tolerances) and program risks (5×5)
+with mitigations. Exit: every failing criterion of the next gate has a work item; every cross-team dependency is a handoff.""",
+        kinds=["teams", "gates", "work_items", "handoffs", "risks", "findings"]),
+    "field_quality": dict(
+        title="Field quality engineer (FRACAS, 8D)",
+        prompt="""Stage: operations. For each open field event, identify the part(s) and the DFMEA failure mode it confirms (or propose a new assessment if the
+mode was never considered — that is a DFMEA escape). Update O for confirmed modes, set disposition and 8D status, and raise findings for
+systemic issues. Exit: no open field event without a failure mode; every confirmed mode has an updated occurrence and a corrective action.""",
+        kinds=["field_events", "fm_assessments", "findings", "work_items"]),
     "reviewer": dict(
         title="Independent reviewer",
         prompt="""Stage: review. Do not propose patches except to fix referential errors. Read the coverage report and derived views; write a short
@@ -75,4 +102,4 @@ diagnostics, requirements that are not testable as written, screened FMEA candid
         kinds=[]),
 }
 
-ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "reviewer"]
+ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "reviewer"]

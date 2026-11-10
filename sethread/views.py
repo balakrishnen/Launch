@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle, Ellipse, Circle
 from . import derive as D
-from .schema import GUIDE_WORDS_FUNC, GUIDE_WORDS_IF, GUIDE_WORDS_TR
+from .schema import GUIDE_WORDS_FUNC, GUIDE_WORDS_IF, GUIDE_WORDS_TR, GUIDE_WORDS_PROC
 
 INK="#1F2A37"; QUIET="#5B6675"; EDGE="#7A8696"; GRID="#D6DCE3"; ACC="#1F6FB2"; ACC_F="#E3EEF8"; GOOD="#2E8B57"; WARN="#C98A00"; CRIT="#B23A3A"
 C2="#7A4FB5"; C2F="#EFE8F8"; C3="#2B8C8C"; C3F="#E2F3F3"; C4="#B5651D"; C4F="#F8ECE1"
@@ -252,9 +252,9 @@ def v13_fmea_coverage(m, out):
     x0, y0, cw, rh = 3.2, H - 1.8, 0.72, 0.17; colors = {"H": CRIT, "M": WARN, "L": GOOD}
     for j, g in enumerate(gws): ax.text(x0 + j*cw + cw/2, y0 + 0.08, g, rotation=45, fontsize=6.6, ha="left", va="bottom", color=INK)
     for i, e in enumerate(elems):
-        y = y0 - i*rh; kind = "function" if e in m["functions"] else "interface" if e in m["interfaces"] else "transition"
+        y = y0 - i*rh; kind = "function" if e in m["functions"] else "interface" if e in m["interfaces"] else "transition" if e in m["transitions"] else "process"
         ax.text(x0 - 0.08, y - rh/2, f"{e} {D.element_name(m, kind, e)[:34]}", fontsize=5.4, ha="right", va="center", color=INK)
-        valid = {"function": GUIDE_WORDS_FUNC, "interface": GUIDE_WORDS_IF, "transition": GUIDE_WORDS_TR}[kind]
+        valid = {"function": GUIDE_WORDS_FUNC, "interface": GUIDE_WORDS_IF, "transition": GUIDE_WORDS_TR, "process": GUIDE_WORDS_PROC}[kind]
         for j, g in enumerate(gws):
             if g not in valid: continue
             a = assess.get((e, g)); fc = "white" if a is None else "#E5E7EB" if a.get("ncr") else colors[fm[(e, g)]["AP"]]

@@ -3,7 +3,7 @@
 Nothing authored here. Every row carries the ids it was derived from.
 """
 from __future__ import annotations
-from .schema import GUIDE_WORDS_FUNC, GUIDE_WORDS_IF, GUIDE_WORDS_TR
+from .schema import GUIDE_WORDS_FUNC, GUIDE_WORDS_IF, GUIDE_WORDS_TR, GUIDE_WORDS_PROC
 
 def ap(S, O, D) -> str:
     if S >= 9: return "H"
@@ -20,6 +20,7 @@ def candidates(m):
     for f in m["functions"]: c += [("function", f, g) for g in GUIDE_WORDS_FUNC]
     for i in m["interfaces"]: c += [("interface", i, g) for g in GUIDE_WORDS_IF]
     for t in m["transitions"]: c += [("transition", t, g) for g in GUIDE_WORDS_TR]
+    for p in m.get("process_steps", {}): c += [("process", p, g) for g in GUIDE_WORDS_PROC]   # PFMEA candidates
     return c
 
 def _assess_index(m):
@@ -28,16 +29,19 @@ def _assess_index(m):
 def element_name(m, kind, eid):
     if kind == "function": return m["functions"][eid]["name"]
     if kind == "interface": return m["interfaces"][eid]["name"]
+    if kind == "process": ps = m["process_steps"][eid]; return f"{ps['station']}: {ps['name']}"
     t = m["transitions"][eid]
     return f"{m['states'][t['frm']]['name']} → {m['states'][t['to']]['name']} on {t['trigger']}" + (f" [{t['guard']}]" if t.get("guard") else "")
 
 def element_reqs(m, kind, eid):
     if kind == "function": return list(m["functions"][eid]["reqs"])
+    if kind == "process": return [r for r, rv in m["requirements"].items() if rv.get("type") == "MFG"][:3]
     if kind == "interface": return sorted({r for f in m["interfaces"][eid]["funcs"] for r in m["functions"][f]["reqs"]})
     return list(m["functions"][m["transitions"][eid]["func"]]["reqs"])
 
 def element_parts(m, kind, eid):
     if kind == "function": return list(m["functions"][eid]["alloc"])
+    if kind == "process": ps = m["process_steps"][eid]; return list(ps.get("parts", [])) + ([ps["output"]] if ps.get("output") else [])
     if kind == "interface": return [m["interfaces"][eid]["a"], m["interfaces"][eid]["b"]]
     t = m["transitions"][eid]; ps = list(m["functions"][t["func"]]["alloc"])
     if t.get("sensor") and t["sensor"] not in ps: ps.append(t["sensor"])
@@ -120,6 +124,23 @@ def trace(m):
         if av.get("trade"): E.append((av["trade"], "resolved by", ad))
     for f in fmea(m):
         E.append((f["element"], "has failure mode", f["id"])); E += [(t, "covers", f["id"]) for t in f["tests"]]
+    for p, pv in m.get("process_steps", {}).items():
+        E += [(x, "consumed by", p) for x in pv.get("parts", [])]
+        if pv.get("output"): E.append((p, "produces", pv["output"]))
+        if pv.get("eol_test"): E.append((pv["eol_test"], "verifies step", p))
+        if pv.get("team"): E.append((pv["team"], "owns", p))
+    for sp, sv in m.get("suppliers", {}).items(): E += [(sp, "supplies", x) for x in sv.get("parts", [])]
+    for p, pv in m["parts"].items():
+        if pv.get("supplier"): E.append((pv["supplier"], "supplies", p))
+        if pv.get("owner_team"): E.append((pv["owner_team"], "owns", p))
+    for w, wv in m.get("work_items", {}).items(): E += [(w, "works on", x) for x in wv.get("links", [])] + ([(w, "for gate", wv["gate"])] if wv.get("gate") else [])
+    for fd, fv in m.get("findings", {}).items():
+        if fv.get("element"): E.append((fd, "found on", fv["element"]))
+    for h, hv in m.get("handoffs", {}).items(): E += [(h, "hands off", x) for x in hv.get("elements", [])] + [(hv["from_team"], "hands to", hv["to_team"])]
+    for fe, fv in m.get("field_events", {}).items():
+        E += [(fe, "observed on", x) for x in fv.get("parts", [])]
+        if fv.get("fm"): E.append((fe, "confirms", fv["fm"]))
+    for r, rv in m.get("risks", {}).items(): E += [(r, "threatens", x) for x in rv.get("links", [])]
     return E
 
 def coverage_report(m):
@@ -134,18 +155,24 @@ def coverage_report(m):
     rep["tests_referenced_but_undefined"] = sorted({t for v in m["requirements"].values() for t in v["tests"] if t not in m["tests"]} | {t for f in fm for t in f["tests"] if t not in m["tests"]})
     rep["fm_without_tests"] = [f["id"] for f in fm if not f["tests"]]
     rep["high_ap_fm_without_tests"] = [f["id"] for f in fm if f["AP"] == "H" and not f["tests"]]
-    rep["unassessed_candidates"] = unassessed(m)
+    ua = unassessed(m); rep["unassessed_candidates"] = [u for u in ua if u["kind"] != "process"]; rep["unassessed_process_candidates"] = [u for u in ua if u["kind"] == "process"]
     rep["needs_without_requirements"] = [n for n, nv in m["needs"].items() if not nv.get("program") and not any(n in v["from_"] for v in m["requirements"].values())]
     rep["regulations_without_requirements"] = [g for g in m["regulations"] if not any(g in v["regs"] for v in m["requirements"].values())]
     rep["alloc_outside_logical_component"] = [(f, p) for f, v in m["functions"].items() for p in v["alloc"] for lc, lv in m["logical_components"].items() if f in lv["funcs"] and lv.get("parts") and p not in lv["parts"]]
     rep["logical_components_without_parts"] = [lc for lc, lv in m["logical_components"].items() if not lv.get("parts")]
     rep["interfaces_without_functions"] = [i for i, v in m["interfaces"].items() if not v["funcs"]]
     rep["arch_decisions_without_requirements"] = [a for a, v in m["arch_decisions"].items() if not v["reqs"]]
+    rep["process_steps_without_pfmea"] = [p for p in m.get("process_steps", {}) if not any(a["element"] == p for a in m["fm_assessments"].values())]
+    rep["buy_parts_without_supplier"] = [p for p, v in m["parts"].items() if v.get("make_buy") == "buy" and not v.get("supplier")]
+    rep["open_findings_critical"] = [f for f, v in m.get("findings", {}).items() if v["status"] != "closed" and v["severity"] in ("critical", "major")]
+    rep["pending_handoffs"] = [h for h, v in m.get("handoffs", {}).items() if v["status"] == "pending"]
+    rep["field_events_without_fm"] = [f for f, v in m.get("field_events", {}).items() if v["status"] != "closed" and not v.get("fm")]
     rep["parts_without_discipline"] = [p for p, v in m["parts"].items() if not v.get("discipline")]
     rep["counts"] = dict(candidates=len(candidates(m)), assessed=len(fm), screened=len(screened(m)), high_ap=sum(f["AP"] == "H" for f in fm),
                          safety_class=sum(f["S"] >= 8 for f in fm), tests=len(m["tests"]), requirements=len(m["requirements"]), functions=len(m["functions"]),
                          parts=len(m["parts"]), logical_components=len(m["logical_components"]), interfaces=len(m["interfaces"]))
-    rep["clean"] = bool(m["requirements"]) and bool(m["tests"]) and all(not v for k, v in rep.items() if k not in ("counts", "clean"))
+    PROGRAM_KEYS = ("open_findings_critical", "pending_handoffs", "buy_parts_without_supplier", "field_events_without_fm", "process_steps_without_pfmea", "unassessed_process_candidates")
+    rep["clean"] = bool(m["requirements"]) and bool(m["tests"]) and all(not v for k, v in rep.items() if k not in ("counts", "clean") + PROGRAM_KEYS)   # SE trace only; program readiness is lifecycle.gate_readiness
     return rep
 
 def gaps_as_tasks(m):

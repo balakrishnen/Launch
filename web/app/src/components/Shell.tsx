@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, ShieldCheck, PanelLeft, FileText, History, ListChecks, HelpCircle, Image, Code2, FolderOpen } from 'lucide-react'
+import { Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, ShieldCheck, PanelLeft, FileText, History, ListChecks, HelpCircle, Image, Code2, FolderOpen, Bell } from 'lucide-react'
 import { useProject } from '../state'
 import { FORMS, KIND_LABEL, STAGE_COLOR } from '../api'
 import { AgentDrawer } from './Agent'
@@ -70,6 +70,7 @@ function Tree() {
     <Item to={`/p/${pid}`} end label="Home" icon={<Home size={17} />} />
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
+    <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />
     <Item to={`/p/${pid}/graph`} label="Graph" icon={<GitBranch size={17} />} />
     <h4>Digital thread</h4>
     {STAGES.map(s => <Group key={s} k={s} label={s.replace(/^\d /, '')} color={STAGE_COLOR[s]} n={stageN(s)}>{(byStage[s] || []).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}</Group>)}
@@ -78,10 +79,23 @@ function Tree() {
       <Item to={`/p/${pid}/form/dfmea`} label="DFMEA" /><Item to={`/p/${pid}/collection/unassessed`} label="Unassessed candidates" n={project.coverage.unassessed_candidates} /><Item to={`/p/${pid}/form/hazards`} label="Hazard register" /><Item to={`/p/${pid}/form/fta`} label="Fault trees" /><Item to={`/p/${pid}/form/drbfm`} label="DRBFM" />
     </Group>
     <Group k="arch" label="Architecture" color={STAGE_COLOR['4 Physical architecture']}>
-      <Item to={`/p/${pid}/form/n2`} label="N² — physical" /><Item to={`/p/${pid}/form/n2l`} label="N² — logical" /><Item to={`/p/${pid}/form/icd`} label="ICD index" /><Item to={`/p/${pid}/form/pugh`} label="Trade matrices" /><Item to={`/p/${pid}/matrix/requirements/functions`} label="Dependency matrices" /><Item to={`/p/${pid}/budgets`} label="Budgets" />
+      <Item to={`/p/${pid}/form/n2`} label="N² — physical" /><Item to={`/p/${pid}/form/n2l`} label="N² — logical" /><Item to={`/p/${pid}/form/icd`} label="ICD index" /><Item to={`/p/${pid}/form/pugh`} label="Trade matrices" /><Item to={`/p/${pid}/matrix/requirements/functions`} label="Dependency matrices" />
     </Group>
     <Group k="ver" label="Verification" color={STAGE_COLOR['6 Verification']} n={project.counts.tests}>
       <Item to={`/p/${pid}/form/dvpr`} label="DVP&R" /><Item to={`/p/${pid}/form/vcrm`} label="VCRM / RTM" /><Item to={`/p/${pid}/form/reqspec`} label="Requirements spec" /><Item to={`/p/${pid}/collection/certification_plan`} label="Certification plan" />
+    </Group>
+    <h4>Teams & program</h4>
+    <Group k="program" label="Program" color={STAGE_COLOR['Program']} n={(project.counts.work_items || 0) + (project.counts.findings || 0)}>
+      <Item to={`/p/${pid}/teams`} label="Teams & handoffs" /><Item to={`/p/${pid}/form/work_items`} label="Work items" n={project.counts.work_items} /><Item to={`/p/${pid}/form/findings`} label="Findings" n={project.counts.findings} /><Item to={`/p/${pid}/form/risks`} label="Program risks" n={project.counts.risks} /><Item to={`/p/${pid}/collection/reviews`} label="Design reviews" n={project.counts.reviews} /><Item to={`/p/${pid}/collection/gates`} label="Gates" n={project.counts.gates} />
+    </Group>
+    <Group k="mfg" label="Manufacturing" color={STAGE_COLOR['Manufacturing']} n={project.counts.process_steps}>
+      <Item to={`/p/${pid}/collection/process_steps`} label="Process flow" n={project.counts.process_steps} /><Item to={`/p/${pid}/form/pfmea`} label="PFMEA" /><Item to={`/p/${pid}/form/control_plan`} label="Control plan" />
+    </Group>
+    <Group k="sc" label="Supply chain" color={STAGE_COLOR['Supply chain']} n={project.counts.suppliers}>
+      <Item to={`/p/${pid}/form/avl`} label="AVL / sourcing" /><Item to={`/p/${pid}/collection/suppliers`} label="Suppliers" n={project.counts.suppliers} /><Item to={`/p/${pid}/budgets`} label="Cost & mass budgets" />
+    </Group>
+    <Group k="ops" label="Operations" color={STAGE_COLOR['Operations']} n={project.counts.field_events}>
+      <Item to={`/p/${pid}/form/fracas`} label="FRACAS" n={project.counts.field_events} />
     </Group>
     <h4>Quality</h4>
     <Item to={`/p/${pid}/scorecard`} label="Scorecard" icon={<ShieldCheck size={17} />} />
