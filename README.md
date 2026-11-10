@@ -230,6 +230,18 @@ launch build <dir> [--docx]
 launch serve-mcp <dir>                  # expose model tools over stdio MCP
 ```
 
+## Examples
+
+The projects page has an **Examples** section: shipped product models under `examples/<id>/` (`example.yaml` metadata, `model.yaml` seed, `docs/` source documents) with one-click "Create project from example". Each card says what is seeded, why the product is a good test of the app, what to assess and prompts to try. Seeds leave deliberate gaps for the agents to close.
+
+| Example | Product | Why |
+|---|---|---|
+| `also-tmb` | [ALSO TM-B](https://ridealso.com/) — pedal-by-wire modular e-bike (Rivian spinout) | software-defined pedal feel, class/country variants in signed config, immobiliser, UL 2849/2271 vs EN 15194, app/cloud dependence |
+| `sabi` | Sabi Cap — EEG cap with flexible electrode array | flagship: complete thread through Production, every form populated |
+| `ebike` | E-bike drive unit | minimal one-page-PRD seed; watch the agents build the thread |
+
+Add an example: create `examples/<id>/example.yaml` (title, company, url, category, summary, why, seeded, assess, prompts), a `model.yaml` that passes `launch check`, and `docs/`.
+
 ## Worked example
 
 `examples/sabi/` is a complete thread for a non-invasive EEG BCI beanie: 7 stakeholders, 12 needs, 13 regulations,

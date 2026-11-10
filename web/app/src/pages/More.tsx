@@ -131,8 +131,8 @@ export function SearchPage() {
 }
 
 export function Landing() {
-  const nav = useNavigate(); const [me, setMe] = useState<any>(null); const [ps, setPs] = useState<any[]>([]); const [email, setEmail] = useState(''); const [invite, setInvite] = useState(''); const [err, setErr] = useState(''); const [np, setNp] = useState({ id: '', name: '', description: '' }); const [show, setShow] = useState(false)
-  useEffect(() => { api.get('/me').then(m => { setMe(m); if (m.user) { if (m.single) nav('/p/default', { replace: true }); else api.get('/projects').then(setPs) } }) }, [])
+  const nav = useNavigate(); const [me, setMe] = useState<any>(null); const [ps, setPs] = useState<any[]>([]); const [email, setEmail] = useState(''); const [invite, setInvite] = useState(''); const [err, setErr] = useState(''); const [ex, setEx] = useState<any[]>([]); const [busyEx, setBusyEx] = useState(''); const [np, setNp] = useState({ id: '', name: '', description: '' }); const [show, setShow] = useState(false)
+  useEffect(() => { api.get('/me').then(m => { setMe(m); if (m.user) { if (m.single) nav('/p/default', { replace: true }); else { api.get('/projects').then(setPs); api.get('/examples').then(setEx).catch(() => { }) } } }) }, [])
   if (!me) return null
   if (!me.user) return <div style={{ maxWidth: 420, margin: '14vh auto', padding: 0 }}><div className="card" style={{ padding: 28 }}><div className="logo" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, marginBottom: 12 }}>L</div><h1>Launch</h1><div className="muted" style={{ marginBottom: 16 }}>Agentic systems engineering for hardware teams</div>
     <label className="small muted">Work email</label><input className="field" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" style={{ margin: '4px 0 10px' }} />
@@ -141,5 +141,31 @@ export function Landing() {
   return <div style={{ maxWidth: 1100, margin: '40px auto', padding: '0 20px' }}>
     <div className="row between"><div><h1>Projects</h1><div className="muted small">{me.user} · <a href="#" onClick={e => { e.preventDefault(); api.post('/logout').then(() => location.reload()) }}>sign out</a></div></div><button className="btn primary" onClick={() => setShow(true)}>New project</button></div>
     {show && <div className="card" style={{ margin: '14px 0' }}><h4>New project</h4><div className="row"><input className="field" style={{ width: 160 }} placeholder="short id, e.g. ebike-v2" value={np.id} onChange={e => setNp({ ...np, id: e.target.value })} /><input className="field" style={{ flex: 1 }} placeholder="Product name" value={np.name} onChange={e => setNp({ ...np, name: e.target.value })} /><input className="field" style={{ flex: 2 }} placeholder="one-line description" value={np.description} onChange={e => setNp({ ...np, description: e.target.value })} /><button className="btn primary" onClick={() => api.post('/projects', np).then(p => nav('/p/' + p.id)).catch(e => setErr(e.message))}>Create</button></div>{err && <div style={{ color: 'var(--bad)' }}>{err}</div>}</div>}
-    <div className="gallery" style={{ marginTop: 16, gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))' }}>{ps.map(p => <div key={p.id} className="artcard" onClick={() => nav('/p/' + p.id)}><div className="t" style={{ fontSize: 16 }}>{p.name}</div><div className="d">{p.description}</div><div className="row" style={{ marginTop: 'auto' }}><span className={'pill ' + (p.clean ? 'good' : 'warn')}>{p.clean ? 'trace clean' : 'gaps open'}</span>{p.staged ? <span className="pill warn">{p.staged} to review</span> : null}{p.rev ? <span className="pill">rev {p.rev}</span> : null}</div><div className="d">{p.counts.requirements} requirements · {p.counts.parts} parts · {p.counts.tests} tests{p.updated ? ` · ${new Date(p.updated * 1000).toLocaleDateString()}` : ''}</div></div>)}{!ps.length && <div className="empty">No projects yet — create one.</div>}</div></div>
+    <div className="gallery" style={{ marginTop: 16, gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))' }}>{ps.map(p => <div key={p.id} className="artcard" onClick={() => nav('/p/' + p.id)}><div className="t" style={{ fontSize: 16 }}>{p.name}</div><div className="d">{p.description}</div><div className="row" style={{ marginTop: 'auto' }}><span className={'pill ' + (p.clean ? 'good' : 'warn')}>{p.clean ? 'trace clean' : 'gaps open'}</span>{p.staged ? <span className="pill warn">{p.staged} to review</span> : null}{p.rev ? <span className="pill">rev {p.rev}</span> : null}</div><div className="d">{p.counts.requirements} requirements · {p.counts.parts} parts · {p.counts.tests} tests{p.updated ? ` · ${new Date(p.updated * 1000).toLocaleDateString()}` : ''}</div></div>)}{!ps.length && <div className="empty">No projects yet — create one, or start from an example below.</div>}</div>
+    {ex.length > 0 && <Examples ex={ex} busy={busyEx} onCreate={(e: any) => { setBusyEx(e.id); api.post('/examples/' + e.id, {}).then(p => nav('/p/' + p.id)).catch(x => { setErr(x.message); setBusyEx('') }) }} onOpen={(e: any) => nav('/p/' + e.project)} />}</div>
+}
+
+// Examples — shipped product models to assess the app with. Each one says what is seeded, why it is a good test and what to try.
+function Examples({ ex, busy, onCreate, onOpen }: { ex: any[]; busy: string; onCreate: (e: any) => void; onOpen: (e: any) => void }) {
+  const [open, setOpen] = useState<string>('')
+  return <div style={{ marginTop: 40 }}>
+    <div className="row between"><div><h2 style={{ margin: 0 }}>Examples</h2><div className="muted small">Real and reference products to assess Launch with — seeded models with deliberate gaps for the agents to close.</div></div></div>
+    <div className="gallery" style={{ marginTop: 14, gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))' }}>{ex.map(e => { const n = Object.values(e.counts || {}).reduce((a: number, b: any) => a + (b as number), 0); const isOpen = open === e.id
+      return <div key={e.id} className="artcard" style={{ cursor: 'default', gridColumn: isOpen ? '1 / -1' : undefined }}>
+        <div className="row between"><div className="t" style={{ fontSize: 16 }}>{e.title}</div><span className="pill">{e.category}</span></div>
+        <div className="small muted">{e.company}{e.url ? <> · <a href={e.url} target="_blank" rel="noreferrer">{e.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a></> : null}</div>
+        <div className="d" style={{ fontSize: 13, color: 'var(--ink-2)' }}>{e.summary}</div>
+        <div className="d">{n} seeded elements · {e.seeded}</div>
+        {isOpen && <div className="stack" style={{ gap: 10, marginTop: 6 }}>
+          <div className="card" style={{ padding: 12 }}><h4>Why this example</h4><div className="small">{e.why}</div></div>
+          <div className="card" style={{ padding: 12 }}><h4>What to assess</h4><ol className="small" style={{ margin: '4px 0 0 18px', padding: 0, display: 'grid', gap: 4 }}>{(e.assess || []).map((a: any, i: number) => <li key={i}>{typeof a === 'string' ? a : JSON.stringify(a)}</li>)}</ol></div>
+          <div className="card" style={{ padding: 12 }}><h4>Prompts to try</h4><div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{(e.prompts || []).map((q: string, i: number) => <span key={i} className="chip" style={{ cursor: 'text' }}>{q}</span>)}</div></div>
+          {e.docs?.length > 0 && <div className="small muted">Source documents: {e.docs.join(', ')}</div>}
+        </div>}
+        <div className="row" style={{ marginTop: 'auto', paddingTop: 6 }}>
+          {e.project ? <button className="btn primary sm" onClick={() => onOpen(e)}>Open project</button> : <button className="btn primary sm" disabled={busy === e.id} onClick={() => onCreate(e)}>{busy === e.id ? 'Creating…' : 'Create project from example'}</button>}
+          <button className="btn sm" onClick={() => setOpen(isOpen ? '' : e.id)}>{isOpen ? 'Less' : 'What to assess'}</button>
+        </div>
+      </div> })}</div>
+  </div>
 }

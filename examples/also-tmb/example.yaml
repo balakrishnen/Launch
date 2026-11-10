@@ -1,0 +1,21 @@
+title: ALSO TM-B
+company: ALSO (Rivian spinout)
+url: https://ridealso.com/
+category: Micromobility · pedal-by-wire e-bike
+summary: Modular e-bike with a series-hybrid pedal-generator drivetrain (no chain), 800 Wh removable battery, swappable top frames, regen, telematics and an immobiliser. Launch/Performance/Base variants on one platform; TM-Q quad shares it.
+why: >
+  Stresses what most SE tools get wrong: a software-defined pedal feel (control latency), country/class variants set in
+  signed configuration, a safety-relevant immobiliser, UL 2849/2271 + EN 15194 regulatory split, and an app/cloud
+  dependence the market already criticises. The seed leaves real gaps for the agents to close.
+seeded: stakeholders, needs with MoEs, regulations, 15 requirements, 14 functions, 8 logical components, 18 parts, 10 interfaces, state machine, 15 tests, PDR/CDR/PVT gates, 8 teams
+assess:
+  - Ask the requirements agent to derive the full regulatory set from REG-* triggers (UL 2849, UL 2271, EN 15194, FCC, 16 CFR 1512) and write the missing requirements.
+  - Run the risk agent — 145 failure-mode candidates are unassessed; check that pedal-generator loss, belt slip, BMS over-temperature and false immobilisation come out High AP with tests.
+  - Ask the sourcing agent to assign suppliers to the 5 buy parts (belt, suspension, brakes, lights, USB-C PD) and build the AVL.
+  - Plan PDR with the program agent — work items and handoffs for every failing exit criterion.
+  - "Change the battery to 1,000 Wh and run impact analysis: which requirements, failure modes and tests move."
+prompts:
+  - Derive the regulatory context for a Class-3 e-bike sold in the US, Canada and the EU and write any missing requirements
+  - Assess every failure-mode candidate of the pedal generator and the immobiliser with causes derived from the architecture
+  - Assign suppliers to all buy parts and build the approved vendor list
+  - Plan the work needed to pass PDR

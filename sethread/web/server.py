@@ -307,6 +307,40 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     @app.post("/api/projects")
     def new_project(np: NewProject, user: str = U): W.create(np.id.strip().lower(), np.name.strip(), np.description, user); return W.summary(np.id.strip().lower())
 
+    # ---- examples: shipped product models to assess the app with (examples/<id>/{example.yaml, model.yaml, docs/})
+    def examples_dir():
+        for d in (os.environ.get("LAUNCH_EXAMPLES"), os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "examples")):
+            if d and os.path.isdir(d): return d
+        return None
+    @app.get("/api/examples")
+    def examples(user: str = U):
+        d = examples_dir(); out = []
+        if not d: return out
+        existing = set(W.ids())
+        for eid in sorted(os.listdir(d)):
+            ep = os.path.join(d, eid, "example.yaml")
+            if not os.path.isfile(ep): continue
+            meta = yaml.safe_load(open(ep)) or {}
+            try: cnt = {k: len(v) for k, v in yaml.safe_load(open(os.path.join(d, eid, "model.yaml"))).items() if isinstance(v, dict) and k in schema.KINDS}
+            except Exception: cnt = {}
+            out.append({"id": eid, **meta, "counts": cnt, "project": eid if eid in existing else None, "docs": sorted(os.listdir(os.path.join(d, eid, "docs"))) if os.path.isdir(os.path.join(d, eid, "docs")) else []})
+        return out
+    @app.post("/api/examples/{eid}")
+    def create_example(eid: str, user: str = U):
+        """Create a project from a shipped example: copies docs/ and loads model.yaml (file mode copies the directory; DB mode imports it as the first patch)."""
+        d = examples_dir(); src = os.path.join(d or "", eid)
+        if not d or not os.path.isfile(os.path.join(src, "example.yaml")): raise HTTPException(404, "no such example")
+        if W.single: raise HTTPException(400, "single-project mode")
+        if eid in W.ids(): return W.summary(eid)
+        root = W.path(eid); os.makedirs(root, exist_ok=True)
+        if os.path.isdir(os.path.join(src, "docs")): shutil.copytree(os.path.join(src, "docs"), os.path.join(root, "docs"), dirs_exist_ok=True)
+        if W.db is None:
+            shutil.copy(os.path.join(src, "model.yaml"), os.path.join(root, "model.yaml"))
+        else:
+            from ..dbstore import import_yaml_project; import_yaml_project(W.db, W.tenant, eid, src)
+        st = W._store(eid, root); m = st.load(); m["meta"]["created_by"] = user; st.save(m)
+        return W.summary(eid)
+
     @app.get("/p/{pid}/out/{path:path}")
     def out_file(pid: str, path: str, user: str = U):
         S = W.get(pid); p = os.path.abspath(os.path.join(S.root, "out", path))

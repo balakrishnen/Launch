@@ -1,0 +1,14 @@
+title: Sabi Cap
+company: Sabi (concept)
+url: ""
+category: Wearable · EEG cap with flexible electrode array
+summary: Flagship example — a fully developed digital thread from needs to field events, with DFMEA, PFMEA, DVP&R, gates, teams and handoffs populated.
+why: Shows every form and the whole-company lifecycle layer on a complete model; use it to judge navigation at scale (hundreds of elements).
+seeded: complete model through Production
+assess:
+  - Open the DFMEA and check that every High-AP failure mode traces to a test.
+  - Accept or reject the pending handoffs and watch gate readiness update.
+  - Change a requirement and follow the staleness alerts.
+prompts:
+  - Review the gate readiness for PDR and tell me what blocks it
+  - Which failure modes would a 20 % thinner flex array introduce?

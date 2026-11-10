@@ -1,0 +1,1091 @@
+meta:
+  name: ALSO TM-B
+  version: '0.1'
+  method: OOSEM
+  description: Modular pedal-by-wire e-bike (Rivian spinout ALSO) — series-hybrid
+    drivetrain, 800 Wh removable battery, swappable top frames
+  system: P-TMB
+  stage: Development
+stakeholders:
+  STK-RIDER:
+    name: Commuter / cargo / trail rider
+    description: Owner who swaps top frames between commute, cargo and trail use;
+      expects 60–100 mi range and a 'magical' ride
+    role: ''
+    concerns: range, ride feel, theft, app dependence
+  STK-DELIVERY:
+    name: Delivery fleet (DoorDash / Amazon)
+    description: Operates TM-B/TM-Q fleets for last-mile delivery; cares about uptime,
+      payload, telematics
+    role: ''
+    concerns: uptime, payload, tracking
+  STK-SERVICE:
+    name: Service & returns
+    description: ALSO service network diagnosing and repairing bikes; battery swap
+      without special tools
+    role: ''
+    concerns: diagnosability, parts
+  STK-MFG:
+    name: Manufacturing / contract manufacturer
+    description: Frame, belt drive and pack assembly at a CM; end-of-line test; ramp
+      from Launch Edition to Base
+    role: ''
+    concerns: yield, EoL test time
+  STK-REG:
+    name: Regulators & certification bodies
+    description: CPSC, UL, FCC, EU notified bodies, Transport Canada
+    role: ''
+    concerns: UL 2849/2271, EN 15194, class limits
+  STK-PRODUCT:
+    name: ALSO product & program
+    description: Launches Launch Edition, Performance and Base variants on one platform;
+      shares the platform with TM-Q
+    role: ''
+    concerns: variant management, gate dates
+moes:
+  MOE-01:
+    name: Assisted range
+    target: '>= 161 km — Distance at Class-1 assist, 75 kg rider, flat, full charge'
+  MOE-02:
+    name: Pedal feel latency
+    target: <= 50 ms — Delay between pedal torque change and motor response
+  MOE-03:
+    name: Switch between solo, utility and bench top frames in minutes
+    target: to be set by needs agent
+  MOE-04:
+    name: Theft immobilisation
+    target: = 0 m — Distance the bike can be pedalled/throttled while locked
+  MOE-05:
+    name: Charge time
+    target: <= 3.5 h — Time 0→100 % SoC with 240 W USB-C PD
+  MOE-06:
+    name: Keep riding if the phone or the cloud is unavailable
+    target: to be set by needs agent
+  MOE-07:
+    name: Telemetry freshness
+    target: <= 60 s — Max age of fleet status while in coverage
+  MOE-08:
+    name: Remove and replace the battery without special tools
+    target: to be set by needs agent
+  MOE-09:
+    name: Comply with class 2/3 limits in the US and 250 W / 25 km/h i
+    target: to be set by needs agent
+  MOE-12:
+    name: Offer Base, Launch and Performance variants from one archite
+    target: to be set by needs agent
+needs:
+  N-01:
+    stk: STK-RIDER
+    text: Ride up to 100 miles on one charge (Performance) without range anxiety
+    moe: MOE-01
+    program: true
+  N-02:
+    stk: STK-RIDER
+    text: Pedal with natural, adjustable resistance although the pedals are not mechanically
+      connected to the wheel
+    moe: MOE-02
+    program: true
+  N-03:
+    stk: STK-RIDER
+    text: Switch between solo, utility and bench top frames in minutes without tools
+    moe: MOE-03
+  N-04:
+    stk: STK-RIDER
+    text: Carry up to 147 kg of rider and cargo safely
+    moe: MOE-03
+    program: true
+  N-05:
+    stk: STK-RIDER
+    text: 'Ride confidently when the bike is parked: it cannot be ridden away and
+      can be located if stolen'
+    moe: MOE-04
+    program: true
+  N-06:
+    stk: STK-RIDER
+    text: Keep riding if the phone or the cloud is unavailable
+    moe: MOE-06
+    program: true
+  N-07:
+    stk: STK-DELIVERY
+    text: See location, state of charge and faults for every bike in the fleet within
+      a minute
+    moe: MOE-07
+  N-08:
+    stk: STK-SERVICE
+    text: Remove and replace the battery without special tools
+    moe: MOE-08
+  N-09:
+    stk: STK-REG
+    text: Comply with class 2/3 limits in the US and 250 W / 25 km/h in the EU, with
+      certified electrical and battery systems
+    moe: MOE-09
+    program: true
+  N-10:
+    stk: STK-MFG
+    text: Test every unit end-of-line in under 3 minutes
+    moe: MOE-06
+  N-11:
+    stk: STK-RIDER
+    text: Charge from empty in about 3 hours with a USB-C PD charger and power other
+      devices from the bike
+    moe: MOE-05
+  N-12:
+    stk: STK-PRODUCT
+    text: Offer Base, Launch and Performance variants from one architecture by changing
+      software limits and suspension parts
+    moe: MOE-12
+actors: {}
+use_cases: {}
+scenarios: {}
+regulations:
+  REG-UL2849:
+    name: UL 2849 — Electrical systems for e-bikes
+    market: US
+    trigger: e-bike with electrical drive system
+    standard: UL 2849
+  REG-UL2271:
+    name: UL 2271 — Batteries for light electric vehicles
+    market: US
+    trigger: removable lithium battery pack
+    standard: UL 2271
+  REG-UN383:
+    name: UN 38.3 — Lithium battery transport
+    market: International
+    trigger: shipping lithium batteries
+    standard: UN 38.3
+  REG-CPSC1512:
+    name: 16 CFR 1512 — Bicycles
+    market: US
+    trigger: bicycle sold in the US
+    standard: 16 CFR 1512
+  REG-FCC15:
+    name: FCC Part 15 — Unintentional/intentional radiators
+    market: US
+    trigger: BLE/LTE/GNSS radios
+    standard: 47 CFR 15
+  REG-EN15194:
+    name: EN 15194 — EPAC bicycles
+    market: EU
+    trigger: 250 W / 25 km/h pedelec sold in the EU
+    standard: EN 15194:2017
+  REG-CLASS:
+    name: 'US 3-class e-bike laws (class 2: 20 mph throttle, class 3: 28 mph assist)'
+    market: US states
+    trigger: throttle and assist speed limits
+    standard: state vehicle codes (3-class model)
+requirements:
+  R-01:
+    type: PERF
+    text: The TM-B shall provide an assisted range of at least 161 km (Performance)
+      and 96 km (Base) at Class-1 assist on flat ground with a 75 kg rider.
+    verify: test
+    tests:
+    - TST-01
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: range >= 161 km
+  R-02:
+    type: PERF
+    text: The drive controller shall update motor torque within 50 ms of a change
+      in pedal torque or cadence.
+    verify: test
+    tests:
+    - TST-02
+    from_:
+    - N-02
+    regs: []
+    uc: []
+    attr: pedal_latency <= 50 ms
+  R-03:
+    type: FUNC
+    text: The pedal generator shall present an adjustable virtual resistance of 0–60
+      Nm, selectable per ride mode.
+    verify: test
+    tests:
+    - TST-03
+    from_:
+    - N-02
+    regs: []
+    uc: []
+    attr: pedal_resistance >= 60 Nm
+  R-04:
+    type: SAFE
+    text: The frame and top-frame interface shall carry a 147 kg payload with a safety
+      factor of 2 per ISO 4210 / 16 CFR 1512 structural tests.
+    verify: test
+    tests:
+    - TST-04
+    from_:
+    - N-04
+    regs:
+    - REG-CPSC1512
+    uc: []
+    attr: payload >= 147 kg
+  R-05:
+    type: FUNC
+    text: When locked, the drive shall decouple the pedals, immobilise the rear wheel
+      and keep only the location tracker powered.
+    verify: test
+    tests:
+    - TST-05
+    from_:
+    - N-05
+    regs: []
+    uc: []
+    attr: locked_travel = 0 m
+  R-06:
+    type: FUNC
+    text: The bike shall start, unlock with the physical key/NFC and ride in all modes
+      without a phone or server connection.
+    verify: test
+    tests:
+    - TST-06
+    from_:
+    - N-06
+    regs: []
+    uc: []
+    attr: offline_ride = 1 bool
+  R-07:
+    type: REGU
+    text: In Class-2 mode throttle assist shall cut off at 32 km/h (20 mph); in Class-3
+      mode pedal assist shall cut off at 45 km/h (28 mph); EU variant at 25 km/h and
+      250 W nominal.
+    verify: test
+    tests:
+    - TST-07
+    from_:
+    - N-09
+    regs:
+    - REG-CLASS
+    - REG-EN15194
+    uc: []
+    attr: assist_cutoff <= 45 km/h
+  R-08:
+    type: REGU
+    text: The electrical system shall be certified to UL 2849 and the battery pack
+      to UL 2271 before US shipment.
+    verify: inspection
+    tests:
+    - TST-08
+    from_:
+    - N-09
+    regs:
+    - REG-UL2849
+    - REG-UL2271
+    uc: []
+    attr: certification = 1 bool
+  R-09:
+    type: PERF
+    text: The battery shall charge from 0 to 100 % SoC in no more than 3.5 h from
+      a 240 W USB-C PD source and shall source up to 240 W to USB-C PD sinks.
+    verify: test
+    tests:
+    - TST-09
+    from_:
+    - N-11
+    regs: []
+    uc: []
+    attr: charge_time <= 3.5 h
+  R-10:
+    type: MAINT
+    text: The battery pack shall be removable and refittable by hand in under 60 s
+      with no tools.
+    verify: test
+    tests:
+    - TST-10
+    from_:
+    - N-08
+    regs: []
+    uc: []
+    attr: battery_swap <= 60 s
+  R-11:
+    type: FUNC
+    text: The telematics unit shall report position, SoC and active faults at least
+      every 60 s while in LTE coverage and buffer up to 24 h offline.
+    verify: test
+    tests:
+    - TST-11
+    from_:
+    - N-07
+    regs:
+    - REG-FCC15
+    uc: []
+    attr: telemetry_period <= 60 s
+  R-12:
+    type: MFG
+    text: The vehicle shall support an end-of-line self-test covering drive, pack,
+      HMI, lights and radios in under 180 s.
+    verify: test
+    tests:
+    - TST-12
+    from_:
+    - N-10
+    regs: []
+    uc: []
+    attr: eol_time <= 180 s
+  R-13:
+    type: PERF
+    text: Regenerative braking shall recover at least 5 % of consumed energy on the
+      standard urban cycle.
+    verify: test
+    tests:
+    - TST-13
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: regen_share >= 5 %
+  R-14:
+    type: SEC
+    text: Variant limits (assist multiplier 5×/10×, class, market power cap) shall
+      be set by signed configuration, not by hardware.
+    verify: test
+    tests:
+    - TST-14
+    from_:
+    - N-12
+    regs:
+    - REG-CLASS
+    uc: []
+    attr: variant_config = 1 bool
+  R-15:
+    type: IFACE
+    text: Top frames shall attach via a single standardised mechanical and electrical
+      interface that is tool-free and detected by the vehicle controller.
+    verify: test
+    tests:
+    - TST-15
+    from_:
+    - N-03
+    regs: []
+    uc: []
+    attr: topframe_swap <= 5 min
+functions:
+  F-01:
+    name: Generate electrical power from pedalling
+    alloc:
+    - P-PEDGEN
+    reqs:
+    - R-03
+    perf: ''
+    safety_decision: ''
+  F-02:
+    name: Control pedal resistance
+    alloc:
+    - P-PEDGEN
+    reqs:
+    - R-02
+    perf: ''
+    safety_decision: ''
+  F-03:
+    name: Drive the rear wheel
+    alloc:
+    - P-BELT
+    - P-BRAKE
+    - P-MCU
+    - P-MOTOR
+    reqs:
+    - R-01
+    perf: ''
+    safety_decision: ''
+  F-04:
+    name: Store and deliver energy
+    alloc:
+    - P-BMS
+    - P-PACK
+    reqs:
+    - R-09
+    perf: ''
+    safety_decision: ''
+  F-05:
+    name: Recover braking energy
+    alloc:
+    - P-BELT
+    - P-BRAKE
+    - P-MCU
+    - P-MOTOR
+    reqs:
+    - R-13
+    perf: ''
+    safety_decision: ''
+  F-06:
+    name: Enforce assist and speed limits per variant
+    alloc:
+    - P-FRAME
+    - P-TOPFRAME
+    - P-VCU
+    reqs:
+    - R-07
+    perf: ''
+    safety_decision: ''
+  F-07:
+    name: Immobilise and track when locked
+    alloc:
+    - P-LOCK
+    reqs:
+    - R-05
+    perf: ''
+    safety_decision: ''
+  F-08:
+    name: Authenticate the rider offline
+    alloc:
+    - P-LOCK
+    reqs:
+    - R-06
+    perf: ''
+    safety_decision: ''
+  F-09:
+    name: Report fleet telemetry
+    alloc:
+    - P-APP
+    - P-TCU
+    reqs:
+    - R-11
+    perf: ''
+    safety_decision: ''
+  F-10:
+    name: Charge and export power over USB-C PD
+    alloc:
+    - P-CHG
+    reqs:
+    - R-09
+    perf: ''
+    safety_decision: ''
+  F-11:
+    name: Detect and configure the attached top frame
+    alloc:
+    - P-FRAME
+    - P-TOPFRAME
+    - P-VCU
+    reqs:
+    - R-15
+    perf: ''
+    safety_decision: ''
+  F-12:
+    name: Run the end-of-line self-test
+    alloc:
+    - P-FRAME
+    - P-TOPFRAME
+    - P-VCU
+    reqs:
+    - R-12
+    perf: ''
+    safety_decision: ''
+  F-13:
+    name: Illuminate and signal
+    alloc:
+    - P-HMI
+    - P-LIGHT
+    reqs:
+    - R-07
+    perf: ''
+    safety_decision: ''
+  F-14:
+    name: Display status and navigation
+    alloc:
+    - P-HMI
+    - P-LIGHT
+    reqs:
+    - R-06
+    perf: ''
+    safety_decision: ''
+logical_components:
+  LC-PEDGEN:
+    name: Pedal generator
+    role: Turn rider effort into electrical power with software-defined feel
+    funcs:
+    - F-01
+    - F-02
+    quality: []
+    parts:
+    - P-PEDGEN
+  LC-TRACTION:
+    name: Traction drive
+    role: Propel the bike and recover braking energy
+    funcs:
+    - F-03
+    - F-05
+    quality: []
+    parts:
+    - P-MOTOR
+    - P-BELT
+    - P-MCU
+    - P-BRAKE
+  LC-ENERGY:
+    name: Energy storage
+    role: Store energy safely and report state
+    funcs:
+    - F-04
+    quality: []
+    parts:
+    - P-PACK
+    - P-BMS
+  LC-VCU:
+    name: Vehicle control
+    role: Coordinate drive, limits, variants and self-test
+    funcs:
+    - F-06
+    - F-11
+    - F-12
+    quality: []
+    parts:
+    - P-FRAME
+    - P-TOPFRAME
+    - P-VCU
+  LC-SEC:
+    name: Security & access
+    role: Authenticate riders and immobilise when locked
+    funcs:
+    - F-07
+    - F-08
+    quality: []
+    parts:
+    - P-LOCK
+  LC-CONN:
+    name: Connectivity
+    role: Connect the bike to app, cloud and fleet
+    funcs:
+    - F-09
+    quality: []
+    parts:
+    - P-TCU
+    - P-APP
+  LC-PWR:
+    name: Power conversion
+    role: Convert and route USB-C PD power
+    funcs:
+    - F-10
+    quality: []
+    parts:
+    - P-CHG
+  LC-HMI:
+    name: Rider interface
+    role: Show status, navigation and light the road
+    funcs:
+    - F-13
+    - F-14
+    quality: []
+    parts:
+    - P-HMI
+    - P-LIGHT
+logical_interfaces:
+  LI-01:
+    a: LC-PEDGEN
+    b: LC-VCU
+    flow: pedal torque, cadence; resistance setpoint
+  LI-02:
+    a: LC-VCU
+    b: LC-TRACTION
+    flow: torque command; regen request; speed
+  LI-03:
+    a: LC-ENERGY
+    b: LC-TRACTION
+    flow: 48 V DC power; current limits
+  LI-04:
+    a: LC-ENERGY
+    b: LC-VCU
+    flow: SoC, temperature, faults
+  LI-05:
+    a: LC-SEC
+    b: LC-VCU
+    flow: lock/unlock state; rider identity
+  LI-06:
+    a: LC-CONN
+    b: LC-VCU
+    flow: telemetry; OTA; remote lock
+  LI-07:
+    a: LC-PWR
+    b: LC-ENERGY
+    flow: charge/discharge power
+  LI-08:
+    a: LC-HMI
+    b: LC-VCU
+    flow: mode selection; status; navigation
+parts:
+  P-TMB:
+    name: ALSO TM-B
+    type: ALSO TM-B
+    parent: null
+    attrs: {}
+    discipline: system
+    context: false
+    make_buy: make
+  P-FRAME:
+    name: Frame with top-frame interface
+    type: Frame with top-frame interface
+    parent: P-TMB
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: make
+  P-TOPFRAME:
+    name: Top frame (solo / utility / bench)
+    type: Top frame
+    parent: P-FRAME
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: make
+  P-PEDGEN:
+    name: Pedal generator unit
+    type: Pedal generator unit
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-MOTOR:
+    name: Rear hub/mid motor, 180 Nm wheel torque
+    type: Rear hub/mid motor
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-BELT:
+    name: Gates carbon belt drive
+    type: Gates carbon belt drive
+    parent: P-TMB
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: buy
+  P-MCU:
+    name: Motor controller / inverter
+    type: Motor controller / inverter
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-PACK:
+    name: 800 Wh removable battery pack
+    type: 800 Wh removable battery pack
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-BMS:
+    name: Battery management system
+    type: Battery management system
+    parent: P-PACK
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-VCU:
+    name: Vehicle control unit
+    type: Vehicle control unit
+    parent: P-TMB
+    attrs: {}
+    discipline: firmware
+    context: false
+    make_buy: make
+  P-TCU:
+    name: Telematics unit (LTE/GNSS/BLE)
+    type: Telematics unit
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-LOCK:
+    name: Rear-wheel lock actuator
+    type: Rear-wheel lock actuator
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-HMI:
+    name: Colour LED display & control module
+    type: Colour LED display & control module
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+  P-LIGHT:
+    name: Headlight, taillight, indicators
+    type: Headlight
+    parent: P-TMB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+  P-CHG:
+    name: 240 W USB-C PD charge/discharge port
+    type: 240 W USB-C PD charge/discharge port
+    parent: P-PACK
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+  P-SUSP:
+    name: Front/rear suspension (air/air or air/coil)
+    type: Front/rear suspension
+    parent: P-TMB
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: buy
+  P-BRAKE:
+    name: Hydraulic disc brakes with regen blending
+    type: Hydraulic disc brakes with regen blending
+    parent: P-TMB
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: buy
+  P-APP:
+    name: Companion app & cloud
+    type: Companion app & cloud
+    parent: P-TMB
+    attrs: {}
+    discipline: software
+    context: true
+    make_buy: make
+nodes: {}
+interfaces:
+  IF-01:
+    name: Pedal generator → VCU torque/cadence
+    a: P-PEDGEN
+    b: P-VCU
+    items:
+    - PedalTorque
+    - Cadence
+    - GeneratorPower
+    kind: electrical+CAN
+    funcs:
+    - F-01
+    - F-02
+  IF-02:
+    name: VCU → motor controller torque command
+    a: P-VCU
+    b: P-MCU
+    items:
+    - TorqueCommand
+    - SpeedLimit
+    kind: CAN
+    funcs:
+    - F-03
+    - F-06
+  IF-03:
+    name: Pack ↔ motor controller HV bus
+    a: P-PACK
+    b: P-MCU
+    items:
+    - DCPower48V
+    kind: electrical 48 V
+    funcs:
+    - F-03
+    - F-04
+  IF-04:
+    name: Top frame ↔ frame (mechanical + ID)
+    a: P-TOPFRAME
+    b: P-FRAME
+    items:
+    - MechanicalLoad
+    - FrameID
+    kind: mechanical+electrical
+    funcs:
+    - F-11
+  IF-05:
+    name: BMS ↔ VCU
+    a: P-BMS
+    b: P-VCU
+    items:
+    - SoC
+    - PackTemp
+    - Faults
+    kind: CAN
+    funcs:
+    - F-04
+  IF-06:
+    name: TCU ↔ cloud/app
+    a: P-TCU
+    b: P-APP
+    items:
+    - Telemetry
+    - OTA
+    - LockCommand
+    kind: LTE/BLE
+    funcs:
+    - F-09
+    - F-07
+  IF-07:
+    name: VCU → wheel lock
+    a: P-VCU
+    b: P-LOCK
+    items:
+    - LockCommand
+    - LockState
+    kind: electrical
+    funcs:
+    - F-07
+  IF-08:
+    name: USB-C PD ↔ pack
+    a: P-CHG
+    b: P-PACK
+    items:
+    - PDPower240W
+    kind: USB-C PD 240 W
+    funcs:
+    - F-10
+  IF-09:
+    name: Motor → belt → rear wheel
+    a: P-MOTOR
+    b: P-BELT
+    items:
+    - Torque
+    kind: mechanical
+    funcs:
+    - F-03
+  IF-10:
+    name: Brake lever → VCU regen request
+    a: P-BRAKE
+    b: P-VCU
+    items:
+    - BrakeLeverPosition
+    kind: electrical
+    funcs:
+    - F-05
+states:
+  S-OFF:
+    name: Off / locked
+  S-UNLOCK:
+    name: Unlocked, standby
+  S-RIDE:
+    name: Riding
+  S-REGEN:
+    name: Regenerating
+  S-CHARGE:
+    name: Charging
+  S-FAULT:
+    name: Fault / limp
+  S-EOL:
+    name: End-of-line test
+transitions:
+  T-01:
+    frm: S-OFF
+    to: S-UNLOCK
+    trigger: rider authenticated (key/NFC/app)
+    guard: ''
+    sensor: null
+    func: F-08
+  T-02:
+    frm: S-UNLOCK
+    to: S-RIDE
+    trigger: pedal torque or throttle > threshold
+    guard: ''
+    sensor: null
+    func: F-03
+  T-03:
+    frm: S-RIDE
+    to: S-REGEN
+    trigger: brake lever or coast with regen enabled
+    guard: ''
+    sensor: null
+    func: F-05
+  T-04:
+    frm: S-RIDE
+    to: S-FAULT
+    trigger: BMS/motor fault
+    guard: ''
+    sensor: null
+    func: F-06
+  T-05:
+    frm: S-UNLOCK
+    to: S-OFF
+    trigger: lock command or 10 min idle
+    guard: ''
+    sensor: null
+    func: F-07
+  T-06:
+    frm: S-OFF
+    to: S-CHARGE
+    trigger: USB-C PD source connected
+    guard: ''
+    sensor: null
+    func: F-10
+  T-07:
+    frm: S-UNLOCK
+    to: S-EOL
+    trigger: EoL fixture command
+    guard: ''
+    sensor: null
+    func: F-12
+constraints: {}
+trades: {}
+arch_decisions: {}
+tests:
+  TST-01:
+    name: Range test, urban cycle, 75 kg rider
+    method: Dyno + road, SAE J1082-style cycle
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-02:
+    name: Pedal-to-torque latency
+    method: 'Bench: step pedal torque, log motor torque'
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-03:
+    name: Virtual resistance sweep
+    method: Bench generator load 0–60 Nm
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-04:
+    name: Frame & top-frame structural
+    method: ISO 4210-6 / 16 CFR 1512 fatigue and static at 2× payload
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-05:
+    name: Lock immobilisation
+    method: Locked bike pushed/pedalled; wheel lock holds, pedals freewheel
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-06:
+    name: Offline ride
+    method: Phone off, server blocked; unlock + ride all modes
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-07:
+    name: Speed/assist cut-off per class
+    method: 'Dyno: class 2/3/EU configs'
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-08:
+    name: UL 2849 / UL 2271 certification
+    method: NRTL test program
+    gate: PVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-09:
+    name: Charge & export 240 W
+    method: 0→100 % timing; PD sink load 240 W
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-10:
+    name: Tool-free battery swap
+    method: Timed swap by 5 users
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-11:
+    name: Telemetry period & offline buffer
+    method: LTE shield box 24 h
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-12:
+    name: EoL self-test time
+    method: Production fixture
+    gate: PVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-13:
+    name: Regen share on urban cycle
+    method: Dyno energy accounting
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-14:
+    name: Signed variant configuration
+    method: Tamper attempt on config; limits unchanged
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-15:
+    name: Top-frame detection & swap time
+    method: Swap three frames; VCU identifies each
+    gate: CDR
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+gates:
+  PDR:
+    date: '2026-12-15'
+    exit: Architecture frozen; pedal-by-wire control concept validated on mule; UL
+      test plan agreed
+    stage: Development
+    status: planned
+  CDR:
+    date: '2027-02-15'
+    exit: Detailed design released; all High-AP failure modes have tests; sourcing
+      complete
+    stage: Development
+    status: planned
+  PVT:
+    date: '2027-05-01'
+    exit: UL 2849/2271 granted; PFMEA & control plan at CM; EoL test < 180 s
+    stage: Production
+    status: planned
+fm_assessments: {}
+teams:
+  TM-SE:
+    name: Systems engineering
+    lead: ''
+    members: []
+  TM-DRIVE:
+    name: Drive & controls
+    lead: ''
+    members: []
+  TM-PACK:
+    name: Battery
+    lead: ''
+    members: []
+  TM-MECH:
+    name: Frame & chassis
+    lead: ''
+    members: []
+  TM-SW:
+    name: Software & connectivity
+    lead: ''
+    members: []
+  TM-TEST:
+    name: Test & reliability
+    lead: ''
+    members: []
+  TM-MFG:
+    name: Manufacturing
+    lead: ''
+    members: []
+  TM-PM:
+    name: Program
+    lead: ''
+    members: []
+process_steps: {}
+suppliers: {}
+work_items: {}
+findings: {}
+handoffs: {}
+field_events: {}
+risks: {}
+reviews: {}
+program:
+  stage: Development

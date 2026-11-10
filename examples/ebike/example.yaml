@@ -1,0 +1,12 @@
+title: E-Bike Drive Unit
+company: (generic)
+url: ""
+category: Mid-drive motor + controller + battery interface
+summary: Small starter model — a few requirements, parts and tests. Good for watching the agents build a thread from a one-page PRD.
+why: Minimal seed; everything beyond the PRD is agent-generated and reviewable.
+seeded: 5 stakeholders, needs/MoEs, 6 requirements, 4 parts, 6 tests
+assess:
+  - Ask the agent to read docs/PRD.md and build the architecture.
+prompts:
+  - Read the documents in docs/ and set up stakeholders, needs and measures of effectiveness
+  - Define the logical and physical architecture
