@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { marked } from 'marked'
 import { Square, Send, X, Play } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useProject, type Ev } from '../state'
 import { Linkified, IdLink } from './common'
 import type { PatchSummary } from '../api'
@@ -24,7 +25,7 @@ export function PatchCard({ p, compact }: { p: PatchSummary; compact?: boolean }
   </div>
 }
 
-function Event({ ev }: { ev: Ev }) {
+export function Event({ ev }: { ev: Ev }) {
   const { answerPermission, send, patches } = useProject(); const [answered, setAnswered] = useState<string | null>(null)
   switch (ev.type) {
     case 'user': return <div className="msg user"><Linkified text={ev.text} /></div>
@@ -47,7 +48,8 @@ function Event({ ev }: { ev: Ev }) {
 function linkHtml(html: string) { return html.replace(/\b((?:STK|MOE|UC|SC|REG|LC|LI|ND|IF|TR|TD|AD|FM|FA|N|R|P|S|C|T|G)-[A-Za-z0-9_.-]+|F\d{2}[a-z]?)\b/g, m => `<a class="id" data-id="${m}">${m}</a>`) }
 
 export function AgentDrawer() {
-  const { drawer, setDrawer, events, busy, send, interrupt, project, pid } = useProject()
+  const { drawer, setDrawer, events: allEvents, busy, send, interrupt, project, pid, thread, setThread, threads } = useProject(); const nav = useNavigate()
+  const events = allEvents.filter(e => !e.thread || e.thread === thread || e.type === 'triage')
   const [text, setText] = useState(''); const log = useRef<HTMLDivElement>(null); const [auto, setAuto] = useState(false); const [menu, setMenu] = useState(false)
   useEffect(() => { log.current?.scrollTo({ top: log.current.scrollHeight }) }, [events.length, drawer])
   useEffect(() => { if (project) setAuto(project.auto) }, [project?.auto])
@@ -55,7 +57,7 @@ export function AgentDrawer() {
   useEffect(() => { const h = (e: MouseEvent) => { const a = (e.target as HTMLElement).closest('a.id[data-id]') as HTMLElement | null; if (a && log.current?.contains(a)) { e.preventDefault(); const id = a.dataset.id!; fetch(`/api/p/${pid}/search?q=${encodeURIComponent(id)}`).then(r => r.json()).then(hits => { const h = hits.find((x: any) => x.id === id); if (h) window.dispatchEvent(new CustomEvent('open-element', { detail: h })) }) } }; document.addEventListener('click', h); return () => document.removeEventListener('click', h) }, [pid])
   const submit = () => { const t = text.trim(); if (!t) return; setText(''); send(t) }
   return <div className={'drawer' + (drawer ? ' open' : '')}>
-    <header><b>Agent</b>{busy ? <span className="row small muted"><span className="spinner" /> working</span> : <span className="small muted">idle</span>}<div style={{ flex: 1 }} />
+    <header><select className="field" style={{ width: 'auto', maxWidth: 200, padding: '3px 6px', fontSize: 12 }} value={thread || ''} onChange={e => setThread(e.target.value || null)}><option value="">New conversation</option>{threads.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select><button className="btn ghost sm" title="Open as a page" onClick={() => nav(`/p/${pid}/chat${thread ? '/' + thread : ''}`)}>↗</button>{busy ? <span className="row small muted"><span className="spinner" /> working</span> : <span className="small muted">idle</span>}<div style={{ flex: 1 }} />
       <label className="small muted" style={{ display: 'flex', gap: 5, alignItems: 'center' }}><input type="checkbox" checked={auto} onChange={async e => { setAuto(e.target.checked); await fetch(`/api/p/${pid}/settings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ auto: e.target.checked }) }) }} /> auto-approve</label>
       {busy && <button className="btn ghost sm" onClick={interrupt} title="Stop"><Square size={13} /></button>}<button className="btn ghost sm" onClick={() => setDrawer(false)}><X size={14} /></button></header>
     <div className="log" ref={log}>

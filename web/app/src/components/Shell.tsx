@@ -90,6 +90,7 @@ function Tree() {
     {isOpen(k) && <div className="sub">{children}</div>}</>
     return <div className="tree">
     <Item to={`/p/${pid}`} end label="Home" icon={<Home size={17} />} />
+    <Item to={`/p/${pid}/chat`} label="Conversations" icon={<Sparkles size={17} />} />
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />

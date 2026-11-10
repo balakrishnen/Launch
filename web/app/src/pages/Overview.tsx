@@ -24,7 +24,7 @@ export function Overview() {
     { icon: <ShieldAlert size={18} />, bg: '#fdecec', color: '#b91c1c', t: 'Assess risks', d: 'Systematic DFMEA: every function, interface and transition against guide words.', q: 'Assess or screen every failure-mode candidate systematically with causes derived from the architecture' },
     { icon: <FlaskConical size={18} />, bg: '#eefbe7', color: '#15803d', t: 'Plan the next gate', d: 'Work items, handoffs and risks for every failing exit criterion.', q: 'Plan the work needed to pass the next gate: work items with owners and due dates for each failing criterion, handoffs for cross-team evidence, and program risks' },
   ]
-  const submit = () => { const t = text.trim(); if (!t) return; setText(''); send(t) }
+  const submit = () => { const t = text.trim(); if (!t) return; setText(''); send(t, undefined, { thread: null, page: true }) }
   const items = seg === 'recent' ? recent.slice().reverse().map((t: any) => ({ t: t.title, k: t.stage ? 'Element' : 'Artifact', s: t.stage || '', path: t.path }))
     : seg === 'artifacts' ? [...FORMS.map(f => ({ t: f.title, k: 'Form', s: f.stage, path: `/p/${pid}/form/${f.id}` })), ...MATRIX_PAIRS.map(([a, b]) => ({ t: `${KIND_LABEL[a]} × ${KIND_LABEL[b]}`, k: 'Matrix', s: project.stage_of[b] || '', path: `/p/${pid}/matrix/${a}/${b}` })), ...(art?.views || []).map((v: string) => ({ t: v.replace('.png', '').replace(/^V\d+_/, '').replace(/_/g, ' '), k: 'Diagram', s: '', path: `/p/${pid}/views` }))]
     : staged.map(p => ({ t: p.rationale, k: 'Patch', s: p.author, path: `/p/${pid}/inbox` }))

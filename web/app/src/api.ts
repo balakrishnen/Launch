@@ -61,6 +61,7 @@ export const P = (pid: string) => ({
   get: (p: string) => api.get(`/p/${pid}${p}`),
   post: (p: string, body?: unknown) => api.post(`/p/${pid}${p}`, body),
   upload: (p: string, f: File) => api.upload(`/p/${pid}${p}`, f),
+  del: (p: string) => api.del(`/p/${pid}${p}`),
   out: (path: string) => (import.meta.env.VITE_REVIEW === '1' ? `out/${path}` : `/p/${pid}/out/${path}`),
 })
 

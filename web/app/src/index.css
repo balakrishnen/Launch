@@ -124,3 +124,10 @@ pre.diff{font:11.5px/1.35 var(--mono);background:#0f172a;color:#e2e8f0;padding:8
 .sheet-t tr.grp td{background:var(--surface-2);padding:6px 10px} .sheet-t tr.totals td{border-top:2px solid var(--line-2);background:var(--surface-2)}
 .tablewrap.dense td{padding:3px 8px;font-size:12.5px}
 .doc{line-height:1.55} .doc h1{font-size:22px;margin:0 0 10px} .doc h2{font-size:17px;margin:18px 0 6px} .doc h3{font-size:14px;margin:14px 0 4px} .doc table{border-collapse:collapse;margin:8px 0} .doc td,.doc th{border:1px solid var(--line);padding:4px 8px;font-size:13px} .doc code{background:var(--surface-2);padding:1px 4px;border-radius:4px}
+
+/* conversations page */
+.chatpage{display:grid;grid-template-columns:260px 1fr;gap:0;height:calc(100vh - 120px);margin:-8px -24px -24px;border-top:1px solid var(--line)}
+.chatpage .threads{border-right:1px solid var(--line);padding:12px;overflow:auto;background:var(--surface)}
+.chatpage .th{padding:8px 10px;border-radius:9px;cursor:pointer} .chatpage .th:hover{background:var(--surface-2)} .chatpage .th.active{background:var(--accent-soft)} .chatpage .th .t{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .chatpage .th .d{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatpage .conv{display:flex;flex-direction:column;min-width:0} .chatpage .conv .log{flex:1;overflow:auto;padding:16px 24px;max-width:960px;width:100%;margin:0 auto} .chatpage .conv footer{padding:12px 24px 18px;border-top:1px solid var(--line);background:var(--surface)} .chatpage .conv footer .prompt{max-width:960px;margin:0 auto}
+.chatpage .msg{font-size:14px} .chatpage .msg.user{margin-left:80px}

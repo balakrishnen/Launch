@@ -45,9 +45,32 @@ class Session:
         self.client: ClaudeSDKClient | None = None; self.busy = False; self.history: list[dict] = []; self.last_score: dict | None = None
         self.server, self.names = make_server(self.store, docs_dir=self.docs_dir, author="agent:ui")
         self.tc = toolchain.detect()
+        # Conversations: like Claude, a project has many threads; each thread is its own agent session with its own memory of the
+        # conversation, all grounded in the same model graph. Persisted as JSONL so they survive restarts and are shared across users.
+        self.threads: dict[str, dict] = {}; self.thread_dir = os.path.join(self.root, ".sethread", "threads"); os.makedirs(self.thread_dir, exist_ok=True)
+        for fn in sorted(os.listdir(self.thread_dir)):
+            if fn.endswith(".jsonl"):
+                tid = fn[:-6]; evs = [json.loads(l) for l in open(os.path.join(self.thread_dir, fn)) if l.strip()]
+                meta = next((e for e in evs if e.get("type") == "thread"), {"title": tid, "created": 0, "user": ""})
+                self.threads[tid] = {"id": tid, "title": meta.get("title", tid), "created": meta.get("created", 0), "user": meta.get("user", ""), "client": None, "busy": False, "history": [e for e in evs if e.get("type") != "thread"], "updated": evs[-1]["ts"] if evs else 0}
+
+    def new_thread(self, title: str, user: str) -> dict:
+        tid = time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4]
+        t = {"id": tid, "title": title[:80] or "New conversation", "created": time.time(), "user": user, "client": None, "busy": False, "history": [], "updated": time.time()}
+        self.threads[tid] = t
+        with open(os.path.join(self.thread_dir, tid + ".jsonl"), "a") as fh: fh.write(json.dumps({"type": "thread", "title": t["title"], "created": t["created"], "user": user, "ts": t["created"]}) + "\n")
+        return t
+    def thread_summary(self, t: dict) -> dict:
+        last = next((e for e in reversed(t["history"]) if e["type"] in ("assistant", "user")), None)
+        return {"id": t["id"], "title": t["title"], "created": t["created"], "updated": t["updated"], "user": t["user"], "busy": t["busy"], "n": len([e for e in t["history"] if e["type"] in ("user", "assistant")]), "last": (last or {}).get("text", "")[:140]}
 
     def emit(self, type_: str, **data):
         ev = {"type": type_, "ts": time.time(), **data}; self.history.append(ev); self.events.put_nowait(ev)
+        tid = data.get("thread")
+        if tid and tid in self.threads:
+            t = self.threads[tid]; t["history"].append(ev); t["updated"] = ev["ts"]
+            if type_ not in ("idle",):
+                with open(os.path.join(self.thread_dir, tid + ".jsonl"), "a") as fh: fh.write(json.dumps(ev, default=str) + "\n")
         if type_ == "model_changed":
             try: self.last_score = triage(self, self.last_score)
             except Exception as e: self.history.append({"type": "error", "ts": time.time(), "text": f"triage: {e}"})
@@ -62,41 +85,58 @@ class Session:
         if ans == "always": self.yolo = True
         return PermissionResultAllow() if ans in ("allow", "always") else PermissionResultDeny(message="engineer declined")
 
-    async def ensure_client(self):
-        if self.client: return
-        sp = HARNESS + "\n\n# Toolchain\n" + toolchain.summary(self.tc) + f"\n\n# Project root\n{self.root}\n\n# UI\nThe engineer is in a web app, not a terminal. When you mention an element, write its id (e.g. R-012) — the app turns ids into links. Keep answers short; the app shows your staged patches as cards."
+    async def ensure_client(self, thread: dict | None = None):
+        if thread is not None and thread.get("client"): return thread["client"]
+        if thread is None and self.client: return self.client
+        sp = HARNESS + "\n\n# Toolchain\n" + toolchain.summary(self.tc) + f"\n\n# Project root\n{self.root}\n\n# UI\nYou are Launch: Claude for physical-product engineers, driven by this project's MBSE graph. Ground every answer in the model — read the relevant elements before answering, cite element ids, and prefer proposing a patch over describing a change. The engineer is in a web app, not a terminal. When you mention an element, write its id (e.g. R-012) — the app turns ids into links. Keep answers short; the app shows your staged patches as cards."
         opts = ClaudeAgentOptions(system_prompt=sp, mcp_servers={"sethread": self.server}, tools=BUILTIN, allowed_tools=self.names + sorted(SAFE_TOOLS), cwd=self.root,
                                   permission_mode="default", can_use_tool=self.can_use_tool, max_turns=60, **({"model": self.model} if self.model else {}))
-        self.client = ClaudeSDKClient(opts); await self.client.connect()
+        client = ClaudeSDKClient(opts); await client.connect()
+        if thread is not None:
+            thread["client"] = client
+            # replay the thread so a restarted server keeps the conversation's memory
+            prior = [e for e in thread["history"] if e["type"] in ("user", "assistant")][-40:]
+            if prior: await client.query("Conversation so far (for context; do not answer it again):\n" + "\n".join(f"{e['type']}: {e['text'][:1500]}" for e in prior)); 
+            if prior:
+                async for _ in client.receive_response(): pass
+        else: self.client = client
+        return client
 
-    async def turn(self, text: str, role: str | None = None, user: str = "engineer"):
-        if self.busy: raise HTTPException(409, "agent is busy")
-        self.busy = True; staged0 = {p.id for p in self.store.list_patches("staged")}
-        self.emit("user", text=text, user=user)
+    async def turn(self, text: str, role: str | None = None, user: str = "engineer", thread_id: str | None = None, context: dict | None = None):
+        thread = self.threads.get(thread_id) if thread_id else None
+        if thread is None and thread_id: thread = self.new_thread(text[:60], user)
+        if thread is None: thread = self.new_thread(text[:60], user)
+        tid = thread["id"]
+        if thread["busy"]: raise HTTPException(409, "this conversation is busy")
+        thread["busy"] = True; self.busy = True; staged0 = {p.id for p in self.store.list_patches("staged")}
+        self.emit("user", text=text, user=user, thread=tid, context=context or {})
         try:
-            await self.ensure_client()
+            client = await self.ensure_client(thread)
             prompt = text
             if role and role in R.ROLES:
                 from ..agents.orchestrator import build_prompt
                 prompt = build_prompt(self.store, role, text or None)
-            await self.client.query(prompt)
-            async for msg in self.client.receive_response():
+            if context and context.get("path"):
+                where = context.get("label") or context["path"]
+                prompt = f"[The engineer is looking at: {where}" + (f" — element {context['element']} ({context.get('kind','')})" if context.get("element") else "") + ". 'This'/'it' refers to that. Read it from the model before answering.]\n\n" + prompt
+            await client.query(prompt)
+            async for msg in client.receive_response():
                 if isinstance(msg, AssistantMessage):
                     for b in msg.content:
-                        if isinstance(b, TextBlock) and b.text.strip(): self.emit("assistant", text=b.text)
+                        if isinstance(b, TextBlock) and b.text.strip(): self.emit("assistant", text=b.text, thread=tid)
                         elif isinstance(b, ToolUseBlock):
                             arg = b.input.get("command") or b.input.get("file_path") or b.input.get("kind") or b.input.get("name") or b.input.get("adapter") or b.input.get("rationale") or ""
-                            self.emit("tool", name=b.name.replace("mcp__sethread__", "model."), arg=str(arg)[:160])
+                            self.emit("tool", name=b.name.replace("mcp__sethread__", "model."), arg=str(arg)[:160], thread=tid)
                 elif isinstance(msg, UserMessage) and isinstance(msg.content, list):
                     for b in msg.content:
-                        if isinstance(b, ToolResultBlock) and b.is_error: self.emit("tool_error", text=str(b.content)[:300])
+                        if isinstance(b, ToolResultBlock) and b.is_error: self.emit("tool_error", text=str(b.content)[:300], thread=tid)
                 elif isinstance(msg, ResultMessage):
-                    self.emit("result", turns=msg.num_turns, seconds=round(msg.duration_ms / 1000), cost=msg.total_cost_usd)
+                    self.emit("result", turns=msg.num_turns, seconds=round(msg.duration_ms / 1000), cost=msg.total_cost_usd, thread=tid)
             new = [p.id for p in self.store.list_patches("staged") if p.id not in staged0]
             for pid in new:
-                if self.auto: self.store.approve(pid, approver="auto"); self.emit("patch_applied", id=pid)
+                if self.auto: self.store.approve(pid, approver="auto"); self.emit("patch_applied", id=pid, thread=tid)
                 else:
-                    self.emit("patch_staged", id=pid, patch=patch_summary(self.store, pid))
+                    self.emit("patch_staged", id=pid, patch=patch_summary(self.store, pid), thread=tid)
                     try:
                         p = self.store.get_patch(pid)
                         for op in p.ops:
@@ -106,9 +146,9 @@ class Session:
                     except Exception: pass
             if new: self.emit("model_changed")
         except Exception as e:
-            self.emit("error", text=f"{type(e).__name__}: {e}")
+            self.emit("error", text=f"{type(e).__name__}: {e}", thread=tid)
         finally:
-            self.busy = False; self.emit("idle")
+            thread["busy"] = False; self.busy = any(t["busy"] for t in self.threads.values()); self.emit("idle", thread=tid)
 
 def triage(S: "Session", before: dict | None):
     """Watcher: after a model change, emit what changed in the scorecard and the top new gaps with one-click agent actions."""
@@ -170,6 +210,10 @@ def element_page(store: Store, kind: str, eid: str) -> dict:
 class Chat(BaseModel):
     text: str
     role: str | None = None
+    thread: str | None = None
+    context: dict | None = None
+class NewThread(BaseModel):
+    title: str = ""
 class SheetCommit(BaseModel):
     file: str = "sheet"
     sheet: str = ""
@@ -637,11 +681,33 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     @app.post("/api/p/{pid}/chat")
     async def chat(pid: str, c: Chat, user: str = U):
         S = W.get(pid)
-        if S.busy: raise HTTPException(409, "agent is busy")
-        asyncio.create_task(S.turn(c.text, c.role, user)); return {"ok": True}
+        t = S.threads.get(c.thread) if c.thread else None
+        if t is None: t = S.new_thread(c.text[:60], user)
+        if t["busy"]: raise HTTPException(409, "this conversation is busy")
+        asyncio.create_task(S.turn(c.text, c.role, user, t["id"], c.context)); return {"ok": True, "thread": t["id"]}
+    @app.get("/api/p/{pid}/threads")
+    def threads(pid: str, user: str = U):
+        S = W.get(pid); return sorted((S.thread_summary(t) for t in S.threads.values()), key=lambda t: -t["updated"])
+    @app.post("/api/p/{pid}/threads")
+    def new_thread(pid: str, nt: NewThread, user: str = U):
+        S = W.get(pid); return S.thread_summary(S.new_thread(nt.title, user))
+    @app.get("/api/p/{pid}/threads/{tid}")
+    def thread(pid: str, tid: str, user: str = U):
+        S = W.get(pid); t = S.threads.get(tid)
+        if not t: raise HTTPException(404, "no such conversation")
+        return {**S.thread_summary(t), "events": t["history"][-500:]}
+    @app.delete("/api/p/{pid}/threads/{tid}")
+    def del_thread(pid: str, tid: str, user: str = U):
+        S = W.get(pid); t = S.threads.pop(tid, None)
+        if t:
+            p = os.path.join(S.thread_dir, tid + ".jsonl")
+            if os.path.exists(p): os.remove(p)
+        return {"ok": True}
     @app.post("/api/p/{pid}/interrupt")
-    async def interrupt(pid: str, user: str = U):
+    async def interrupt(pid: str, thread: str | None = None, user: str = U):
         S = W.get(pid)
+        for t in S.threads.values():
+            if t.get("client") and (thread is None or t["id"] == thread) and t["busy"]: await t["client"].interrupt()
         if S.client: await S.client.interrupt()
         return {"ok": True}
     @app.post("/api/p/{pid}/permission/{perm_id}")

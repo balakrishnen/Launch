@@ -11,6 +11,10 @@ with Fable 5.2) stop at the files. Their own limitations lists are the same: no 
 antenna sign-off, no certification, no durability, no instrument loop. That gap — requirements, architecture, FMEA,
 V&V, certification, traced to every file — is what sethread adds.
 
+## Claude for physical-product engineers, driven by the MBSE graph
+
+The primary interface is the conversation. A project has many **conversations** (Conversations in the sidebar, or the Agent drawer beside any page); each is its own agent session, persisted and shared across the team, and all of them are grounded in the same model graph: the agent reads the elements before answering, cites ids (which the app turns into links), and proposes patches instead of describing changes. Every message carries what the engineer is looking at — the element, form, table or run on screen — so "this" means this. The hero prompt on the project home starts a new conversation; "Review", "Plan a change", "ask the agent to fill this" buttons on every page start one in context.
+
 ## Launch is an engineer OS
 
 Not a suite of tools — an operating system for a hardware program. The **kernel** is the system model: one typed, event-sourced, revisioned graph. The only **syscall** is the patch: every change, by a person in a sheet or by an agent, is a patch with author, rationale and sources. **Permissions** are review: apply it yourself or stage it for someone else. **Processes** are the agent roles. The **window manager** is the INCOSE / ISO 15288 life-cycle navigation. **Applications** are the forms and tools (DFMEA, DVP&R, gate readiness, tables, notes, CAD next); they all read and write the kernel through the same syscall, so a BOM table, a failure mode, a test result and a drawing land in one thread with one provenance. **Drivers** are the few connectors worth having because the tool behind them does a deep job: TestRUNS and Kanalysis (results in), DOORS/Jama via OSLC, PLM later. Everything else is cheaper to build on the kernel than to integrate.
