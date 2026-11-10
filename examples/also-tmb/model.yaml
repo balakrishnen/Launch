@@ -1051,32 +1051,90 @@ teams:
     name: Systems engineering
     lead: ''
     members: []
+    kind: functional
+    focus: systems
   TM-DRIVE:
     name: Drive & controls
     lead: ''
     members: []
+    kind: subsystem
+    parts:
+    - P-PEDGEN
+    - P-MOTOR
+    - P-BELT
+    - P-MCU
+    - P-BRAKE
+    lcs:
+    - LC-PEDGEN
+    - LC-TRACTION
+    moes:
+    - MOE-02
   TM-PACK:
     name: Battery
     lead: ''
     members: []
+    kind: subsystem
+    parts:
+    - P-PACK
+    lcs:
+    - LC-ENERGY
+    - LC-PWR
+    moes:
+    - MOE-01
+    - MOE-05
   TM-MECH:
     name: Frame & chassis
     lead: ''
     members: []
+    kind: subsystem
+    parts:
+    - P-FRAME
+    - P-SUSP
+    lcs: []
+    moes:
+    - MOE-03
   TM-SW:
     name: Software & connectivity
     lead: ''
     members: []
+    kind: subsystem
+    parts:
+    - P-VCU
+    - P-TCU
+    - P-HMI
+    - P-LOCK
+    - P-APP
+    lcs:
+    - LC-VCU
+    - LC-SEC
+    - LC-CONN
+    - LC-HMI
+    moes:
+    - MOE-04
+    - MOE-07
   TM-TEST:
     name: Test & reliability
     lead: ''
     members: []
+    kind: functional
+    focus: test
   TM-MFG:
     name: Manufacturing
     lead: ''
     members: []
+    kind: functional
+    focus: manufacturing
   TM-PM:
     name: Program
+    lead: ''
+    members: []
+    kind: functional
+    focus: program
+  TM-REL:
+    name: Reliability & quality
+    kind: functional
+    discipline: system
+    focus: reliability
     lead: ''
     members: []
 process_steps: {}

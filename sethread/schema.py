@@ -43,7 +43,10 @@ KINDS: dict[str, dict[str, Any]] = {
     "gates": dict(req=["date", "exit"], opt={"stage": "", "criteria": {}, "status": "planned"}, refs={}),
     "fm_assessments": dict(req=["element", "guide"], opt={"mode": "", "effect": "", "cause": "", "S": None, "O": None, "D": None, "controls": "", "tests": [], "ncr": ""}, refs={"tests": "tests"}),
     # ---- whole-company layers: teams, manufacturing, supply chain, program, quality/field ----
-    "teams": dict(req=["name"], opt={"discipline": "", "lead": "", "members": []}, refs={}),
+    # Two kinds of team. subsystem: owns a slice of the architecture (scope = root parts and/or logical components; the closure is computed —
+    # subtree, functions, requirements, boundary interfaces, failure modes, tests, MoEs). functional: cuts across all subsystems with a focus
+    # (reliability, quality, safety, compliance, test, manufacturing, sourcing, program, systems, software…).
+    "teams": dict(req=["name"], opt={"kind": "functional", "discipline": "", "focus": "", "lead": "", "members": [], "parts": [], "lcs": [], "moes": []}, refs={"parts": "parts", "lcs": "logical_components", "moes": "moes"}),
     "process_steps": dict(req=["name", "station"], opt={"seq": 0, "parts": [], "output": None, "characteristics": [], "controls": "", "cycle_s": None, "team": None, "eol_test": None}, refs={"parts": "parts", "output": "parts", "team": "teams", "eol_test": "tests"}),
     "suppliers": dict(req=["name"], opt={"parts": [], "status": "approved", "lead_time_d": None, "country": "", "risk": "", "second_source": None, "owner": ""}, refs={"parts": "parts", "second_source": "suppliers"}),
     "work_items": dict(req=["title", "owner", "status"], opt={"team": None, "due": "", "links": [], "gate": None, "priority": "P2", "notes": ""}, refs={"team": "teams", "gate": "gates"}),
@@ -64,6 +67,7 @@ KINDS: dict[str, dict[str, Any]] = {
     "attachments": dict(req=["element", "file", "role"], opt={"title": "", "format": "", "rev": "", "date": "", "size": 0, "uploaded_by": ""}, refs={}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
+TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field"]
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]
 # INCOSE SE Handbook / ISO/IEC/IEEE 15288 generic life-cycle stages
 LIFECYCLE = ["Concept", "Development", "Production", "Utilization", "Support", "Retirement"]

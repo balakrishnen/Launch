@@ -4516,44 +4516,105 @@ teams:
     name: Systems engineering
     discipline: system
     lead: maya@sabi.com
+    kind: functional
+    focus: systems
   TM-ME:
     name: Mechanical & textile
     discipline: mechanical
     lead: jon@sabi.com
+    kind: functional
   TM-EE:
     name: Electrical
     discipline: electrical
     lead: priya@sabi.com
     members:
     - bala@twinmo.ai
+    kind: functional
   TM-FW:
     name: Firmware
     discipline: firmware
     lead: li@sabi.com
+    kind: functional
   TM-SW:
     name: App & cloud
     discipline: software
     lead: sam@sabi.com
+    kind: functional
   TM-TEST:
     name: Test & reliability
     discipline: system
     lead: bala@twinmo.ai
+    kind: functional
+    focus: test
   TM-MFG:
     name: Manufacturing
     discipline: manufacturing
     lead: rosa@sabi.com
+    kind: functional
+    focus: manufacturing
   TM-SC:
     name: Supply chain
     discipline: manufacturing
     lead: dev@sabi.com
+    kind: functional
+    focus: sourcing
   TM-QA:
     name: Quality & compliance
     discipline: system
     lead: ana@sabi.com
+    kind: functional
+    focus: quality
   TM-PM:
     name: Program
     discipline: system
     lead: kim@sabi.com
+    kind: functional
+    focus: program
+  TM-SENSE:
+    name: Sensing system
+    kind: subsystem
+    discipline: electrical
+    lead: priya@sabi.com
+    members: []
+    parts:
+    - P-ARRAY
+    lcs:
+    - LC-SENSE
+    - LC-COND
+    moes: []
+  TM-POWER:
+    name: Power system
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members:
+    - bala@twinmo.ai
+    parts:
+    - P-BATT
+    - P-CHARGER
+    lcs:
+    - LC-PWR
+    - LC-CHG
+    moes: []
+  TM-FIT:
+    name: Fit & comfort
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-TEXTILE
+    lcs:
+    - LC-FIT
+    moes:
+    - MOE-WEAR
+  TM-REL:
+    name: Reliability
+    kind: functional
+    discipline: system
+    focus: reliability
+    lead: ''
+    members: []
 suppliers:
   SUP-01:
     name: Shenzhen Knitwear Co.

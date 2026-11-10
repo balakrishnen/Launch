@@ -8,7 +8,7 @@ import { P, KIND_LABEL } from '../api'
 import { IdLink, Linkified } from '../components/common'
 import { Sheet, type Col } from '../components/Sheet'
 
-const TABS = ['Overview', 'Work', 'Records', 'Risk & tests', 'Handoffs', 'Activity']
+const TABS = ['Overview', 'Subsystem', 'Focus', 'Work', 'Records', 'Risk & tests', 'Handoffs', 'Activity']
 
 export function TeamPage() {
   const { tid = '' } = useParams(); const { pid, project, patches, send, openTab, toast } = useProject(); const nav = useNavigate()
@@ -29,13 +29,13 @@ export function TeamPage() {
   const recKinds = Object.entries(w.records as Record<string, string[]>)
   return <div>
     <div className="elhead" style={{ marginBottom: 10 }}><div style={{ flex: 1 }}>
-      <div className="row" style={{ marginBottom: 4 }}><span className="pill"><Users size={12} /> team</span>{w.discipline && <span className="pill accent">{w.discipline}</span>}<span className="muted small">lead {w.lead || '—'} · {w.members.length} member{w.members.length === 1 ? '' : 's'}</span></div>
+      <div className="row" style={{ marginBottom: 4 }}><span className={'pill ' + (w.kind === 'subsystem' ? 'accent' : '')}><Users size={12} /> {w.kind === 'subsystem' ? 'subsystem team' : `functional team${w.focus ? ' · ' + w.focus.name : ''}`}</span>{w.discipline && <span className="pill accent">{w.discipline}</span>}<span className="muted small">lead {w.lead || '—'} · {w.members.length} member{w.members.length === 1 ? '' : 's'}</span></div>
       <div className="title">{w.name}</div></div>
       <div className="row" style={{ flex: 'none' }}><button className="btn sm" onClick={() => send(`As the ${w.name} team: what should we do this week to be ready for the next gate? Use our open work items, findings, handoffs and High-AP failure modes on our parts`)}><Sparkles size={14} />Plan our week</button><button className="btn sm" onClick={() => nav(`/p/${pid}/teams`)}>All teams</button></div></div>
-    <div className="sectabs">{TABS.map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div>
+    <div className="sectabs">{TABS.filter(t => (t !== 'Subsystem' || w.subsystem) && (t !== 'Focus' || w.focus)).map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t === 'Focus' ? `Focus · ${w.focus.name}` : t}</button>)}</div>
     {tab === 'Overview' && <div className="stack" style={{ gap: 16 }}>
       <div className="kpis">
-        <Kpi label="Open work items" v={k.open_work_items} to={`/p/${pid}/team/${tid}`} /><Kpi label="Overdue" v={k.overdue} bad={k.overdue > 0} /><Kpi label="Open findings" v={k.open_findings} bad={k.critical_findings > 0} /><Kpi label="Handoffs waiting on us" v={k.handoffs_waiting_on_us} bad={k.handoffs_waiting_on_us > 0} /><Kpi label="We wait for" v={k.handoffs_we_wait_for} /><Kpi label="Tests passed" v={k.tests_passed} /><Kpi label="High-AP on our parts" v={k.high_ap_on_our_parts} bad={k.high_ap_without_test > 0} /><Kpi label="Open risks" v={k.open_risks} />
+        <Kpi label="Open work items" v={k.open_work_items} to={`/p/${pid}/team/${tid}`} /><Kpi label="Overdue" v={k.overdue} bad={k.overdue > 0} /><Kpi label="Open findings" v={k.open_findings} bad={k.critical_findings > 0} /><Kpi label="Handoffs waiting on us" v={k.handoffs_waiting_on_us} bad={k.handoffs_waiting_on_us > 0} /><Kpi label="We wait for" v={k.handoffs_we_wait_for} /><Kpi label="Tests passed" v={k.tests_passed} /><Kpi label="High-AP on our parts" v={k.high_ap_on_our_parts} bad={k.high_ap_without_test > 0} /><Kpi label="Open risks" v={k.open_risks} />{k.req_coverage && <Kpi label="Requirements with a test" v={k.req_coverage} bad={k.req_coverage[0] < k.req_coverage[1]} />}{k.boundary_interfaces !== undefined && <Kpi label="Boundary interfaces" v={k.boundary_interfaces} />}
       </div>
       <div className="grid2">
         <div className="card"><h4>Due next</h4>{w.due_soon.length ? <div className="list due">{w.due_soon.map((x: any) => <div key={x.id} className="li" onClick={() => nav(`/p/${pid}/element/work_items/${x.id}`)}><span className="t">{x.title}</span><span className="muted small">{x.owner}</span><span className={'pill ' + (x.due < new Date().toISOString().slice(0, 10) ? 'bad' : '')}>{x.due}</span><span className="muted small">{x.status}</span></div>)}</div> : <span className="muted small">Nothing with a due date.</span>}</div>
@@ -48,6 +48,8 @@ export function TeamPage() {
         <div className="card"><h4>Conversations</h4>{w.conversations.length ? w.conversations.map((c: any) => <div key={c.id} className="small clickable" onClick={() => nav(`/p/${pid}/chat/${c.id}`)}>• {c.title}</div>) : <span className="muted small">None touched our records yet.</span>}<div style={{ marginTop: 8 }}><button className="chip" onClick={() => send(`Summarise the state of the ${w.name} team's records: parts, open work, findings, risks, and what blocks the next gate`)}><Sparkles size={13} />ask about this team</button></div></div>
       </div>
     </div>}
+    {tab === 'Subsystem' && w.subsystem && <SubsystemView s={w.subsystem} w={w} />}
+    {tab === 'Focus' && w.focus && <FocusView f={w.focus} />}
     {tab === 'Work' && <div className="stack" style={{ gap: 14 }}>
       <TeamSheet pid={pid} kind="work_items" ids={w.records.work_items} tid={tid} title="Work items" />
       <TeamSheet pid={pid} kind="findings" ids={w.records.findings} tid={tid} title="Findings" />
@@ -80,4 +82,45 @@ function TeamSheet({ pid, kind, ids, tid, title }: { pid: string; kind: string; 
     const r = await P(pid).post('/patch', { ops, rationale: `${title}: ${ops.length} change(s)`, apply: !stageIt }); toast(stageIt ? `Staged ${r.patch_id}` : `Applied ${r.patch_id}`)
   }
   return <div className="card"><h4>{title} <span className="pill">{rows.length}</span></h4><Sheet cols={cols} rows={rows} dense onCommit={commit} onOpen={r => nav(`/p/${pid}/element/${kind}/${encodeURIComponent(String(r.id))}`)} newRowTemplate={() => { const t: any = {}; if (spec) { for (const f of spec.req) t[f] = f === 'status' ? 'open' : ''; for (const [f, d] of Object.entries(spec.opt)) t[f] = Array.isArray(d) ? [] : (typeof d === 'object' && d) ? {} : d } return t }} /></div>
+}
+
+// The subsystem team's slice of the architecture: scope tree, boundary ICD, requirements with verification, performance MoEs, DFMEA slice, budgets.
+function SubsystemView({ s, w }: { s: any; w: any }) {
+  const { pid, send } = useProject(); const nav = useNavigate()
+  const byParent: Record<string, any[]> = {}; for (const t of s.tree) (byParent[t.parent || ''] ??= []).push(t)
+  const Node = ({ p, depth }: { p: any; depth: number }) => <div><div className="row small" style={{ paddingLeft: depth * 16, gap: 6, padding: '3px 0 3px ' + depth * 16 + 'px' }}><IdLink id={p.id} kind="parts" /><span>{p.name}</span><span className="muted">{p.discipline}{p.make_buy ? ` · ${p.make_buy}` : ''}</span>{p.owner_team && p.owner_team !== w.id && <span className="pill" style={{ fontSize: 10 }}>{p.owner_team}</span>}</div>{(byParent[p.id] || []).map(c => <Node key={c.id} p={c} depth={depth + 1} />)}</div>
+  return <div className="stack" style={{ gap: 14 }}>
+    <div className="grid2" style={{ alignItems: 'start' }}>
+      <div className="card"><div className="row between"><h4>Scope — {s.parts.length} parts, {s.lcs.length} logical components</h4><button className="chip" onClick={() => send(`Define the ${w.name} subsystem precisely: confirm its root parts and logical components, and propose any parts that should move in or out of scope`)}><Sparkles size={13} />refine scope</button></div>
+        {(byParent[''] || []).map(p => <Node key={p.id} p={p} depth={0} />)}<div className="small muted ids" style={{ marginTop: 6 }}>logical: {s.lcs.map((l: string) => <IdLink key={l} id={l} kind="logical_components" />)}</div>
+        {Object.keys(s.budgets).length > 0 && <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>{Object.entries(s.budgets).map(([k, v]: any) => <span key={k} className="pill">{k.replace(/_/g, ' ')} <b>{v}</b></span>)}</div>}</div>
+      <div className="card"><h4>Performance — measures of effectiveness we own</h4>{s.moes.length ? <table className="dt"><thead><tr><th>MoE</th><th>Name</th><th>Target</th></tr></thead><tbody>{s.moes.map((x: any) => <tr key={x.id}><td><IdLink id={x.id} kind="moes" /></td><td>{x.name}</td><td className="mono small">{String(x.target)}</td></tr>)}</tbody></table> : <span className="muted small">No MoEs linked — set <code>teams.moes</code> or link needs through requirements.</span>}
+        <h4 style={{ marginTop: 12 }}>Functions we realize</h4><div className="row ids" style={{ gap: 6, flexWrap: 'wrap' }}>{s.functions.map((f: string) => <IdLink key={f} id={f} kind="functions" />)}</div></div>
+    </div>
+    <div className="card"><div className="row between"><h4>Boundary — interfaces to the rest of the product ({s.interfaces_boundary.length}) · the subsystem ICD</h4><button className="btn sm" onClick={() => nav(`/p/${pid}/form/icd`)}>Full ICD</button></div>
+      {s.boundary.length ? <table className="dt"><thead><tr><th>Interface</th><th>Name</th><th>Kind</th><th>Items</th><th>Other side</th><th>Functions</th></tr></thead><tbody>{s.boundary.map((i: any) => <tr key={i.id}><td><IdLink id={i.id} kind="interfaces" /></td><td>{i.name}</td><td>{i.kind}</td><td className="small">{(i.items || []).join(', ')}</td><td><IdLink id={i.outside} kind="parts" /></td><td className="small ids">{(i.funcs || []).map((f: string) => <IdLink key={f} id={f} kind="functions" />)}</td></tr>)}</tbody></table> : <span className="muted small">No boundary interfaces — the subsystem is isolated or interfaces are not modelled yet.</span>}
+      <div className="small muted" style={{ marginTop: 6 }}>{s.interfaces_internal.length} internal interfaces</div></div>
+    <div className="grid2" style={{ alignItems: 'start' }}>
+      <div className="card"><div className="row between"><h4>Requirements we realize ({s.requirements.length})</h4><span className={'pill ' + (s.verification.covered === s.verification.total ? 'good' : 'warn')}>{s.verification.covered}/{s.verification.total} with a test · {s.verification.passed}/{s.verification.tests} passed</span></div>
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>{s.requirements.map((r: string) => <IdLink key={r} id={r} kind="requirements" />)}</div>
+        <div className="row" style={{ marginTop: 8 }}><button className="chip" onClick={() => send(`For the ${w.name} subsystem: list every requirement we realize with its verification status, and propose tests for any without one`)}><Sparkles size={13} />verification plan</button><button className="btn sm" onClick={() => nav(`/p/${pid}/form/dvpr`)}>DVP&R</button></div></div>
+      <div className="card"><div className="row between"><h4>Failure modes on our scope ({s.fmea.length})</h4><button className="btn sm" onClick={() => nav(`/p/${pid}/form/dfmea`)}>DFMEA</button></div>
+        <div className="stack" style={{ gap: 3, maxHeight: 320, overflow: 'auto' }}>{s.fmea.slice(0, 40).map((f: any) => <div key={f.id} className="link"><IdLink id={f.id} kind="fmea" /><span className={'ap-' + f.AP}>{f.AP}</span><span className="small"><IdLink id={f.element} /> {f.guide} — {f.mode}</span></div>)}{!s.fmea.length && <span className="muted small">None assessed yet.</span>}</div>
+        <div className="row" style={{ marginTop: 8 }}><button className="chip" onClick={() => send(`Assess every unassessed failure-mode candidate on the ${w.name} subsystem (parts ${s.parts.join(', ')}) with causes derived from the architecture`)}><Sparkles size={13} />ask the risk agent</button></div></div>
+    </div>
+  </div>
+}
+
+// A functional team's cross-cutting view: whatever its focus is made of, across every subsystem.
+function FocusView({ f }: { f: any }) {
+  const { pid, send } = useProject(); const nav = useNavigate()
+  const lists = Object.entries(f).filter(([k]) => k !== 'name') as [string, any[]][]
+  const LINK: Record<string, string> = { high_ap: 'fmea', unassessed: '', field_events: 'field_events', findings_open: 'findings', reviews: 'reviews', hazards: 'fmea', safety_functions: 'functions', regulations: 'regulations', regulations_without_requirements: 'regulations', certification: 'tests', tests: 'tests', requirements_without_tests: 'requirements', process_steps: 'process_steps', process_steps_without_pfmea: 'process_steps', suppliers: 'suppliers', buy_parts_without_supplier: 'parts', gates: 'gates', pending_handoffs: 'handoffs', risks: 'risks' }
+  const FORM: Record<string, string> = { reliability: 'dfmea', quality: 'findings', safety: 'hazards', compliance: 'reqspec', test: 'dvpr', manufacturing: 'pfmea', sourcing: 'avl', program: 'risks' }
+  return <div className="stack" style={{ gap: 14 }}>
+    <div className="row between"><div className="muted small">Cross-cutting view for <b>{f.name}</b> across every subsystem.</div><div className="row">{FORM[f.name] && <button className="btn sm" onClick={() => nav(`/p/${pid}/form/${FORM[f.name]}`)}>Open the {f.name} form</button>}<button className="chip" onClick={() => send(`As the ${f.name} team: review the whole product across subsystems and tell me the top 5 things we should act on this week, each with the element ids`)}><Sparkles size={13} />what should we act on</button></div></div>
+    <div className="grid3">{lists.map(([k, xs]) => <div key={k} className="card"><div className="row between"><h4>{k.replace(/_/g, ' ')}</h4><span className={'pill ' + (/without|open|unassessed|pending/.test(k) && xs.length ? 'warn' : '')}>{xs.length}</span></div>
+      <div className="stack" style={{ gap: 3, maxHeight: 260, overflow: 'auto' }}>{xs.slice(0, 40).map((x: any, i: number) => { const id = typeof x === 'string' ? x : x.id || x.item || JSON.stringify(x); const kind = LINK[k] || (typeof x === 'object' ? x.kind : undefined)
+        return <div key={i} className="small"><IdLink id={id} kind={kind || undefined} />{typeof x === 'object' && x.mode ? <span className="muted"> {x.guide} — {x.mode}</span> : typeof x === 'object' && x.guide ? <span className="muted"> {x.element} · {x.guide}</span> : null}</div> })}{xs.length > 40 && <span className="muted small">+{xs.length - 40} more</span>}{!xs.length && <span className="muted small">—</span>}</div></div>)}</div>
+  </div>
 }

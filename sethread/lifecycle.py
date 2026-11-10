@@ -131,6 +131,53 @@ def team_workload(m):
     return out
 
 
+def subsystem_scope(m, tv: dict) -> dict:
+    """closure of a subsystem team's scope: parts subtree, logical components, functions, requirements, interfaces (internal vs boundary),
+    failure modes, tests, MoEs, and the parts' budgets (mass/cost attrs rolled up)."""
+    roots = list(tv.get("parts") or []); lcs = set(tv.get("lcs") or [])
+    parts = set()
+    def walk(p):
+        if p in parts or p not in m["parts"]: return
+        parts.add(p)
+        for c, cv in m["parts"].items():
+            if cv.get("parent") == p: walk(c)
+    for r in roots: walk(r)
+    for lc in lcs:
+        for p in m["logical_components"].get(lc, {}).get("parts", []): walk(p)
+    for lc, v in m["logical_components"].items():
+        if set(v.get("parts", [])) & parts: lcs.add(lc)
+    funcs = {f for f, v in m["functions"].items() if set(v.get("alloc", [])) & parts or any(f in m["logical_components"][lc].get("funcs", []) for lc in lcs if lc in m["logical_components"])}
+    reqs = sorted({r for f in funcs for r in m["functions"][f].get("reqs", [])})
+    internal = [i for i, v in m["interfaces"].items() if v.get("a") in parts and v.get("b") in parts]
+    boundary = [i for i, v in m["interfaces"].items() if (v.get("a") in parts) != (v.get("b") in parts)]
+    fms = [x for x in D.fmea(m) if x.get("element") in parts or x.get("element") in funcs]
+    tests = sorted({t for r in reqs for t in m["requirements"][r].get("tests", [])})
+    needs = sorted({n for r in reqs for n in m["requirements"][r].get("from_", [])})
+    moes = sorted(set(tv.get("moes") or []) | {m["needs"][n]["moe"] for n in needs if n in m["needs"] and m["needs"][n].get("moe")})
+    def num(x):
+        try: return float(x)
+        except (TypeError, ValueError): return None
+    budgets = {}
+    for key in ("mass_g", "mass_kg", "cost_usd", "cost", "power_W", "power_mW"):
+        vals = [num((m["parts"][p].get("attrs") or {}).get(key)) for p in parts]; vals = [v for v in vals if v is not None]
+        if vals: budgets[key] = round(sum(vals), 3)
+    return {"roots": roots, "parts": sorted(parts), "lcs": sorted(lcs), "functions": sorted(funcs), "requirements": reqs, "interfaces_internal": internal, "interfaces_boundary": boundary,
+            "boundary": [{"id": i, **m["interfaces"][i], "outside": m["interfaces"][i]["b"] if m["interfaces"][i]["a"] in parts else m["interfaces"][i]["a"]} for i in boundary],
+            "fmea": fms, "tests": tests, "needs": needs, "moes": [{"id": x, **m["moes"][x]} for x in moes if x in m["moes"]], "budgets": budgets,
+            "verification": {"covered": len([r for r in reqs if m["requirements"][r].get("tests")]), "total": len(reqs), "passed": len([t for t in tests if m["tests"].get(t, {}).get("status") == "passed"]), "tests": len(tests)},
+            "tree": [{"id": p, "name": m["parts"][p]["name"], "parent": m["parts"][p].get("parent") if m["parts"][p].get("parent") in parts else None, "discipline": m["parts"][p].get("discipline"), "owner_team": m["parts"][p].get("owner_team"), "make_buy": m["parts"][p].get("make_buy")} for p in sorted(parts)]}
+
+FOCUS_VIEWS = {   # what a functional team's cross-cutting view is made of
+    "reliability": lambda m, rep: {"high_ap": [x for x in D.fmea(m) if x.get("AP") == "H"], "unassessed": rep["unassessed_candidates"][:100], "field_events": list(m.get("field_events", {}).keys())},
+    "quality": lambda m, rep: {"findings_open": [f for f, v in m.get("findings", {}).items() if v["status"] != "closed"], "process_steps_without_pfmea": rep["process_steps_without_pfmea"], "reviews": list(m.get("reviews", {}).keys())},
+    "safety": lambda m, rep: {"hazards": [x for x in D.fmea(m) if (x.get("S") or 0) >= 9], "safety_functions": [f for f, v in m["functions"].items() if v.get("safety_decision")]},
+    "compliance": lambda m, rep: {"regulations": list(m["regulations"].keys()), "regulations_without_requirements": rep["regulations_without_requirements"], "certification": [t for t, v in m["tests"].items() if v.get("kind") in ("certification", "cert")]},
+    "test": lambda m, rep: {"tests": list(m["tests"].keys()), "requirements_without_tests": rep["requirements_without_tests"], "stale": []},
+    "manufacturing": lambda m, rep: {"process_steps": list(m.get("process_steps", {}).keys()), "process_steps_without_pfmea": rep["process_steps_without_pfmea"]},
+    "sourcing": lambda m, rep: {"suppliers": list(m.get("suppliers", {}).keys()), "buy_parts_without_supplier": rep["buy_parts_without_supplier"]},
+    "program": lambda m, rep: {"gates": list(m["gates"].keys()), "pending_handoffs": rep["pending_handoffs"], "risks": list(m.get("risks", {}).keys())},
+}
+
 def team_workspace(m, tid: str, store=None, threads: list | None = None) -> dict:
     """System-of-record view for one team: KPIs, every record they own by kind, what waits on them, what they wait for,
     the failure modes and tests on their parts, recent activity on their records, and conversations that touched them."""
@@ -176,5 +223,16 @@ def team_workspace(m, tid: str, store=None, threads: list | None = None) -> dict
             if len(activity) >= 30: break
     except Exception: pass
     convs = [t for t in (threads or []) if any(x in (t.get("last", "") + t.get("title", "")) for x in list(ours)[:200])][:10]
-    return {"id": tid, **tv, "members": sorted(members), "kpis": kpis, "records": recs, "functions": funcs, "interfaces": ifaces, "requirements": reqs, "high_ap": high[:50], "handoffs_in": hand_in, "handoffs_out": hand_out,
+    sub = subsystem_scope(m, tv) if tv.get("kind") == "subsystem" else None
+    focus = None
+    if tv.get("kind") != "subsystem":
+        fv = FOCUS_VIEWS.get(tv.get("focus") or tv.get("discipline") or "")
+        if fv:
+            try: focus = {"name": tv.get("focus") or tv.get("discipline"), **fv(m, D.coverage_report(m))}
+            except Exception: focus = None
+    if sub:   # a subsystem team's records include everything in its scope, not only explicitly owned rows
+        recs["parts"] = sorted(set(recs["parts"]) | set(sub["parts"])); recs["tests"] = sorted(set(recs["tests"]) | set(sub["tests"]))
+        funcs = sub["functions"]; ifaces = sub["interfaces_internal"] + sub["interfaces_boundary"]; reqs = sub["requirements"]; fms = sub["fmea"]; high = [x for x in fms if x.get("AP") == "H"]
+        kpis.update(high_ap_on_our_parts=len(high), high_ap_without_test=len([x for x in high if not x.get("tests")]), tests_passed=[sub["verification"]["passed"], sub["verification"]["tests"]], req_coverage=[sub["verification"]["covered"], sub["verification"]["total"]], boundary_interfaces=len(sub["interfaces_boundary"]))
+    return {"id": tid, **tv, "members": sorted(members), "kpis": kpis, "records": recs, "subsystem": sub, "focus": focus, "functions": funcs, "interfaces": ifaces, "requirements": reqs, "high_ap": high[:50], "handoffs_in": hand_in, "handoffs_out": hand_out,
             "due_soon": sorted([{"id": w, **m["work_items"][w]} for w in open_wi if m["work_items"][w].get("due")], key=lambda w: w["due"])[:10], "activity": activity, "conversations": convs}
