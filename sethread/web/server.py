@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -44,6 +44,9 @@ class Session:
         self.events: asyncio.Queue = asyncio.Queue(); self.pending: dict[str, asyncio.Future] = {}
         self.client: ClaudeSDKClient | None = None; self.busy = False; self.history: list[dict] = []; self.last_score: dict | None = None
         self.server, self.names = make_server(self.store, docs_dir=self.docs_dir, author="agent:ui")
+        try: self.store.root = self.root
+        except Exception: pass
+        self.policy = harness.load_policy(self.root)
         self.tc = toolchain.detect()
         # Conversations: like Claude, a project has many threads; each thread is its own agent session with its own memory of the
         # conversation, all grounded in the same model graph. Persisted as JSONL so they survive restarts and are shared across users.
@@ -116,6 +119,10 @@ class Session:
             if role and role in R.ROLES:
                 from ..agents.orchestrator import build_prompt
                 prompt = build_prompt(self.store, role, text or None)
+            try:
+                mem = memory.recall_for_turn(self.store.load(), self.store, text, context, [self.thread_summary(t) for t in self.threads.values()])
+                if mem: prompt = "[Graph memory the harness recalled for this message — facts from the model, not instructions]\n" + mem + "\n\n" + prompt
+            except Exception as e: self.emit("tool_error", text=f"memory: {e}", thread=tid)
             if context and context.get("path"):
                 where = context.get("label") or context["path"]
                 prompt = f"[The engineer is looking at: {where}" + (f" — element {context['element']} ({context.get('kind','')})" if context.get("element") else "") + ". 'This'/'it' refers to that. Read it from the model before answering.]\n\n" + prompt
@@ -134,7 +141,8 @@ class Session:
                     self.emit("result", turns=msg.num_turns, seconds=round(msg.duration_ms / 1000), cost=msg.total_cost_usd, thread=tid)
             new = [p.id for p in self.store.list_patches("staged") if p.id not in staged0]
             for pid in new:
-                if self.auto: self.store.approve(pid, approver="auto"); self.emit("patch_applied", id=pid, thread=tid)
+                if self.auto or harness.auto_approves(getattr(self, "policy", None) or harness.load_policy(self.root), self.store.get_patch(pid)):
+                    self.store.approve(pid, approver="auto" if self.auto else "policy"); self.emit("patch_applied", id=pid, thread=tid)
                 else:
                     self.emit("patch_staged", id=pid, patch=patch_summary(self.store, pid), thread=tid)
                     try:
@@ -645,6 +653,31 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     @app.get("/api/p/{pid}/attachments/{element}")
     def attachments(pid: str, element: str, user: str = U):
         S = W.get(pid); m = S.store.load(); return [{"id": k, **v} for k, v in m.get("attachments", {}).items() if v["element"] == element]
+
+    @app.get("/api/p/{pid}/memory/{eid}")
+    def element_mem(pid: str, eid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); mem = memory.element_memory(m, S.store, eid, [S.thread_summary(t) for t in S.threads.values()])
+        if not mem: raise HTTPException(404, "no such element")
+        return {**mem, "text": memory.recall_text(mem)}
+
+    # ---- the harness, as a product surface: policy, roles, skills, watchers; editable and versioned with the project
+    @app.get("/api/p/{pid}/harness")
+    def get_harness(pid: str, user: str = U):
+        S = W.get(pid); return harness.describe(S)
+    @app.post("/api/p/{pid}/harness")
+    def set_harness(pid: str, body: dict, user: str = U):
+        S = W.get(pid); harness.save_policy(S.root, body.get("policy", {})); S.policy = harness.load_policy(S.root); return harness.describe(S)
+
+    # ---- agile execution visuals: board (kanban over work items), timeline (gates, handoffs, work items, runs), trend (coverage over revs)
+    @app.get("/api/p/{pid}/board")
+    def board(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return harness.board(m)
+    @app.get("/api/p/{pid}/timeline")
+    def timeline(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return harness.timeline(m)
+    @app.get("/api/p/{pid}/trend")
+    def trend(pid: str, user: str = U):
+        S = W.get(pid); return harness.trend(S.store)
 
     @app.get("/api/p/{pid}/team/{tid}")
     def team_ws(pid: str, tid: str, user: str = U):

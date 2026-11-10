@@ -22,7 +22,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Operation': [['form/fracas', 'FRACAS']],
   'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
   'Disposal': [['search?q=disposal', 'Disposal requirements']],
-  'Project planning': [['teams', 'Lifecycle & gates'], ['form/work_items', 'Work items board']],
+  'Project planning': [['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
   'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
   // team workspaces are added dynamically from project.teams
   'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
@@ -115,6 +115,7 @@ function Tree() {
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}
     <div className="sep" />
+    <Item to={`/p/${pid}/harness`} label="Agent harness" icon={<Hammer size={17} />} />
     <Item to={`/p/${pid}/documents`} label="Source documents" icon={<FolderOpen size={17} />} />
     <Item to={`/p/${pid}/integrations`} label="Integrations" icon={<Plug size={17} />} />
   </div>
