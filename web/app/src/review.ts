@@ -5,14 +5,17 @@ export function installReviewShim(data: Record<string, any>) {
     const url = typeof input === 'string' ? input : input.url
     if (!url.startsWith('/api')) return real(input, init)
     const json = (b: any, status = 200) => new Response(JSON.stringify(b), { status, headers: { 'content-type': 'application/json' } })
-    if (url === '/api/me') return json({ user: 'reviewer', single: true })
+    if (url === '/api/me') return json({ user: 'reviewer', single: false, invite_required: false })
+    if (url === '/api/projects') return json(data.list || [])
+    if (url === '/api/examples') return json(data.examples || [])
     if (url === '/api/token') return json(null, 404)
     if (url.startsWith('/api/oslc/consumers')) return json([])
     if ((init?.method || 'GET') !== 'GET') return json({ detail: 'Review build: read-only snapshot. In the app this would stage a patch for approval.' }, 400)
-    const p = url.replace(/^\/api\/p\/[^/]+/, '')
-    if (p.startsWith('/search?q=')) { const q = decodeURIComponent(p.slice(10)).toLowerCase(); const hits: any[] = []; for (const n of data['/graph'].nodes) { if (n.kind === 'fmea') continue; const row = (data['/collection/' + n.kind] || []).find((r: any) => r.id === n.id); if ((n.id + ' ' + JSON.stringify(row || n)).toLowerCase().includes(q)) hits.push({ kind: n.kind, id: n.id, name: n.name }) } return json(hits.slice(0, 60)) }
+    const mm = url.match(/^\/api\/p\/([^/]+)(.*)$/); if (!mm) return json({ detail: 'not in review snapshot' }, 404)
+    const pid = mm[1], p = mm[2]; const pd = (data.projects || {})[pid]; if (!pd) return json({ detail: 'project not in review snapshot: ' + pid }, 404)
+    if (p.startsWith('/search?q=')) { const q = decodeURIComponent(p.slice(10)).toLowerCase(); const hits: any[] = []; for (const n of pd['/graph'].nodes) { if (n.kind === 'fmea') continue; const row = (pd['/collection/' + n.kind] || []).find((r: any) => r.id === n.id); if ((n.id + ' ' + JSON.stringify(row || n)).toLowerCase().includes(q)) hits.push({ kind: n.kind, id: n.id, name: n.name }) } return json(hits.slice(0, 60)) }
     if (p === '/history') return json({ supported: false, note: 'History needs the database store; not in the review snapshot.' })
-    if (p in data) return json(data[p])
+    if (p in pd && pd[p] !== null) return json(pd[p])
     if (p.startsWith('/events')) return new Response('', { status: 204 })
     return json({ detail: 'not in review snapshot: ' + p }, 404)
   }
