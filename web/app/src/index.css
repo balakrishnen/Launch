@@ -117,3 +117,10 @@ pre.diff{font:11.5px/1.35 var(--mono);background:#0f172a;color:#e2e8f0;padding:8
 .tree .group.small{padding-left:22px;font-size:12.5px;font-weight:500}
 .tree .group.small+.sub{padding-left:14px}
 .tree .group.current{background:var(--accent-soft);border-radius:8px}
+
+/* sheet (editable grid) */
+.sheet-t td.ed{cursor:text} .sheet-t td.ed:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--surface)} .sheet-t td.dirty{background:var(--warn-soft)} .sheet-t tr.new td{background:var(--accent-soft)} .sheet-t tr.changed td.dirty{background:var(--warn-soft)}
+.sheet-t td.num{text-align:right;font-variant-numeric:tabular-nums} .sheet-t td.err{color:var(--bad)} .sheet-t td.rowtool{color:var(--ink-3);cursor:pointer;width:28px;text-align:center} .sheet-t td.rowtool:hover{color:var(--bad)}
+.sheet-t tr.grp td{background:var(--surface-2);padding:6px 10px} .sheet-t tr.totals td{border-top:2px solid var(--line-2);background:var(--surface-2)}
+.tablewrap.dense td{padding:3px 8px;font-size:12.5px}
+.doc{line-height:1.55} .doc h1{font-size:22px;margin:0 0 10px} .doc h2{font-size:17px;margin:18px 0 6px} .doc h3{font-size:14px;margin:14px 0 4px} .doc table{border-collapse:collapse;margin:8px 0} .doc td,.doc th{border:1px solid var(--line);padding:4px 8px;font-size:13px} .doc code{background:var(--surface-2);padding:1px 4px;border-radius:4px}

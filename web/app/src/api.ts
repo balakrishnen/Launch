@@ -5,7 +5,7 @@ export const KIND_LABEL: Record<string, string> = {
   regulations: 'Regulations', requirements: 'Requirements', functions: 'Functions', logical_components: 'Logical components', logical_interfaces: 'Logical interfaces',
   parts: 'Parts', nodes: 'Physical nodes', interfaces: 'Interfaces', states: 'States', transitions: 'Transitions', arch_decisions: 'Architecture decisions',
   trades: 'Trade studies', constraints: 'Constraints', tests: 'Tests', gates: 'Gates', fm_assessments: 'FMEA assessments', fmea: 'Failure modes',
-  teams: 'Teams', process_steps: 'Process steps', suppliers: 'Suppliers', work_items: 'Work items', findings: 'Findings', handoffs: 'Handoffs', field_events: 'Field events', risks: 'Program risks', reviews: 'Design reviews',
+  teams: 'Teams', process_steps: 'Process steps', suppliers: 'Suppliers', work_items: 'Work items', findings: 'Findings', handoffs: 'Handoffs', field_events: 'Field events', risks: 'Program risks', reviews: 'Design reviews', tables: 'Tables', notes: 'Notes', test_runs: 'Test runs', simulations: 'Simulations', attachments: 'Attachments',
 }
 // INCOSE SE Handbook / ISO 15288: life-cycle stages, technical processes (each in the stage where it is primarily exercised), management processes
 export const LIFECYCLE = ['Concept', 'Development', 'Production', 'Utilization', 'Support', 'Retirement']
@@ -66,7 +66,7 @@ export const P = (pid: string) => ({
 
 export const ID_RE = /\b((?:STK|MOE|UC|SC|REG|LC|LI|ND|IF|TR|TD|AD|FM|FA|HZ|FT|N|R|P|S|C|T|G)-[A-Za-z0-9_.-]+|F\d{2}[a-z]?)\b/g
 
-export type Project = { id: string; user: string; meta: Record<string, any>; counts: Record<string, number>; stage_of: Record<string, string>; lifecycle: string[]; processes: { name: string; stage: string; kinds: string[] }[]; management: { name: string; kinds: string[] }[]; stage?: string; fmea_counts: Record<string, number>; coverage: Record<string, any>; staged: number; busy: boolean; auto: boolean; toolchain: any; roles: Record<string, string>; role_order: string[] }
+export type Project = { id: string; user: string; meta: Record<string, any>; counts: Record<string, number>; stage_of: Record<string, string>; lifecycle: string[]; processes: { name: string; stage: string; kinds: string[] }[]; management: { name: string; kinds: string[] }[]; stage?: string; schema: Record<string, { req: string[]; opt: Record<string, any>; refs: Record<string, string> }>; fmea_counts: Record<string, number>; coverage: Record<string, any>; staged: number; busy: boolean; auto: boolean; toolchain: any; roles: Record<string, string>; role_order: string[] }
 export type ElementPage = { kind: string; id: string; data: Record<string, any>; stage: string; up: Link[]; down: Link[]; provenance: any[]; fmea?: any[]; screened?: any[]; unassessed?: any[]; disciplines?: string[] }
 export type Link = { kind: string | null; id: string; rel: string; name: string }
 export type Form = { name: string; title: string; standard: string; groups: [string, number][]; headers: string[]; widths: number[]; rows: any[][]; row_keys?: (string | null)[]; editable?: Record<number, string>; merge_cols?: number[]; row_elements?: string[]; rating_tables?: Record<string, [number, string][]>; kind?: string; pairs?: [string, string][] }

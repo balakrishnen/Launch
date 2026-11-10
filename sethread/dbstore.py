@@ -63,7 +63,7 @@ class DbStore:
             pr = self.db.exec(c, "SELECT name, meta, program, rev FROM projects WHERE tenant=? AND id=?", (self.tenant, self.project)).fetchone()
             m = schema.empty_model(pr[0]); m["meta"] = json.loads(pr[1]); m["program"] = json.loads(pr[2]); m["meta"]["rev"] = pr[3]
             if rev is None or rev >= pr[3]:
-                for kind, eid, body in self.db.exec(c, "SELECT kind,id,body FROM elements WHERE tenant=? AND project=? AND deleted=0", (self.tenant, self.project)):
+                for kind, eid, body in self.db.exec(c, "SELECT kind,id,body FROM elements WHERE tenant=? AND project=? AND deleted=0 ORDER BY kind, id", (self.tenant, self.project)):
                     m.setdefault(kind, {})[eid] = json.loads(body)
             else:   # fold the log up to rev (baseline / history read)
                 m["meta"]["rev"] = rev

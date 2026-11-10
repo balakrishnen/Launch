@@ -16,7 +16,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'System analysis': [['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
   'Implementation': [['form/avl', 'AVL / sourcing']],
   'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
-  'Verification': [['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
+  'Verification': [['runs', 'Test results', 'test_runs'], ['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
   'Transition': [['form/pfmea', 'PFMEA'], ['form/control_plan', 'Control plan']],
   'Validation': [['matrix/needs/requirements', 'Needs validated'], ['collection/moes', 'Measures of effectiveness']],
   'Operation': [['form/fracas', 'FRACAS']],
@@ -27,7 +27,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
   'Risk management': [['form/risks', 'Risk register']],
   'Configuration management': [['history', 'History & baselines']],
-  'Information management': [['documents', 'Source documents'], ['docs', 'Design documentation'], ['sysml', 'SysML v2 text'], ['artifacts', 'Artifact library']],
+  'Information management': [['tables', 'Tables (spreadsheets)', 'tables'], ['notes', 'Notes & specs', 'notes'], ['import', 'Import spreadsheet'], ['documents', 'Source documents'], ['docs', 'Design documentation'], ['sysml', 'SysML v2 text'], ['artifacts', 'Artifact library']],
   'Measurement': [['scorecard', 'Scorecard'], ['gaps', 'Open gaps']],
   'Quality assurance': [['form/findings', 'Findings log'], ['inbox', 'Review inbox']],
 }
@@ -105,7 +105,7 @@ function Tree() {
       </Group> })}
     <h4>Technical management</h4>
     {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
-      {p.kinds.map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {p.kinds.filter(k => k !== 'tables' && k !== 'notes').map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}
     <div className="sep" />

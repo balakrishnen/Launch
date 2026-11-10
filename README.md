@@ -230,6 +230,40 @@ launch build <dir> [--docx]
 launch serve-mcp <dir>                  # expose model tools over stdio MCP
 ```
 
+## No Excel, no Word: the office tools live inside the thread
+
+Engineering teams run on spreadsheets and documents. Launch replaces them rather than importing from them forever:
+
+- **Every collection is a sheet.** Requirements, parts, tests, work items, suppliers… open as an editable grid: click a cell, Tab/Enter through rows, add rows, add columns (custom attributes), paste rows straight from a spreadsheet, filter, sort, group, totals. Every edit is a patch with provenance — applied by you, or staged for someone else to approve.
+- **Tables** (`tables` kind) are the ad-hoc spreadsheets: trackers, cost rollups, action lists. Columns can be formulas that reach into the model — `qty * unit_cost`, `part(part_id).attrs.mass`, `el('tests', test_id, 'status')`, `sum(cols.ext_cost)`, `days(start, due)` — evaluated by `sethread/tables.py` in a safe expression subset, with totals.
+- **Notes** (`notes` kind) are the documents: specs, minutes, decision logs, test reports, written in Markdown in the app; every element id in the text becomes a link and is recorded on the note. The agent can draft or extend them with every claim traceable.
+- **Import a spreadsheet once** (`/import`): upload .xlsx/.csv, pick a sheet, map columns to a collection's fields (auto-matched, required fields marked) or keep it as a table; rows land as a reviewable patch.
+
+### Capability roadmap — build, don't integrate
+
+Launch is agentic, so the tools a hardware team needs are built into the thread rather than bolted on; legacy tools are connected only where a company already has data there (OSLC for DOORS/Jama, spreadsheet import for everything else). Planned in-app capabilities, each an agent role plus standard forms:
+
+| Capability | What it replaces | Shape in Launch |
+|---|---|---|
+| Test execution (TestRUNS-class) | LabVIEW/TestStand sequences, lab notebooks | test procedures as model elements, runs with instrument setup, results written to `tests.result` with the revision verified; EoL and DV share the thread |
+| Time-series test analytics (Kanalysis-class) | MATLAB/Excel post-processing | run data attached to tests, limit checks against requirement attributes, trend/capability views, anomalies become findings |
+| Simulation | Simulink/Modelica/FEA run outside the thread | FMU co-simulation already tooled (`simulate_fmu`); budgets and derived MoEs recomputed from runs, parameters traced to parts |
+| CAD / mechanical | PDM check-in/out, drawings, tolerance stacks | parts carry geometry facts (mass, envelope, materials) from STEP/CAD exports; DFM/DFA and tolerance forms; interfaces get mechanical ICDs |
+| Electrical | Altium/ECAD, derating sheets | netlist-derived interfaces, derating and EMC/ESD analysis forms, BOM with AVL |
+| Firmware/software | Jira + Git + release notes | software requirements, variants/configurations as a model concept, releases tied to tests and gates |
+| Compliance evidence | Shared drives of PDFs | evidence attached per requirement/regulation, certification plan drives the test program |
+| Program | MS Project/Asana | gates, work items, handoffs, risks (done) + schedule lanes |
+
+## No Excel, no Word: the office layer
+
+Engineers must not need a spreadsheet or a document tool beside Launch. So every collection is an editable sheet (click a cell, add/paste rows, add columns, group, filter — each change is a patch with provenance), and three more things live in the model:
+
+- **Tables** — ad-hoc trackers, rollups and lists with **formula columns** that reach into the model: `qty * unit_cost`, `part(part_id).attrs.mass`, `el('tests', test_id, 'status')`, `sum(cols.ext_cost)`, `if_()`, `days()`. Totals row, grouping, paste from any sheet.
+- **Notes** — specs, minutes, decision logs, reports written in-app (Markdown); every element id in the text becomes a link and is recorded on the note.
+- **Import spreadsheet** — the migration path: upload the last .xlsx/.csv once, map columns to a collection's fields (or keep it as a table), stage or apply.
+
+Build, don't integrate: Launch is agentic, so most team tools are easier to build inside the thread than to bolt on. The exceptions are the ones that already exist and do a deep job: **TestRUNS** (test execution) and **Kanalysis** (time-series analytics) post results into `POST /api/p/{pid}/runs` — a run lands as `test_runs` with its verdict against the requirement limits, and the test's status and freshness follow. CAD and simulation follow the same rule: the agent writes parametric code-CAD and simulation models from the architecture, and Launch renders and checks them in place (`attachments` and `simulations` kinds hold the files and results today).
+
 ## Examples
 
 The projects page has an **Examples** section: shipped product models under `examples/<id>/` (`example.yaml` metadata, `model.yaml` seed, `docs/` source documents) with one-click "Create project from example". Each card says what is seeded, why the product is a good test of the app, what to assess and prompts to try. Seeds leave deliberate gaps for the agents to close.

@@ -10,7 +10,7 @@ patch approvals are recorded under the approving user. Run one worker per contai
 from __future__ import annotations
 import asyncio, json, os, uuid, shutil, difflib, yaml, webbrowser, threading, time
 from typing import Any
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Response, Depends
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -170,6 +170,28 @@ def element_page(store: Store, kind: str, eid: str) -> dict:
 class Chat(BaseModel):
     text: str
     role: str | None = None
+class SheetCommit(BaseModel):
+    file: str = "sheet"
+    sheet: str = ""
+    headers: list[str]
+    rows: list[list]
+    kind: str
+    mapping: dict[str, str] = {}
+    id_column: str = ""
+    id_prefix: str = ""
+    table_name: str = ""
+    table_id: str = ""
+    apply: bool = False
+def _cell(x):
+    if hasattr(x, "isoformat"): return x.isoformat()
+    return x
+def _slug(s: str) -> str: return "".join(ch if ch.isalnum() else "-" for ch in s.strip().upper()).strip("-")[:24] or "TABLE"
+def _guess_kind(headers: list[str]) -> str:
+    h = " ".join(headers).lower()
+    for kind, words in [("requirements", ["requirement", "shall", "verify"]), ("tests", ["test", "pass/fail", "passfail", "method"]), ("parts", ["part", "bom", "qty", "supplier"]), ("suppliers", ["vendor", "supplier"]),
+                        ("work_items", ["action", "owner", "due", "task"]), ("findings", ["finding", "severity"]), ("risks", ["risk", "prob", "impact"]), ("field_events", ["symptom", "field", "return"]), ("needs", ["need", "stakeholder"])]:
+        if sum(w in h for w in words) >= 2: return kind
+    return "tables"
 class HumanPatch(BaseModel):
     ops: list
     rationale: str = "edited in the app"
@@ -351,7 +373,7 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def project(pid: str, user: str = U):
         S = W.get(pid)
         m = S.store.load(); rep = derive.coverage_report(m)
-        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": lifecycle.convergence(m), "stage_of": STAGE_OF, "lifecycle": schema.LIFECYCLE, "processes": [{"name": n, "stage": st, "kinds": ks} for n, st, ks in schema.PROCESSES], "management": [{"name": n, "kinds": ks} for n, ks in schema.MANAGEMENT], "fmea_counts": rep["counts"],
+        return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": lifecycle.convergence(m), "stage_of": STAGE_OF, "lifecycle": schema.LIFECYCLE, "processes": [{"name": n, "stage": st, "kinds": ks} for n, st, ks in schema.PROCESSES], "management": [{"name": n, "kinds": ks} for n, ks in schema.MANAGEMENT], "schema": {k: {"req": v["req"], "opt": v["opt"], "refs": v["refs"]} for k, v in schema.KINDS.items()}, "fmea_counts": rep["counts"],
                 "coverage": {k: (len(v) if hasattr(v, "__len__") and not isinstance(v, dict) else v) for k, v in rep.items() if k != "counts"},
                 "staged": len(S.store.list_patches("staged")), "busy": S.busy, "auto": S.auto, "toolchain": S.tc, "roles": {k: v["title"] for k, v in R.ROLES.items()}, "role_order": R.ORDER}
 
@@ -469,6 +491,116 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
             S.store.approve(patch.id, approver=user); S.emit("patch_applied", id=patch.id, user=user); S.emit("model_changed")
         else: S.emit("patch_staged", id=patch.id, patch=patch_summary(S.store, patch.id))
         return {"ok": True, "patch_id": patch.id, "applied": hp.apply, "warnings": [f"{i.where}: {i.msg}" for i in issues if i.level == "warning"][:5]}
+
+    # ---- office replacement: tables with formulas, spreadsheet import (xlsx/csv/pasted TSV) into any collection or a new table
+    @app.get("/api/p/{pid}/table/{tid}")
+    def table(pid: str, tid: str, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        if tid not in m.get("tables", {}): raise HTTPException(404, "no such table")
+        return tables.render(m, tid)
+    @app.post("/api/p/{pid}/table/{tid}/eval")
+    def table_eval(pid: str, tid: str, body: dict, user: str = U):
+        """Evaluate a candidate formula against the current rows (used while typing a formula)."""
+        S = W.get(pid); m = S.store.load(); t = m["tables"].get(tid) or {"rows": [], "columns": []}
+        rows = t["rows"][:5]
+        return {"sample": [tables.evaluate(body.get("formula", ""), m, t["rows"], r) for r in rows]}
+    @app.post("/api/p/{pid}/sheet/preview")
+    async def sheet_preview(pid: str, file: UploadFile = File(...), user: str = U):
+        """Parse an uploaded .xlsx/.csv/.tsv: every sheet with headers and rows, plus a guess of the target collection."""
+        W.get(pid); data = await file.read(); name = file.filename or "sheet"
+        sheets = []
+        if name.lower().endswith((".xlsx", ".xlsm")):
+            import openpyxl, io
+            wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True, read_only=True)
+            for ws in wb.worksheets:
+                rows = [[("" if c is None else c) for c in r] for r in ws.iter_rows(values_only=True)]
+                rows = [r for r in rows if any(str(x).strip() for x in r)]
+                if rows: sheets.append({"name": ws.title, "headers": [str(h) for h in rows[0]], "rows": [[_cell(x) for x in r] for r in rows[1:]]})
+        else:
+            import csv, io
+            txt = data.decode("utf-8-sig", errors="replace"); dialect = csv.excel_tab if "\t" in txt.splitlines()[0] else csv.excel
+            rows = [r for r in csv.reader(io.StringIO(txt), dialect) if any(x.strip() for x in r)]
+            if rows: sheets.append({"name": name, "headers": rows[0], "rows": rows[1:]})
+        for sh in sheets: sh["guess"] = _guess_kind(sh["headers"])
+        return {"file": name, "sheets": sheets, "kinds": {k: {"req": v["req"], "opt": list(v["opt"]), "refs": v["refs"]} for k, v in schema.KINDS.items()}}
+    @app.post("/api/p/{pid}/sheet/commit")
+    def sheet_commit(pid: str, body: SheetCommit, user: str = U):
+        """Rows → elements of a kind (mapping: field → column header) or → a new table. Becomes a human patch (applied or staged)."""
+        S = W.get(pid); m = S.store.load(); hdr = {h: i for i, h in enumerate(body.headers)}
+        ops = []
+        if body.kind == "tables":
+            t = tables.from_sheet(body.headers, body.rows); tid = body.table_id or ("TBL-" + _slug(body.table_name or body.sheet or "table"))
+            ops.append({"op": "add" if tid not in m.get("tables", {}) else "update", "kind": "tables", "id": tid, "value": {"name": body.table_name or body.sheet or tid, "description": f"imported from {body.file}", **t}})
+        else:
+            if body.kind not in schema.KINDS: raise HTTPException(400, "unknown kind")
+            spec = schema.KINDS[body.kind]; n = 0
+            for r in body.rows:
+                val = {}
+                for field, col in body.mapping.items():
+                    if col in hdr and hdr[col] < len(r):
+                        v = r[hdr[col]]
+                        if field in spec["refs"] and isinstance(spec["opt"].get(field, None), list) or field in ("tests", "reqs", "funcs", "alloc", "from_", "regs", "parts", "elements", "members"): v = [x.strip() for x in str(v).replace(";", ",").split(",") if x.strip()] if v != "" else []
+                        val[field] = v
+                for f in spec["req"]:
+                    if f not in val: val[f] = [] if f in ("tests", "reqs", "funcs", "alloc", "parts", "lcs", "items", "columns", "rows") else ""
+                eid = (r[hdr[body.id_column]] if body.id_column in hdr and hdr[body.id_column] < len(r) and r[hdr[body.id_column]] else "") or f"{body.id_prefix or body.kind[:3].upper()}-{len(m[body.kind]) + n + 1:03d}"
+                n += 1; ops.append({"op": "update" if eid in m[body.kind] else "add", "kind": body.kind, "id": str(eid), "value": val})
+        if not ops: raise HTTPException(400, "nothing to import")
+        hp = HumanPatch(ops=ops, rationale=f"Imported {len(ops)} row(s) from {body.file} → {body.kind}", apply=body.apply)
+        return human_patch(pid, hp, user)
+
+    # ---- test execution & data: upload a run's data file for a test → metrics, limit checks, verdict, chart series; test status follows
+    def _runs_dir(S, rid): d = os.path.join(S.root, "runs", rid); os.makedirs(d, exist_ok=True); return d
+    @app.post("/api/p/{pid}/runs")
+    async def new_run(pid: str, test: str = Form(...), unit: str = Form(""), operator: str = Form(""), station: str = Form(""), notes: str = Form(""), limits: str = Form(""), file: UploadFile | None = File(None), user: str = U):
+        S = W.get(pid); m = S.store.load()
+        if test not in m["tests"]: raise HTTPException(404, "no such test")
+        n = len([r for r in m.get("test_runs", {}).values() if r["test"] == test]) + 1; rid = f"RUN-{test}-{n:02d}"
+        value = {"test": test, "date": time.strftime("%Y-%m-%d"), "unit": unit, "operator": operator or user, "station": station, "notes": notes, "rev": m["meta"].get("rev"), "result": "recorded", "channels": [], "metrics": {}, "limits": {}, "checks": []}
+        lims = testdata.limits_for_test(m, test)
+        for line in (limits or "").splitlines():
+            L = testdata.parse_limit(line)
+            if L: lims.append(L)
+        if file is not None and file.filename:
+            raw = (await file.read()).decode("utf-8-sig", errors="replace"); d = testdata.parse(raw)
+            dest = _runs_dir(S, rid); open(os.path.join(dest, os.path.basename(file.filename)), "w").write(raw)
+            mets = testdata.metrics(d); checks = testdata.check(mets, lims); ser = testdata.series(d)
+            json.dump(ser, open(os.path.join(dest, "series.json"), "w"))
+            value.update(data=os.path.basename(file.filename), channels=[c for c in d["columns"] if c != d["time"]], metrics=mets, checks=checks, limits={L["channel"]: f"{L['op']} {L['value']} {L.get('unit', '')}".strip() for L in lims})
+            if checks and all(c["ok"] is not None for c in checks): value["result"] = "pass" if all(c["ok"] for c in checks) else "fail"
+            elif checks: value["result"] = "pass" if all(c["ok"] for c in checks if c["ok"] is not None) and any(c["ok"] is not None for c in checks) else "inconclusive"
+        ops = [{"op": "add", "kind": "test_runs", "id": rid, "value": value}]
+        if value["result"] in ("pass", "fail"):
+            tv = m["tests"][test]; attrs = dict(tv.get("attrs") or {}); attrs["result_ts"] = time.time()
+            ops.append({"op": "update", "kind": "tests", "id": test, "value": {"status": "passed" if value["result"] == "pass" else "failed", "result": value["result"], "result_rev": m["meta"].get("rev"), "attrs": attrs}})
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Test run {rid}: {value['result']}" + (f" ({value['data']})" if value.get("data") else ""), apply=True), user)
+        return {"id": rid, **value, "patch_id": r["patch_id"]}
+    @app.get("/api/p/{pid}/run/{rid}")
+    def run(pid: str, rid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); v = m.get("test_runs", {}).get(rid)
+        if not v: raise HTTPException(404, "no such run")
+        p = os.path.join(S.root, "runs", rid, "series.json"); ser = json.load(open(p)) if os.path.exists(p) else None
+        t = m["tests"].get(v["test"], {}); reqs = [r for r, rv in m["requirements"].items() if v["test"] in rv.get("tests", [])]
+        return {"id": rid, **v, "series": ser, "test_name": t.get("name", ""), "requirements": reqs}
+    @app.get("/api/p/{pid}/runs")
+    def runs(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        return [{"id": k, **v, "metrics": {c: {kk: mv.get(kk) for kk in ("min", "max", "mean")} for c, mv in (v.get("metrics") or {}).items()}, "test_name": m["tests"].get(v["test"], {}).get("name", "")} for k, v in sorted(m.get("test_runs", {}).items(), key=lambda kv: kv[1].get("date", ""), reverse=True)]
+
+    # ---- attachments: CAD, drawings, schematics, reports pinned to an element
+    @app.post("/api/p/{pid}/attach")
+    async def attach(pid: str, element: str = Form(...), role: str = Form("document"), title: str = Form(""), rev: str = Form(""), file: UploadFile = File(...), user: str = U):
+        S = W.get(pid); m = S.store.load(); kind = _kind_of(m, element)
+        if not kind: raise HTTPException(404, "no such element")
+        d = os.path.join(S.root, "files", element); os.makedirs(d, exist_ok=True); name = os.path.basename(file.filename or "file"); dest = os.path.join(d, name)
+        with open(dest, "wb") as fh: shutil.copyfileobj(file.file, fh)
+        aid = f"ATT-{element}-{len([a for a in m.get('attachments', {}).values() if a['element'] == element]) + 1:02d}"
+        value = {"element": element, "file": f"files/{element}/{name}", "role": role, "title": title or name, "format": name.rsplit(".", 1)[-1].lower() if "." in name else "", "rev": rev, "date": time.strftime("%Y-%m-%d"), "size": os.path.getsize(dest), "uploaded_by": user}
+        human_patch(pid, HumanPatch(ops=[{"op": "add", "kind": "attachments", "id": aid, "value": value}], rationale=f"Attached {name} to {element} as {role}", apply=True), user)
+        return {"id": aid, **value}
+    @app.get("/api/p/{pid}/attachments/{element}")
+    def attachments(pid: str, element: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return [{"id": k, **v} for k, v in m.get("attachments", {}).items() if v["element"] == element]
 
     @app.get("/api/p/{pid}/graph")
     def graph(pid: str, user: str = U):

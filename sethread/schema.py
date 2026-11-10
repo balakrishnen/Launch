@@ -52,6 +52,17 @@ KINDS: dict[str, dict[str, Any]] = {
     "field_events": dict(req=["date", "symptom"], opt={"unit": "", "parts": [], "fm": "", "disposition": "", "status": "open", "count": 1, "severity": "", "eight_d": ""}, refs={"parts": "parts"}),
     "risks": dict(req=["title", "prob", "impact"], opt={"owner": "", "mitigation": "", "status": "open", "links": [], "team": None}, refs={"team": "teams"}),
     "reviews": dict(req=["name", "gate", "date"], opt={"attendees": [], "findings": [], "decision": "", "notes": ""}, refs={"gate": "gates", "findings": "findings"}),
+    # Office replacement: ad-hoc tables (trackers, rollups, lists — what used to be a spreadsheet) and notes (specs, minutes, decision logs — what used to be a doc).
+    # tables.columns: [{key, name, type: text|number|date|ref|formula, kind?: ref target, formula?: expression over row fields and the model}]
+    "tables": dict(req=["name", "columns", "rows"], opt={"description": "", "owner_team": None, "elements": []}, refs={"owner_team": "teams"}),
+    # Test results intake (execution stays in TestRUNS, analytics in Kanalysis — they post here): a run is one result of a test on a unit,
+    # with optional data, computed metrics, limits (from the requirement attribute or explicit) and a verdict. tests.status/result/result_rev follow the latest run.
+    "test_runs": dict(req=["test", "date", "result"], opt={"unit": "", "operator": "", "data": "", "channels": [], "metrics": {}, "limits": {}, "checks": [], "notes": "", "rev": None, "station": ""}, refs={"test": "tests"}),
+    # Simulations: a model-based analysis (FMU, FEA, CFD, SPICE, Modelica…) run against an element, with inputs/outputs and the requirements it informs
+    "simulations": dict(req=["name", "tool", "element"], opt={"inputs": {}, "outputs": {}, "requirements": [], "file": "", "status": "planned", "date": "", "owner_team": None, "notes": ""}, refs={"requirements": "requirements", "owner_team": "teams"}),
+    # Attachments: CAD (STEP/native), drawings, schematics, reports — files pinned to an element with a role
+    "attachments": dict(req=["element", "file", "role"], opt={"title": "", "format": "", "rev": "", "date": "", "size": 0, "uploaded_by": ""}, refs={}),
+    "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]
 # INCOSE SE Handbook / ISO/IEC/IEEE 15288 generic life-cycle stages
@@ -63,11 +74,11 @@ PROCESSES = [
     ("Stakeholder needs and requirements definition", "Concept", ["needs", "actors", "use_cases", "scenarios"]),
     ("System requirements definition", "Development", ["regulations", "requirements", "constraints"]),
     ("System architecture definition", "Development", ["functions", "logical_components", "logical_interfaces", "nodes", "interfaces", "states", "transitions", "arch_decisions"]),
-    ("Design definition", "Development", ["parts"]),
-    ("System analysis", "Development", ["trades", "fm_assessments"]),
+    ("Design definition", "Development", ["parts", "attachments"]),
+    ("System analysis", "Development", ["trades", "fm_assessments", "simulations"]),
     ("Implementation", "Development", ["suppliers"]),
     ("Integration", "Development", []),
-    ("Verification", "Development", ["tests"]),
+    ("Verification", "Development", ["tests", "test_runs"]),
     ("Transition", "Production", ["process_steps"]),
     ("Validation", "Production", []),
     ("Operation", "Utilization", ["field_events"]),
@@ -81,7 +92,7 @@ MANAGEMENT = [
     ("Decision management", []),
     ("Risk management", ["risks"]),
     ("Configuration management", []),
-    ("Information management", []),
+    ("Information management", ["tables", "notes"]),
     ("Measurement", []),
     ("Quality assurance", ["findings", "reviews"]),
 ]
