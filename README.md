@@ -262,6 +262,10 @@ Launch is agentic, so the tools a hardware team needs are built into the thread 
 | Compliance evidence | Shared drives of PDFs | evidence attached per requirement/regulation, certification plan drives the test program |
 | Program | MS Project/Asana | gates, work items, handoffs, risks (done) + schedule lanes |
 
+## A system of record for every team
+
+Each team has a workspace (`/team/<id>`, and "My team" in the sidebar for members): KPI tiles (open and overdue work, findings, handoffs waiting on them and that they wait for, tests passed, High-AP failure modes on their parts, open risks), what is due next, every record they own by kind as an editable sheet (parts, tests, work items, findings, risks, process steps, suppliers, tables, notes, simulations), the functions, interfaces and requirements that hang off their parts, activity on their records, and the conversations that touched them. Membership is by email on `teams.members` / `teams.lead`. Every element is a record page with fields, upstream/downstream, failure modes, impact, files (CAD, drawings, schematics, reports attached with a role), test results (for tests), comments and history.
+
 ## No Excel, no Word: the office layer
 
 Engineers must not need a spreadsheet or a document tool beside Launch. So every collection is an editable sheet (click a cell, add/paste rows, add columns, group, filter — each change is a patch with provenance), and three more things live in the model:

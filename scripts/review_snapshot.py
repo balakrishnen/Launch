@@ -24,6 +24,8 @@ for pid in pids:
             for pr in e.get('provenance', []): pr['ops'] = [o for o in pr.get('ops', []) if o.get('id') == n['id']]
             P[f"/element/{n['kind']}/{eid}"] = e; P[f"/impact/{eid}"] = g(f"/impact/{eid}")
     for t in P.get('/collection/tables') or []: P['/table/' + t['id']] = g('/table/' + t['id'])
+    for t in (P['/project'] or {}).get('teams', {}): P['/team/' + t] = g('/team/' + t)
+    P['/me/team'] = g('/me/team')
     for t in P.get('/threads') or []: P['/threads/' + t['id']] = g('/threads/' + t['id'])
     for r in P.get('/runs') or []: P['/run/' + r['id']] = g('/run/' + r['id'])
     for f in (P['/artifacts'] or {}).get('sysml', []): P['/file?path=out/sysml/' + f] = None

@@ -646,6 +646,18 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def attachments(pid: str, element: str, user: str = U):
         S = W.get(pid); m = S.store.load(); return [{"id": k, **v} for k, v in m.get("attachments", {}).items() if v["element"] == element]
 
+    @app.get("/api/p/{pid}/team/{tid}")
+    def team_ws(pid: str, tid: str, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        if tid not in m["teams"]: raise HTTPException(404, "no such team")
+        return lifecycle.team_workspace(m, tid, S.store, [S.thread_summary(t) for t in S.threads.values()])
+    @app.get("/api/p/{pid}/me/team")
+    def my_team(pid: str, user: str = U):
+        """which team(s) the signed-in user belongs to (members/lead emails) — drives 'My team' in the sidebar"""
+        S = W.get(pid); m = S.store.load(); u = user.lower()
+        mine = [t for t, v in m["teams"].items() if u in [x.lower() for x in v.get("members", [])] or v.get("lead", "").lower() == u]
+        return {"teams": mine, "user": user}
+
     @app.get("/api/p/{pid}/graph")
     def graph(pid: str, user: str = U):
         S = W.get(pid)

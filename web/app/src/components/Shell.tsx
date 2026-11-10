@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
+import { Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
 import { useProject } from '../state'
 import { FORMS, KIND_LABEL, STAGE_COLOR, stageColor, LIFECYCLE } from '../api'
 import { AgentDrawer } from './Agent'
@@ -24,6 +24,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Disposal': [['search?q=disposal', 'Disposal requirements']],
   'Project planning': [['teams', 'Lifecycle & gates'], ['form/work_items', 'Work items board']],
   'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
+  // team workspaces are added dynamically from project.teams
   'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
   'Risk management': [['form/risks', 'Risk register']],
   'Configuration management': [['history', 'History & baselines']],
@@ -81,6 +82,8 @@ function Tree() {
   const { pid, project, patches } = useProject()
   const [open, setOpen] = useState<Record<string, boolean>>(() => { try { return JSON.parse(localStorage.getItem('tree2') || '{}') } catch { return {} } })
   useEffect(() => { try { localStorage.setItem('tree2', JSON.stringify(open)) } catch { } }, [open])
+  const [myTeams, setMyTeams] = useState<string[]>([])
+  useEffect(() => { fetch(`/api/p/${pid}/me/team`).then(r => r.json()).then(x => setMyTeams(x.teams || [])).catch(() => { }) }, [pid, project?.meta?.rev])
   if (!project) return null
   const isOpen = (k: string) => open[k] === true
   const staged = patches.filter(p => p.status === 'staged').length
@@ -91,6 +94,7 @@ function Tree() {
     return <div className="tree">
     <Item to={`/p/${pid}`} end label="Home" icon={<Home size={17} />} />
     <Item to={`/p/${pid}/chat`} label="Conversations" icon={<Sparkles size={17} />} />
+    {myTeams.map(t => <Item key={t} to={`/p/${pid}/team/${t}`} label={`My team · ${project.teams?.[t]?.name || t}`} icon={<Users size={17} />} />)}
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />
@@ -107,6 +111,7 @@ function Tree() {
     <h4>Technical management</h4>
     {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
       {p.kinds.filter(k => k !== 'tables' && k !== 'notes').map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {p.name === 'Project assessment and control' && Object.entries(project.teams || {}).map(([t, tv]: any) => <Item key={t} to={`/p/${pid}/team/${t}`} label={tv.name} />)}
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}
     <div className="sep" />

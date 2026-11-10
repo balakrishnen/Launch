@@ -129,3 +129,52 @@ def team_workload(m):
                   "parts": [p for p, pv in m["parts"].items() if pv.get("owner_team") == t], "tests": [x for x, xv in m["tests"].items() if xv.get("owner_team") == t],
                   "process_steps": [p for p, pv in m.get("process_steps", {}).items() if pv.get("team") == t]}
     return out
+
+
+def team_workspace(m, tid: str, store=None, threads: list | None = None) -> dict:
+    """System-of-record view for one team: KPIs, every record they own by kind, what waits on them, what they wait for,
+    the failure modes and tests on their parts, recent activity on their records, and conversations that touched them."""
+    tv = m["teams"].get(tid)
+    if not tv: return {}
+    lead = tv.get("lead", ""); members = set(tv.get("members", [])) | ({lead} if lead else set())
+    mine = lambda v, *keys: any(v.get(k) in (tid, lead) or v.get(k) in members for k in keys)
+    recs = {
+        "parts": [p for p, v in m["parts"].items() if v.get("owner_team") == tid],
+        "tests": [t for t, v in m["tests"].items() if v.get("owner_team") == tid],
+        "work_items": [w for w, v in m.get("work_items", {}).items() if v.get("team") == tid or mine(v, "owner")],
+        "findings": [f for f, v in m.get("findings", {}).items() if mine(v, "owner")],
+        "risks": [r for r, v in m.get("risks", {}).items() if v.get("team") == tid or mine(v, "owner")],
+        "process_steps": [p for p, v in m.get("process_steps", {}).items() if v.get("team") == tid],
+        "suppliers": [s for s, v in m.get("suppliers", {}).items() if mine(v, "owner")],
+        "tables": [t for t, v in m.get("tables", {}).items() if v.get("owner_team") == tid],
+        "notes": [n for n, v in m.get("notes", {}).items() if v.get("owner_team") == tid or v.get("author") in members],
+        "simulations": [s for s, v in m.get("simulations", {}).items() if v.get("owner_team") == tid],
+    }
+    parts = set(recs["parts"])
+    # elements that hang off their parts: functions allocated, interfaces, failure modes (derived), requirements realized
+    funcs = [f for f, v in m["functions"].items() if set(v.get("alloc", [])) & parts]
+    ifaces = [i for i, v in m["interfaces"].items() if v.get("a") in parts or v.get("b") in parts]
+    reqs = sorted({r for f in funcs for r in m["functions"][f].get("reqs", [])})
+    fms = [x for x in D.fmea(m) if (x.get("element") in parts or x.get("element") in funcs)]
+    high = [x for x in fms if x.get("AP") == "H"]
+    hand_in = [{"id": h, **v} for h, v in m.get("handoffs", {}).items() if v["to_team"] == tid and v["status"] == "pending"]
+    hand_out = [{"id": h, **v} for h, v in m.get("handoffs", {}).items() if v["from_team"] == tid and v["status"] == "pending"]
+    open_wi = [w for w in recs["work_items"] if m["work_items"][w]["status"] != "done"]
+    overdue = [w for w in open_wi if (m["work_items"][w].get("due") or "9999") < time.strftime("%Y-%m-%d")]
+    open_f = [f for f in recs["findings"] if m["findings"][f]["status"] != "closed"]
+    tests_passed = [t for t in recs["tests"] if m["tests"][t].get("status") == "passed"]
+    kpis = {"open_work_items": len(open_wi), "overdue": len(overdue), "open_findings": len(open_f), "critical_findings": len([f for f in open_f if m["findings"][f]["severity"] in ("critical", "major")]),
+            "handoffs_waiting_on_us": len(hand_in), "handoffs_we_wait_for": len(hand_out), "tests_passed": [len(tests_passed), len(recs["tests"])], "high_ap_on_our_parts": len(high),
+            "high_ap_without_test": len([x for x in high if not x.get("tests")]), "open_risks": len([r for r in recs["risks"] if m["risks"][r]["status"] == "open"])}
+    # activity: applied patches touching our records
+    ours = {x for xs in recs.values() for x in xs} | set(funcs) | set(ifaces)
+    activity = []
+    try:
+        for p in sorted(store.list_patches("applied"), key=lambda p: -(getattr(p, "applied", None) or p.created))[:200]:
+            hit = [o for o in p.ops if o.id in ours]
+            if hit: activity.append({"patch": p.id, "ts": getattr(p, "applied", None) or p.created, "author": p.author, "rationale": p.rationale, "ids": [o.id for o in hit][:8], "n": len(hit)})
+            if len(activity) >= 30: break
+    except Exception: pass
+    convs = [t for t in (threads or []) if any(x in (t.get("last", "") + t.get("title", "")) for x in list(ours)[:200])][:10]
+    return {"id": tid, **tv, "members": sorted(members), "kpis": kpis, "records": recs, "functions": funcs, "interfaces": ifaces, "requirements": reqs, "high_ap": high[:50], "handoffs_in": hand_in, "handoffs_out": hand_out,
+            "due_soon": sorted([{"id": w, **m["work_items"][w]} for w in open_wi if m["work_items"][w].get("due")], key=lambda w: w["due"])[:10], "activity": activity, "conversations": convs}
