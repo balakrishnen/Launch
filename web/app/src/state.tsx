@@ -24,7 +24,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Ev[]>([]); const [busy, setBusy] = useState(false)
   const [tabs, setTabs] = useState<Tab[]>(() => { try { return JSON.parse(localStorage.getItem('tabs:' + pid) || '[]') } catch { return [] } })
   const [activeTab, setActive] = useState<string | null>(null)
-  const [drawer, setDrawer] = useState(() => { try { return localStorage.getItem('drawer') !== '0' } catch { return true } })
+  const [drawer, setDrawer] = useState(() => { try { return localStorage.getItem('drawer') === '1' } catch { return false } })
   const [palette, setPalette] = useState(false); const [msg, setMsg] = useState<string | null>(null)
   const [patches, setPatches] = useState<PatchSummary[]>([])
   const [theme, setThemeState] = useState(() => { try { return localStorage.getItem('theme') || 'light' } catch { return 'light' } })
