@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProject } from '../state'
+import { SysmlDiagram } from '../components/Diagram'
 import { P, FORMS, MATRIX_PAIRS, KIND_LABEL, stageColor, type Form } from '../api'
 import { Grid } from '../components/Grid'
 import { marked } from 'marked'
@@ -42,6 +43,11 @@ export function Artifacts() {
 const sel = { borderColor: 'var(--accent)', color: 'var(--accent-ink)', background: 'var(--accent-soft)' }
 function viewStage(v: string) { const n = parseInt(v.slice(1, 3)); return n <= 2 ? 'Stakeholder needs and requirements definition' : n <= 4 ? 'System requirements definition' : n <= 11 ? 'System architecture definition' : n <= 13 ? 'System analysis' : 'Verification' }
 
+export function FormDiagram({ name, ids }: { name: string; ids: string[] }) {
+  const v = FORM_VIEW[name]; const [open, setOpen] = useState(false)
+  if (!v) return null
+  return <div style={{ margin: '6px 0 10px' }}><button className="btn sm" onClick={() => setOpen(o => !o)}>{open ? 'Hide' : 'Show'} SysML v2 view</button>{open && <div style={{ marginTop: 8 }}><SysmlDiagram path={`/diagram/${v}?ids=${encodeURIComponent(ids.slice(0, 60).join(','))}`} height={480} showText={false} /></div>}</div>
+}
 export function FormPage() {
   const { name = '' } = useParams(); const { pid, send, patches, project, openTab } = useProject(); const [form, setForm] = useState<Form | null>(null); const [showRatings, setShowRatings] = useState(false)
   const load = () => P(pid).get('/form/' + name).then(setForm).catch(() => setForm(null))
@@ -52,6 +58,7 @@ export function FormPage() {
   return <div>
     <div className="row between" style={{ marginBottom: 4 }}><div><h2>{form.title} <span className="pill">{form.rows.length}</span></h2><div className="muted small">{form.standard} · generated from the model · {form.editable ? 'click a cell to edit; edits become a logged patch' : 'read-only view'}</div></div>
       <div className="row">{form.rating_tables && <button className="btn sm" onClick={() => setShowRatings(v => !v)}>Rating tables</button>}<button className="btn sm" onClick={() => send(ask[name] || `Improve the ${form.title}`)}>▶ Ask the agent</button></div></div>
+    <FormDiagram name={name} ids={form.rows.map((r: any[]) => String(r[0])).filter((x: string) => /^[A-Z]{1,6}-?[A-Za-z0-9]/.test(x))} />
     {showRatings && form.rating_tables && <div className="card" style={{ margin: '8px 0' }}><div className="row" style={{ gap: 28, alignItems: 'flex-start' }}>{Object.entries(form.rating_tables).map(([t, rows]) => <div key={t}><h4>{t}</h4>{rows.map(([n, d]) => <div key={n} className="small"><b style={{ display: 'inline-block', width: 22 }}>{n}</b>{d}</div>)}</div>)}</div></div>}
     {form.rows.length ? <Grid form={form} onSaved={load} /> : <div className="empty">Nothing to show yet. <button className="chip" onClick={() => send(ask[name] || '')}>ask the agent</button></div>}
   </div>
@@ -68,6 +75,14 @@ export function MatrixPage() {
   </div>
 }
 
+const FORM_VIEW: Record<string, string> = { dfmea: 'fmea', hazards: 'fmea', fta: 'fmea', drbfm: 'fmea', dvpr: 'verification', vcrm: 'verification', reqspec: 'requirements', n2: 'interconnection', n2l: 'logical', icd: 'interconnection', pfmea: 'process', control_plan: 'process' }
+export function LiveDiagrams() {
+  const { pid } = useProject(); const [views, setViews] = useState<any[]>([]); const [cur, setCur] = useState('interconnection')
+  useEffect(() => { P(pid).get('/diagrams').then(setViews).catch(() => { }) }, [pid])
+  return <div><div className="row between" style={{ marginBottom: 10 }}><div><h2>SysML v2 diagrams</h2><div className="muted small">Live views rendered from the model — interconnection, logical, requirements, verification, states, failure network, process, use cases. Click any element to open its record.</div></div></div>
+    <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>{views.map(v => <button key={v.id} className="chip" style={cur === v.id ? { borderColor: 'var(--accent)', color: 'var(--accent-ink)', background: 'var(--accent-soft)' } : {}} onClick={() => setCur(v.id)}>{v.title}</button>)}</div>
+    <SysmlDiagram path={`/diagram/${cur}`} height={640} showText={false} /></div>
+}
 export function Views() {
   const { pid, project } = useProject(); const [art, setArt] = useState<any>(null)
   useEffect(() => { P(pid).get('/artifacts').then(setArt) }, [pid, project?.meta?.rev])

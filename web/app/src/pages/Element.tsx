@@ -5,12 +5,13 @@ import { useProject } from '../state'
 import { P, KIND_LABEL, type ElementPage } from '../api'
 import { Cell, IdLink, StagePill, Linkified } from '../components/common'
 import { Comments } from './Lifecycle'
+import { SysmlDiagram } from '../components/Diagram'
 
 export function Element() {
   const { kind = '', id = '' } = useParams(); const { pid, send, openTab, project, patches } = useProject(); const nav = useNavigate()
-  const [e, setE] = useState<ElementPage | null>(null); const [im, setIm] = useState<any>(null); const [tab, setTab] = useState('overview'); const [err, setErr] = useState(''); const [att, setAtt] = useState<any[]>([]); const [runs, setRuns] = useState<any[]>([]); const [mem, setMem] = useState<any>(null); const { toast } = useProject()
+  const [e, setE] = useState<ElementPage | null>(null); const [im, setIm] = useState<any>(null); const [tab, setTab] = useState('overview'); const [err, setErr] = useState(''); const [att, setAtt] = useState<any[]>([]); const [runs, setRuns] = useState<any[]>([]); const [mem, setMem] = useState<any>(null); const [where, setWhere] = useState<any[]>([]); const { toast } = useProject()
   const eid = decodeURIComponent(id)
-  useEffect(() => { setE(null); setErr(''); const p = P(pid); p.get(`/element/${kind}/${encodeURIComponent(eid)}`).then(setE).catch(x => setErr(x.message)); p.get(`/impact/${encodeURIComponent(eid)}`).then(setIm).catch(() => setIm(null)); p.get(`/attachments/${encodeURIComponent(eid)}`).then(setAtt).catch(() => setAtt([])); if (kind === 'tests') p.get('/runs').then((rs: any[]) => setRuns(rs.filter(r => r.test === eid))).catch(() => setRuns([])) }, [pid, kind, eid, patches.length, project?.meta?.rev])
+  useEffect(() => { setE(null); setErr(''); const p = P(pid); p.get(`/element/${kind}/${encodeURIComponent(eid)}`).then(setE).catch(x => setErr(x.message)); p.get(`/impact/${encodeURIComponent(eid)}`).then(setIm).catch(() => setIm(null)); p.get(`/attachments/${encodeURIComponent(eid)}`).then(setAtt).catch(() => setAtt([])); p.get(`/where/${encodeURIComponent(eid)}`).then(setWhere).catch(() => setWhere([])); if (kind === 'tests') p.get('/runs').then((rs: any[]) => setRuns(rs.filter(r => r.test === eid))).catch(() => setRuns([])) }, [pid, kind, eid, patches.length, project?.meta?.rev])
   useEffect(() => { if (e) openTab({ key: `el:${kind}:${eid}`, title: eid, path: `/p/${pid}/element/${kind}/${encodeURIComponent(eid)}`, stage: e.stage }) }, [e?.id])
   const title = useMemo(() => e ? (e.data.name || e.data.title || e.data.mode || String(e.data.text || '').slice(0, 120) || eid) : '', [e])
   if (err) return <div className="empty">Could not open {eid}: {err}</div>
@@ -30,8 +31,11 @@ export function Element() {
         <button className="btn sm" onClick={() => send(`I want to change ${eid}. Run an impact analysis, tell me which requirements, failure modes and tests are affected, and propose the patch set that keeps the thread consistent`)}><MessageSquare size={14} />Plan a change</button>
       </div>
     </div>
-    <div className="sectabs">{[['overview', 'Overview'], ['trace', `Trace (${e.up.length + e.down.length})`], ['fmea', `Failure modes${e.fmea ? ` (${e.fmea.length})` : ''}`], ['impact', `Impact${im ? ` (${im.affected.length})` : ''}`], ['files', `Files (${att.length})`], ...(kind === 'tests' ? [['runs', `Results (${runs.length})`]] : []), ['memory', 'Memory'], ['history', `History (${e.provenance.length})`]].filter(([k]) => k !== 'fmea' || e.fmea || e.unassessed).map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
-    {tab === 'overview' && <div className="grid2">
+    <div className="sectabs">{[['overview', 'Overview'], ['diagram', 'SysML v2'], ['trace', `Trace (${e.up.length + e.down.length})`], ['fmea', `Failure modes${e.fmea ? ` (${e.fmea.length})` : ''}`], ['impact', `Impact${im ? ` (${im.affected.length})` : ''}`], ['files', `Files (${att.length})`], ...(kind === 'tests' ? [['runs', `Results (${runs.length})`]] : []), ['memory', 'Memory'], ['history', `History (${e.provenance.length})`]].filter(([k]) => k !== 'fmea' || e.fmea || e.unassessed).map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
+    {tab === 'overview' && <SysmlDiagram path={`/diagram/element/${kind}/${encodeURIComponent(eid)}`} height={300} />}
+    {tab === 'diagram' && <SysmlDiagram path={`/diagram/element/${kind}/${encodeURIComponent(eid)}`} height={620} />}
+    {tab === 'overview' && where.length > 0 && <div className="card" style={{ marginTop: 14 }}><h4>Appears in</h4><div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>{where.map((w, i) => <button key={i} className="chip" onClick={() => nav(`/p/${pid}${w.link}`)}><span className="muted">{w.type}</span> {w.name}{w.rows ? <span className="muted"> · {w.rows} row{w.rows > 1 ? 's' : ''}</span> : null}</button>)}</div></div>}
+    {tab === 'overview' && <div className="grid2" style={{ marginTop: 14 }}>
       <div className="card"><h4>Fields</h4><dl className="kv">{Object.entries(e.data).map(([k, v]) => <><dt key={k + 'k'}>{k}</dt><dd key={k + 'v'}><Cell v={v} col={k} /></dd></>)}{e.disciplines && <><dt>disciplines</dt><dd>{e.disciplines.join(', ')}</dd></>}</dl></div>
       <div className="stack" style={{ gap: 14 }}>
         <div className="card"><h4>Upstream — where it comes from</h4>{groups(e.up).map(([rel, xs]) => <div key={rel} className="link"><span className="rel">{rel}</span><span className="stack" style={{ gap: 2 }}>{xs.map(x => <span key={x.id}><IdLink id={x.id} kind={x.kind || undefined} /> <span className="muted small">{x.name}</span></span>)}</span></div>)}{!e.up.length && <span className="muted">—</span>}</div>

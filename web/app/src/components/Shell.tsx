@@ -11,7 +11,7 @@ import { Palette } from './Palette'
 const EXTRA: Record<string, [string, string, string?][]> = {
   'Stakeholder needs and requirements definition': [['matrix/needs/requirements', 'Needs × requirements']],
   'System requirements definition': [['form/reqspec', 'Requirements specification'], ['matrix/regulations/requirements', 'Regulations × requirements'], ['collection/certification_plan', 'Certification plan']],
-  'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['views', 'Diagrams']],
+  'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['diagrams', 'SysML v2 diagrams'], ['views', 'Rendered views']],
   'Design definition': [['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
   'System analysis': [['dfx', 'Design for X'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
   'Implementation': [['form/avl', 'AVL / sourcing']],

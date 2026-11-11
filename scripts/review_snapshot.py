@@ -22,13 +22,21 @@ for pid in pids:
         if e:
             for pr in e.get('provenance', []): pr['ops'] = [o for o in pr.get('ops', []) if o.get('id') == n['id']]
             P[f"/element/{n['kind']}/{eid}"] = e
+            dg = g(f"/diagram/element/{n['kind']}/{eid}")
+            if dg: dg.pop('svg', None); P[f"/diagram/element/{n['kind']}/{eid}"] = dg
+            P[f"/where/{eid}"] = g(f"/where/{eid}")
             if n['kind'] != 'fmea': P[f"/impact/{eid}"] = g(f"/impact/{eid}"); P[f"/memory/{eid}"] = g(f"/memory/{eid}")
     for t in P.get('/collection/tables') or []: P['/table/' + t['id']] = g('/table/' + t['id'])
     for f in P.get('/collection/fmea') or []:
         k = f"/element/fmea/{urllib.parse.quote(f['id'], safe='')}"
         if k not in P: P[k] = g(k)
+        dk = f"/diagram/element/fmea/{urllib.parse.quote(f['id'], safe='')}"; dg = g(dk)
+        if dg: dg.pop('svg', None); P[dk] = dg
     for t in (P['/project'] or {}).get('teams', {}): P['/team/' + t] = g('/team/' + t); P[f'/team/{t}/deliverables'] = g(f'/team/{t}/deliverables')
     P['/me/team'] = g('/me/team')
+    P['/diagrams'] = g('/diagrams')
+    for v in (P['/diagrams'] or []): dg = g('/diagram/' + v['id']); dg and dg.pop('svg', None); P['/diagram/' + v['id']] = dg
+    for t in (P['/project'] or {}).get('teams', {}): dg = g(f'/diagram/element/teams/{t}'); dg and dg.pop('svg', None); P[f'/diagram/element/teams/{t}'] = dg
     for x in P.get('/dfx') or []: P['/dfx/' + x['id']] = g('/dfx/' + x['id'])
     for t in P.get('/threads') or []: P['/threads/' + t['id']] = g('/threads/' + t['id'])
     for r in P.get('/runs') or []: P['/run/' + r['id']] = g('/run/' + r['id'])

@@ -18,6 +18,7 @@ export function installReviewShim(data: Record<string, any>) {
     if (p.startsWith('/search?q=')) { const q = decodeURIComponent(p.slice(10)).toLowerCase(); const hits: any[] = []; for (const n of pd['/graph'].nodes) { if (n.kind === 'fmea') continue; const row = (pd['/collection/' + n.kind] || []).find((r: any) => r.id === n.id); if ((n.id + ' ' + JSON.stringify(row || n)).toLowerCase().includes(q)) hits.push({ kind: n.kind, id: n.id, name: n.name }) } return json(hits.slice(0, 60)) }
     if (p === '/history') return json({ supported: false, note: 'History needs the database store; not in the review snapshot.' })
     if (p in pd && pd[p] !== null) return json(pd[p])
+    { const base = p.split('?')[0]; if (base.startsWith('/diagram/') && base in pd && pd[base]) return json(pd[base]) }
     if (p.startsWith('/events')) return new Response('', { status: 204 })
     return json({ detail: 'not in review snapshot: ' + p }, 404)
   }

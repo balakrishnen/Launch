@@ -8,6 +8,7 @@ import { P, KIND_LABEL } from '../api'
 import { IdLink, Linkified } from '../components/common'
 import { Sheet, type Col } from '../components/Sheet'
 import { TeamDeliverables } from './Pdp'
+import { SysmlDiagram } from '../components/Diagram'
 
 const TABS = ['Overview', 'Subsystem', 'Focus', 'Work', 'Records', 'Risk & tests', 'Handoffs', 'Activity']
 
@@ -92,6 +93,7 @@ function SubsystemView({ s, w }: { s: any; w: any }) {
   const byParent: Record<string, any[]> = {}; for (const t of s.tree) (byParent[t.parent || ''] ??= []).push(t)
   const Node = ({ p, depth }: { p: any; depth: number }) => <div><div className="row small" style={{ paddingLeft: depth * 16, gap: 6, padding: '3px 0 3px ' + depth * 16 + 'px' }}><IdLink id={p.id} kind="parts" /><span>{p.name}</span><span className="muted">{p.discipline}{p.make_buy ? ` · ${p.make_buy}` : ''}</span>{p.owner_team && p.owner_team !== w.id && <span className="pill" style={{ fontSize: 10 }}>{p.owner_team}</span>}</div>{(byParent[p.id] || []).map(c => <Node key={c.id} p={c} depth={depth + 1} />)}</div>
   return <div className="stack" style={{ gap: 14 }}>
+    <SysmlDiagram path={`/diagram/element/teams/${w.id}`} title={`${w.name} — subsystem boundary`} height={420} showText={false} />
     <div className="grid2" style={{ alignItems: 'start' }}>
       <div className="card"><div className="row between"><h4>Scope — {s.parts.length} parts, {s.lcs.length} logical components</h4><button className="chip" onClick={() => send(`Define the ${w.name} subsystem precisely: confirm its root parts and logical components, and propose any parts that should move in or out of scope`)}><Sparkles size={13} />refine scope</button></div>
         {(byParent[''] || []).map(p => <Node key={p.id} p={p} depth={0} />)}<div className="small muted ids" style={{ marginTop: 6 }}>logical: {s.lcs.map((l: string) => <IdLink key={l} id={l} kind="logical_components" />)}</div>
