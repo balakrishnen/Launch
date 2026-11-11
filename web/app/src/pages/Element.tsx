@@ -6,6 +6,7 @@ import { P, KIND_LABEL, type ElementPage } from '../api'
 import { Cell, IdLink, StagePill, Linkified } from '../components/common'
 import { Comments } from './Lifecycle'
 import { SysmlDiagram } from '../components/Diagram'
+import { CadPanel } from '../components/Cad'
 
 export function Element() {
   const { kind = '', id = '' } = useParams(); const { pid, send, openTab, project, patches } = useProject(); const nav = useNavigate()
@@ -34,6 +35,7 @@ export function Element() {
     </div>
     <div className="sectabs">{[['overview', 'Overview'], ['diagram', 'SysML v2'], ['trace', `Trace (${e.up.length + e.down.length})`], ['fmea', `Failure modes${e.fmea ? ` (${e.fmea.length})` : ''}`], ['impact', `Impact${im ? ` (${im.affected.length})` : ''}`], ['files', `Files (${att.length})`], ...(kind === 'tests' ? [['runs', `Results (${runs.length})`]] : []), ['memory', 'Memory'], ['history', `History (${e.provenance.length})`]].filter(([k]) => k !== 'fmea' || e.fmea || e.unassessed).map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
     {brief !== null && <div className="card" style={{ marginBottom: 14, borderColor: 'var(--accent)' }}><div className="row between"><h4>CAD brief — derived from the graph; hand it to a mechanical engineer or a text-to-CAD copilot (MecAgent, Zoo, Studio)</h4><button className="btn sm" onClick={() => { navigator.clipboard?.writeText(brief).then(() => toast('Copied')).catch(() => { }) }}>Copy</button></div><pre className="diff" style={{ whiteSpace: 'pre-wrap', maxHeight: 420 }}>{brief}</pre></div>}
+    {tab === 'overview' && kind === 'parts' && <CadPanel part={eid} />}
     {tab === 'overview' && <SysmlDiagram path={`/diagram/element/${kind}/${encodeURIComponent(eid)}`} height={300} />}
     {tab === 'diagram' && <SysmlDiagram path={`/diagram/element/${kind}/${encodeURIComponent(eid)}`} height={620} />}
     {tab === 'overview' && where.length > 0 && <div className="card" style={{ marginTop: 14 }}><h4>Appears in</h4><div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>{where.map((w, i) => <button key={i} className="chip" onClick={() => nav(`/p/${pid}${w.link}`)}><span className="muted">{w.type}</span> {w.name}{w.rows ? <span className="muted"> · {w.rows} row{w.rows > 1 ? 's' : ''}</span> : null}</button>)}</div></div>}

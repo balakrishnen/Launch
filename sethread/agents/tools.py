@@ -1,7 +1,7 @@
 """In-process MCP tools the role agents use. The model is read freely; it is changed only through propose_patch,
 which validates and stages. Tools are built with the Claude Agent SDK (@tool + create_sdk_mcp_server)."""
 from __future__ import annotations
-import json, time, os
+import json, os, time
 from typing import Any
 from claude_agent_sdk import tool, create_sdk_mcp_server
 from ..store import Store, Patch, Op
@@ -81,6 +81,22 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
     async def cad_brief(args):
         from .. import cadbrief
         return _txt(cadbrief.brief(store.load(), args["part"]))
+
+    @tool("cad_build", "Native CAD: build a part's geometry from build123d code (Python; mm; define `result`; set density_g_cm3; declare `features` and `mates` {interface_id: feature}). Exports STEP/STL, measures volume/mass/bbox, checks them against the part's attrs (mass_budget_g, envelope_mm), mechanical interfaces (mates) and requirement attrs, attaches the STEP to the part and writes measured attrs. Start from cad_brief. Returns the build result or the Python error to fix.", {"part": str, "code": str})
+    async def cad_build_tool(args):
+        from .. import cad as CAD
+        from ..store import Patch, Op
+        m = store.load(); part = args["part"]
+        if part not in m["parts"]: return _txt({"error": "no such part"})
+        root = getattr(store, "root", None) or "."; res = CAD.build(args["code"], os.path.join(root, "cad"), part)
+        if not res["ok"]: return _txt({"ok": False, "error": res["error"]})
+        chk = CAD.checks(m, part, res); cid = "CAD-" + part; cur = m.get("cad_models", {}).get(cid)
+        value = {"part": part, "code": args["code"], "name": m["parts"][part].get("name", ""), "status": "built" if all(c["ok"] for c in chk) else "built-with-findings", "built": time.strftime("%Y-%m-%d %H:%M"), "by": author, "volume_mm3": res["volume_mm3"], "mass_g": res["mass_g"], "bbox_mm": res["bbox_mm"], "files": res["files"], "checks": chk, "features": res.get("features", []), "error": ""}
+        attrs = dict(m["parts"][part].get("attrs") or {}); attrs.update({"envelope_actual_mm": "×".join(f"{x:g}" for x in res["bbox_mm"]), "volume_mm3": res["volume_mm3"]})
+        if res["mass_g"] is not None: attrs["mass_g_cad"] = res["mass_g"]
+        ops = [Op(op="update" if cur else "add", kind="cad_models", id=cid, value=value), Op(op="update", kind="parts", id=part, value={"attrs": attrs})]
+        pid = store.stage(Patch(ops=ops, author=author, rationale=f"Native CAD build of {part}: {res['bbox_mm']} mm, {res.get('mass_g')} g", sources=[])); store.approve(pid, approver=author)
+        return _txt({"ok": True, "patch": pid, "volume_mm3": res["volume_mm3"], "mass_g": res["mass_g"], "bbox_mm": res["bbox_mm"], "checks": chk})
 
     @tool("dfx_review", "Design-for-X evaluation: x = manufacturing|assembly|testability|reliability|safety|maintainability|service|transportation|cost|environment|emc|security|usability|quality|supply_chain, or omit for the summary of all. Returns guideline items with automatic status (pass/partial/fail/n/a) or 'unknown' for manual items, measured values and evidence ids. Record verdicts with dfx_set (one call per item); if you put them in propose_patch instead, use kind dfx_reviews, id DFX-<x>, value {x, items: {<guideline id>: {status, evidence, note}}}.", {"x": str})
     async def dfx_review(args):
@@ -170,7 +186,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, dfx_review, dfx_set]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

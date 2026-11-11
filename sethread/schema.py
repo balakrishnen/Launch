@@ -71,6 +71,8 @@ KINDS: dict[str, dict[str, Any]] = {
     "attachments": dict(req=["element", "file", "role"], opt={"title": "", "format": "", "rev": "", "date": "", "size": 0, "uploaded_by": ""}, refs={}),
     # Design-for-X review state: reviewer/agent statuses per guideline item (auto checks come from the library); one record per X
     "dfx_reviews": dict(req=["x"], opt={"items": {}, "date": "", "by": "", "notes": ""}, refs={}),
+    # Native CAD: a part's geometry as build123d code, built into STEP/STL + measurements, checked against the thread
+    "cad_models": dict(req=["part", "code"], opt={"name": "", "status": "draft", "built": "", "by": "", "volume_mm3": None, "mass_g": None, "bbox_mm": [], "files": {}, "checks": [], "features": [], "notes": "", "error": ""}, refs={"part": "parts"}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
 TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field"]
@@ -84,7 +86,7 @@ PROCESSES = [
     ("Stakeholder needs and requirements definition", "Concept", ["needs", "actors", "use_cases", "scenarios"]),
     ("System requirements definition", "Development", ["regulations", "requirements", "constraints"]),
     ("System architecture definition", "Development", ["functions", "logical_components", "logical_interfaces", "nodes", "interfaces", "states", "transitions", "arch_decisions"]),
-    ("Design definition", "Development", ["parts", "attachments"]),
+    ("Design definition", "Development", ["parts", "cad_models", "attachments"]),
     ("System analysis", "Development", ["trades", "fm_assessments", "simulations", "dfx_reviews"]),
     ("Implementation", "Development", ["suppliers"]),
     ("Integration", "Development", []),

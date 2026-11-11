@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -734,6 +734,39 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         return DG.artifact(m, view, [x for x in ids.split(",") if x])
     @app.get("/api/p/{pid}/diagrams")
     def diagram_list(pid: str, user: str = U): return [{"id": k, "title": v} for k, v in DG.ARTIFACT_VIEWS.items()]
+    # ---- native CAD: code → geometry → checks → attached to the part
+    @app.get("/api/p/{pid}/cad/{part}")
+    def cad_get(pid: str, part: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); cid = "CAD-" + part; v = m.get("cad_models", {}).get(cid)
+        if not v: return {"id": cid, "part": part, "code": CAD.TEMPLATE.format(pid=part, name=m["parts"].get(part, {}).get("name", "")), "status": "none", "files": {}, "checks": []}
+        return {"id": cid, **v}
+    @app.post("/api/p/{pid}/cad/{part}/build")
+    def cad_build(pid: str, part: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        if part not in m["parts"]: raise HTTPException(404, "no such part")
+        code = body.get("code") or (m.get("cad_models", {}).get("CAD-" + part) or {}).get("code") or CAD.TEMPLATE.format(pid=part, name=m["parts"][part].get("name", ""))
+        res = CAD.build(code, os.path.join(S.root, "cad"), part)
+        cid = "CAD-" + part; cur = m.get("cad_models", {}).get(cid)
+        if not res["ok"]:
+            value = {"part": part, "code": code, "status": "error", "error": res["error"], "by": user, "built": time.strftime("%Y-%m-%d %H:%M")}
+            human_patch(pid, HumanPatch(ops=[{"op": "update" if cur else "add", "kind": "cad_models", "id": cid, "value": value}], rationale=f"CAD build of {part} failed", apply=True), user)
+            return {"ok": False, "error": res["error"], "code": code}
+        chk = CAD.checks(m, part, res)
+        value = {"part": part, "code": code, "name": m["parts"][part].get("name", ""), "status": "built" if all(c["ok"] for c in chk) else "built-with-findings", "built": time.strftime("%Y-%m-%d %H:%M"), "by": user, "volume_mm3": res["volume_mm3"], "mass_g": res["mass_g"], "bbox_mm": res["bbox_mm"], "files": res["files"], "checks": chk, "features": res.get("features", []), "error": ""}
+        ops = [{"op": "update" if cur else "add", "kind": "cad_models", "id": cid, "value": value}]
+        attrs = dict(m["parts"][part].get("attrs") or {}); attrs.update({"envelope_actual_mm": "×".join(f"{x:g}" for x in res["bbox_mm"]), "volume_mm3": res["volume_mm3"]}); 
+        if res["mass_g"] is not None: attrs["mass_g_cad"] = res["mass_g"]
+        ops.append({"op": "update", "kind": "parts", "id": part, "value": {"attrs": attrs}})
+        aid = f"ATT-{part}-CAD"
+        ops.append({"op": "update" if aid in m.get("attachments", {}) else "add", "kind": "attachments", "id": aid, "value": {"element": part, "file": f"cad/{res['files']['step']}", "role": "cad", "title": f"{part}.step (native, build123d)", "format": "step", "rev": str(m["meta"].get("rev", "")), "date": time.strftime("%Y-%m-%d"), "size": os.path.getsize(os.path.join(S.root, "cad", res["files"]["step"])), "uploaded_by": user}})
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Native CAD build of {part}: {res['bbox_mm']} mm, {res.get('mass_g')} g, {len([c for c in chk if not c['ok']])} finding(s)", apply=True), user)
+        return {"ok": True, **value, "patch_id": r["patch_id"]}
+    @app.get("/api/p/{pid}/cad/{part}/mesh")
+    def cad_mesh(pid: str, part: str, user: str = U):
+        S = W.get(pid); p = os.path.join(S.root, "cad", part + ".mesh.json")
+        if not os.path.exists(p): raise HTTPException(404, "not built")
+        return Response(open(p, "rb").read(), media_type="application/json")
+
     @app.get("/api/p/{pid}/cadbrief/{part}")
     def cad_brief(pid: str, part: str, user: str = U):
         S = W.get(pid); m = S.store.load(); b = cadbrief.brief(m, part)

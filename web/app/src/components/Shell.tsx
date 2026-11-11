@@ -110,7 +110,7 @@ function Tree() {
       </Group> })}
     <h4>Technical management</h4>
     {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
-      {p.kinds.filter(k => !['tables', 'notes', 'phases', 'deliverables', 'dfx_reviews'].includes(k)).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {p.kinds.filter(k => !['tables', 'notes', 'phases', 'deliverables', 'dfx_reviews', 'cad_models'].includes(k)).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
       {p.name === 'Project assessment and control' && Object.entries(project.teams || {}).map(([t, tv]: any) => <Item key={t} to={`/p/${pid}/team/${t}`} label={tv.name} />)}
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}

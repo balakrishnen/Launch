@@ -37,6 +37,9 @@ for pid in pids:
     P['/diagrams'] = g('/diagrams')
     for v in (P['/diagrams'] or []): dg = g('/diagram/' + v['id']); dg and dg.pop('svg', None); P['/diagram/' + v['id']] = dg
     for t in (P['/project'] or {}).get('teams', {}): dg = g(f'/diagram/element/teams/{t}'); dg and dg.pop('svg', None); P[f'/diagram/element/teams/{t}'] = dg
+    for pt in (P.get('/collection/parts') or []):
+        c = g(f"/cad/{pt['id']}")
+        if c and c.get('status','none') != 'none': P[f"/cad/{pt['id']}"] = c; P[f"/cadbrief/{pt['id']}"] = g(f"/cadbrief/{pt['id']}")
     for x in P.get('/dfx') or []: P['/dfx/' + x['id']] = g('/dfx/' + x['id'])
     for t in P.get('/threads') or []: P['/threads/' + t['id']] = g('/threads/' + t['id'])
     for r in P.get('/runs') or []: P['/run/' + r['id']] = g('/run/' + r['id'])
