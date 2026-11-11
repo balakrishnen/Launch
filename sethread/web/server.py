@@ -480,7 +480,31 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         else:
             from ..dbstore import import_yaml_project; import_yaml_project(W.db, W.tenant, eid, src)
         st = W._store(eid, root); m = st.load(); m["meta"]["created_by"] = user; st.save(m)
+        # a shipped example carries its own product development process (example.yaml: process: <template>, process_start, spacing_days);
+        # it is applied to the example project only — the organization's default process is untouched
+        ex = yaml.safe_load(open(os.path.join(src, "example.yaml"))) or {}
+        if ex.get("process") and not m.get("gates"):
+            t = pdp.template(ex["process"], root)
+            if t:
+                ops = pdp.apply_ops(m, t, ex.get("process_start") or time.strftime("%Y-%m-%d"), int(ex.get("spacing_days", 45)))
+                human_patch(eid, HumanPatch(ops=ops, rationale=f"Shipped example adopts its PDP: {t['name']}", apply=True), user)
+                m = st.load(); m.setdefault("program", {})["pdp"] = t["name"]; st.save(m)
         return W.summary(eid)
+
+    @app.delete("/api/p/{pid}")
+    def delete_project(pid: str, user: str = U):
+        """Remove a project: its model, patches, baselines and files. Only the creator or an organization admin; shipped examples can be re-created."""
+        if W.single: raise HTTPException(400, "single-project mode")
+        if pid not in W.ids(): raise HTTPException(404, "no such project")
+        m = W._store(pid, W.path(pid)).load()
+        o = ORG.load(org_root(), W.tenant)
+        if m["meta"].get("created_by") != user and ORG.role_of(o, user) != "admin": raise HTTPException(403, "only the creator or an organization admin deletes a project")
+        W.sessions.pop(pid, None)
+        if W.db is not None:
+            with W.db.connect() as c:
+                for t in ("elements", "patches", "baselines", "projects"): W.db.exec(c, f"DELETE FROM {t} WHERE tenant=? AND " + ("id=?" if t == "projects" else "project=?"), (W.tenant, pid))
+        shutil.rmtree(W.path(pid), ignore_errors=True)
+        return {"ok": True, "deleted": pid}
 
     @app.get("/p/{pid}/out/{path:path}")
     def out_file(pid: str, path: str, user: str = U):

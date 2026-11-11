@@ -1,6 +1,8 @@
 title: Sabi Cap
 company: Sabi (concept)
 url: ""
+process: stage_gate
+spacing_days: 42
 category: Wearable · EEG cap with flexible electrode array
 summary: Flagship example — a fully developed digital thread from needs to field events, with DFMEA, PFMEA, DVP&R, gates, teams and handoffs populated.
 why: Shows every form and the whole-company lifecycle layer on a complete model; use it to judge navigation at scale (hundreds of elements).

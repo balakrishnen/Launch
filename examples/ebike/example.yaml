@@ -1,6 +1,8 @@
 title: E-Bike Drive Unit
 company: (generic)
 url: ""
+process: evt_dvt_pvt
+spacing_days: 42
 category: Mid-drive motor + controller + battery interface
 summary: Small starter model — a few requirements, parts and tests. Good for watching the agents build a thread from a one-page PRD.
 why: Minimal seed; everything beyond the PRD is agent-generated and reviewable.

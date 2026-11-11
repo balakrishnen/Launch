@@ -1,6 +1,8 @@
 title: BrewMaster One
 company: Fictional connected-kitchen appliance maker
 url: ""
+process: appliance_npi
+spacing_days: 42
 category: Consumer appliance · connected 10-cup drip coffee maker
 summary: 1,400 W thermoblock drip coffee maker with Wi-Fi/BLE scheduling, descale estimation, keep-warm plate and a controller/radio/HMI platform shared with a kettle and grinder. US + EU, $179.
 why: >
