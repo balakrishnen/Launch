@@ -1,0 +1,26 @@
+id: quality
+name: Design for Quality (DfQ)
+short: DfQ
+focus: quality
+standard: ISO 9001, IATF 16949, AIAG CQI
+items:
+- id: DFQ-01
+  text: Design reviews held at each gate (reviews recorded)
+  check:
+    type: collection
+    kind: reviews
+    n: 1
+- id: DFQ-02
+  text: No open critical or major findings
+  check:
+    type: coverage
+    key: open_findings_critical
+    max: 0
+- id: DFQ-03
+  text: Critical characteristics flow from DFMEA to PFMEA to control plan
+  check:
+    type: manual
+- id: DFQ-04
+  text: Measurement system analysis planned for critical characteristics
+  check:
+    type: manual

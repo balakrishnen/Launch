@@ -1,0 +1,38 @@
+id: maintainability
+name: Design for Maintainability (DfMt)
+short: DfMt
+focus: service
+standard: MIL-HDBK-470, IEC 60300-3-10
+items:
+- id: DFMT-01
+  text: Maintainability targets (MTTR, maintenance interval) stated as requirements
+  check:
+    type: req_type
+    req: MAINT
+    n: 1
+- id: DFMT-02
+  text: Wear and consumable parts identified with a service interval
+  check:
+    type: attr
+    kind: parts
+    key: service_interval
+    min_share: 0.2
+- id: DFMT-03
+  text: Line-replaceable units defined (LRU flag on parts)
+  check:
+    type: attr
+    kind: parts
+    key: lru
+    min_share: 0.3
+- id: DFMT-04
+  text: 'Fault isolation: diagnostics identify the failed LRU'
+  check:
+    type: manual
+- id: DFMT-05
+  text: 'Access: LRUs replaceable without removing unrelated parts'
+  check:
+    type: manual
+- id: DFMT-06
+  text: Standard tools only; captive fasteners where repeated access is expected
+  check:
+    type: manual

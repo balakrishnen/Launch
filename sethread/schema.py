@@ -69,6 +69,8 @@ KINDS: dict[str, dict[str, Any]] = {
     "simulations": dict(req=["name", "tool", "element"], opt={"inputs": {}, "outputs": {}, "requirements": [], "file": "", "status": "planned", "date": "", "owner_team": None, "notes": ""}, refs={"requirements": "requirements", "owner_team": "teams"}),
     # Attachments: CAD (STEP/native), drawings, schematics, reports — files pinned to an element with a role
     "attachments": dict(req=["element", "file", "role"], opt={"title": "", "format": "", "rev": "", "date": "", "size": 0, "uploaded_by": ""}, refs={}),
+    # Design-for-X review state: reviewer/agent statuses per guideline item (auto checks come from the library); one record per X
+    "dfx_reviews": dict(req=["x"], opt={"items": {}, "date": "", "by": "", "notes": ""}, refs={}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
 TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field"]
@@ -83,7 +85,7 @@ PROCESSES = [
     ("System requirements definition", "Development", ["regulations", "requirements", "constraints"]),
     ("System architecture definition", "Development", ["functions", "logical_components", "logical_interfaces", "nodes", "interfaces", "states", "transitions", "arch_decisions"]),
     ("Design definition", "Development", ["parts", "attachments"]),
-    ("System analysis", "Development", ["trades", "fm_assessments", "simulations"]),
+    ("System analysis", "Development", ["trades", "fm_assessments", "simulations", "dfx_reviews"]),
     ("Implementation", "Development", ["suppliers"]),
     ("Integration", "Development", []),
     ("Verification", "Development", ["tests", "test_runs"]),

@@ -1,0 +1,30 @@
+id: security
+name: Design for Security (DfSec)
+short: DfSec
+focus: software
+standard: IEC 62443, ETSI EN 303 645, NIST IR 8259, EU Cyber Resilience Act
+items:
+- id: DFSEC-01
+  text: Security requirements exist (authentication, update integrity, data)
+  check:
+    type: req_type
+    req: SEC
+    n: 1
+- id: DFSEC-02
+  text: Connected-product cybersecurity regulation in the set (CRA, EN 303 645, RED
+    art. 3.3)
+  check:
+    type: regulation
+    pattern: 303 645|CRA|Cyber|62443
+- id: DFSEC-03
+  text: 'Threat model: external interfaces (radio, USB, cloud) assessed'
+  check:
+    type: manual
+- id: DFSEC-04
+  text: Signed firmware and secure boot; configuration cannot be changed without authorisation
+  check:
+    type: manual
+- id: DFSEC-05
+  text: 'Offline degradation: product remains safe and usable without the cloud'
+  check:
+    type: manual

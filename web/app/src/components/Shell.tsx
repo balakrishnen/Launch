@@ -13,7 +13,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'System requirements definition': [['form/reqspec', 'Requirements specification'], ['matrix/regulations/requirements', 'Regulations × requirements'], ['collection/certification_plan', 'Certification plan']],
   'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['views', 'Diagrams']],
   'Design definition': [['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
-  'System analysis': [['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
+  'System analysis': [['dfx', 'Design for X'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
   'Implementation': [['form/avl', 'AVL / sourcing']],
   'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
   'Verification': [['runs', 'Test results', 'test_runs'], ['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
@@ -110,7 +110,7 @@ function Tree() {
       </Group> })}
     <h4>Technical management</h4>
     {project.management.map(p => <Group key={p.name} k={'mg:' + p.name} label={p.name} color={STAGE_COLOR.Management} n={p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0) || undefined} small>
-      {p.kinds.filter(k => !['tables', 'notes', 'phases', 'deliverables'].includes(k)).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
+      {p.kinds.filter(k => !['tables', 'notes', 'phases', 'deliverables', 'dfx_reviews'].includes(k)).map(k => <Item key={k} to={`/p/${pid}/collection/${k}`} label={KIND_LABEL[k]} n={project.counts[k]} />)}
       {p.name === 'Project assessment and control' && Object.entries(project.teams || {}).map(([t, tv]: any) => <Item key={t} to={`/p/${pid}/team/${t}`} label={tv.name} />)}
       {(EXTRA[p.name] || []).map(([to, label, nk]) => <Item key={to} to={`/p/${pid}/${to}`} label={label} n={nk ? project.counts[nk] : undefined} pill={to === 'inbox' && staged ? String(staged) : undefined} />)}
     </Group>)}

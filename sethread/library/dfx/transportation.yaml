@@ -1,0 +1,32 @@
+id: transportation
+name: Design for Transportation & Packaging
+short: DfTr
+focus: manufacturing
+standard: ISTA 3A/6, ASTM D4169, UN 38.3, IATA DGR
+items:
+- id: DFTR-01
+  text: Shipping environment (shock, vibration, temperature, humidity) captured as
+    environmental requirements
+  check:
+    type: req_type
+    req: ENV
+    n: 1
+- id: DFTR-02
+  text: 'Lithium batteries: UN 38.3 in the regulatory set'
+  check:
+    type: regulation
+    pattern: 38\.3
+- id: DFTR-03
+  text: Packaging drop/vibration test planned (ISTA / ASTM D4169)
+  check:
+    type: tests_method
+    pattern: ISTA|D4169|drop|vibration
+    n: 1
+- id: DFTR-04
+  text: Product ships in a transport-safe state (battery SoC, locks, modes)
+  check:
+    type: manual
+- id: DFTR-05
+  text: Package dimensions and mass fit the target shipping class / pallet pattern
+  check:
+    type: manual

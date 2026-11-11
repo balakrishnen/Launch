@@ -1,0 +1,26 @@
+id: emc
+name: Design for EMC & Electrical Compliance
+short: DfEMC
+focus: compliance
+standard: FCC Part 15, CISPR 32/35, IEC 61000-4-x, UL/IEC 62368-1
+items:
+- id: DFEMC-01
+  text: EMC / radio regulations in the regulatory set
+  check:
+    type: regulation
+    pattern: FCC|CISPR|61000|RED|ETSI
+- id: DFEMC-02
+  text: Electrical safety standard identified (UL/IEC 62368-1, 60335, 2849…)
+  check:
+    type: regulation
+    pattern: '62368|60335|2849|UL '
+- id: DFEMC-03
+  text: Pre-compliance EMC tests planned
+  check:
+    type: tests_method
+    pattern: EMC|emission|immunity|ESD
+    n: 1
+- id: DFEMC-04
+  text: Grounding, shielding and cable-routing strategy documented
+  check:
+    type: manual

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -398,6 +398,30 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         pr = ORG.process_variant(o, body.get("variant"))
         r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Apply organization process '{pr.get('name','')}' and teams" + (f" (re-sync {len(body['only'])} item(s))" if body.get("only") else ""), apply=bool(body.get("apply", True))), user)
         m = S.store.load(); m.setdefault("program", {}).update(pdp=pr.get("name", ""), pdp_source={"variant": pr.get("id", "default"), "applied": time.strftime("%Y-%m-%d"), "by": user}); S.store.save(m); return r
+    # ---- Design for X
+    def _dfx_enabled():
+        try:
+            o = ORG.load(org_root(), W.tenant); en = [t["id"].split(":", 1)[1] for t in o.get("tools", []) if t["id"].startswith("dfx:") and t.get("enabled")]
+            return en if en else None
+        except Exception: return None
+    @app.get("/api/p/{pid}/dfx")
+    def dfx_list(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return DFX.summary(m, S.root, _dfx_enabled())
+    @app.get("/api/p/{pid}/dfx/{x}")
+    def dfx_one(pid: str, x: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); e = DFX.evaluate(m, x, S.root)
+        if not e: raise HTTPException(404, "no such DfX set")
+        return e
+    @app.post("/api/p/{pid}/dfx/{x}/item")
+    def dfx_set(pid: str, x: str, body: dict, user: str = U):
+        """reviewer sets a manual status (pass/fail/partial/n/a/unknown) with evidence ids and a note → patch on dfx_reviews"""
+        S = W.get(pid); m = S.store.load(); rid = "DFX-" + x; cur = m.get("dfx_reviews", {}).get(rid) or {"x": x, "items": {}}
+        items = dict(cur.get("items") or {}); iid = body["item"]
+        if body.get("status") in (None, "", "auto"): items.pop(iid, None)
+        else: items[iid] = {"status": body["status"], "evidence": body.get("evidence", []), "note": body.get("note", ""), "by": user, "date": time.strftime("%Y-%m-%d")}
+        value = {"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": user}
+        return human_patch(pid, HumanPatch(ops=[{"op": "update" if rid in m.get("dfx_reviews", {}) else "add", "kind": "dfx_reviews", "id": rid, "value": value}], rationale=f"DfX {x}: {iid} → {body.get('status') or 'auto'}" + (f" — {body.get('note')}" if body.get("note") else ""), apply=True), user)
+
     @app.get("/api/p/{pid}/pdp/tailoring")
     def pdp_tailoring(pid: str, user: str = U):
         S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant); return {**ORG.tailoring(o, m), "variants": [{"id": x["id"], "name": x.get("name", x["id"])} for x in o.get("processes", [])]}

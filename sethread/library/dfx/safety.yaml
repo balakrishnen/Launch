@@ -1,0 +1,53 @@
+id: safety
+name: Design for Safety (DfS)
+short: DfS
+focus: safety
+standard: ISO 12100, IEC 61508 / ISO 13849, ISO 14971, UL/IEC product standards
+items:
+- id: DFS-01
+  text: 'Hazard analysis exists: failure modes with severity ≥ 9 are identified'
+  check:
+    type: fmea
+    sev_min: 9
+    n: 1
+- id: DFS-02
+  text: Every severity ≥ 9 failure mode has a verifying test
+  check:
+    type: fmea
+    sev_min: 9
+    require: tests
+- id: DFS-03
+  text: Safety requirements exist
+  check:
+    type: req_type
+    req: SAFE
+    n: 1
+- id: DFS-04
+  text: Safety functions identified (safety_decision on functions)
+  check:
+    type: attr
+    kind: functions
+    key: safety_decision
+    min_share: 0.2
+- id: DFS-05
+  text: Applicable safety standards are in the regulatory set with requirements
+  check:
+    type: coverage
+    key: regulations_without_requirements
+    max: 0
+- id: DFS-06
+  text: 'Hierarchy of controls applied: inherently safe design before guards before
+    warnings'
+  check:
+    type: manual
+- id: DFS-07
+  text: Energy sources (electrical, stored mechanical, thermal, chemical) have isolation
+    and discharge paths
+  check:
+    type: manual
+- id: DFS-08
+  text: Foreseeable misuse considered in scenarios
+  check:
+    type: collection
+    kind: scenarios
+    n: 2

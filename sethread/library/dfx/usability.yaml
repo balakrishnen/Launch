@@ -1,0 +1,28 @@
+id: usability
+name: Design for Usability & Ergonomics
+short: DfU
+focus: systems
+standard: ISO 9241-210, IEC 62366, ISO 6385
+items:
+- id: DFU-01
+  text: Actors and use cases modelled for primary and secondary users
+  check:
+    type: collection
+    kind: use_cases
+    n: 3
+- id: DFU-02
+  text: Usability requirements with measurable attributes
+  check:
+    type: req_type
+    req: USAB
+    n: 1
+- id: DFU-03
+  text: Formative usability test planned
+  check:
+    type: tests_method
+    pattern: usability|user study|formative
+    n: 1
+- id: DFU-04
+  text: Error states and recovery visible to the user (HMI covers fault states)
+  check:
+    type: manual

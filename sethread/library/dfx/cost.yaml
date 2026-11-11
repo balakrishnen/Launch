@@ -1,0 +1,27 @@
+id: cost
+name: Design to Cost (DtC)
+short: DtC
+focus: program
+standard: design-to-cost, should-cost
+items:
+- id: DTC-01
+  text: Unit cost target stated as a requirement
+  check:
+    type: req_type
+    req: COST
+    n: 1
+- id: DTC-02
+  text: Parts carry a cost attribute so the rollup is live
+  check:
+    type: attr
+    kind: parts
+    key: cost_usd
+    min_share: 0.7
+- id: DTC-03
+  text: Cost rollup table exists and is within target
+  check:
+    type: manual
+- id: DTC-04
+  text: Top-10 cost drivers have a should-cost or alternative
+  check:
+    type: manual

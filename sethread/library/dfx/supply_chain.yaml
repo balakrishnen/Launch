@@ -1,0 +1,30 @@
+id: supply_chain
+name: Design for Supply Chain
+short: DfSC
+focus: sourcing
+standard: industry practice
+items:
+- id: DFSC-01
+  text: Buy parts have a supplier
+  check:
+    type: coverage
+    key: buy_parts_without_supplier
+    max: 0
+- id: DFSC-02
+  text: Part lifecycle status known (active / NRND / EOL)
+  check:
+    type: attr
+    kind: parts
+    key: lifecycle
+    min_share: 0.6
+- id: DFSC-03
+  text: Single-source parts identified with a second source or risk
+  check:
+    type: manual
+- id: DFSC-04
+  text: Lead times captured for long-lead parts
+  check:
+    type: attr
+    kind: parts
+    key: lead_time_weeks
+    min_share: 0.3

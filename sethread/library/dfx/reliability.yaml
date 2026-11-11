@@ -1,0 +1,57 @@
+id: reliability
+name: Design for Reliability (DfR)
+short: DfR
+focus: reliability
+standard: MIL-HDBK-338, IEC 61709, AIAG-VDA FMEA, Telcordia SR-332
+items:
+- id: DFR-01
+  text: Reliability targets (MTBF / B10 / mission life) stated as requirements
+  check:
+    type: req_type
+    req: RELY
+    n: 1
+- id: DFR-02
+  text: 'DFMEA complete: every candidate assessed or screened'
+  check:
+    type: coverage
+    key: unassessed_candidates
+    max: 0
+- id: DFR-03
+  text: Every High-AP failure mode has a test
+  check:
+    type: coverage
+    key: high_ap_fm_without_tests
+    max: 0
+- id: DFR-04
+  text: Derating rules applied to electrical parts (voltage, current, temperature)
+  check:
+    type: attr
+    kind: parts
+    key: derating
+    min_share: 0.6
+    filter:
+      discipline: electrical
+- id: DFR-05
+  text: Life / wear-out mechanisms identified per part (fatigue, corrosion, electromigration,
+    cycles)
+  check:
+    type: attr
+    kind: parts
+    key: wearout
+    min_share: 0.5
+- id: DFR-06
+  text: Accelerated life / HALT planned for the top failure mechanisms
+  check:
+    type: tests_method
+    pattern: HALT|accelerated|life
+    n: 1
+- id: DFR-07
+  text: Field events are linked to failure modes (FRACAS loop closed)
+  check:
+    type: coverage
+    key: field_events_without_fm
+    max: 0
+- id: DFR-08
+  text: Single points of failure identified and justified or mitigated
+  check:
+    type: manual

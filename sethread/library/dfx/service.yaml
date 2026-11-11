@@ -1,0 +1,34 @@
+id: service
+name: Design for Service (DfSv)
+short: DfSv
+focus: service
+standard: industry practice; right-to-repair regulations (EU, US states)
+items:
+- id: DFSV-01
+  text: Serviceable parts carry a service level (user / field / depot / factory)
+  check:
+    type: attr
+    kind: parts
+    key: service_level
+    min_share: 0.3
+- id: DFSV-02
+  text: 'Spare-parts strategy: parts have a lifecycle status'
+  check:
+    type: attr
+    kind: parts
+    key: lifecycle
+    min_share: 0.5
+- id: DFSV-03
+  text: Service documentation planned (report note)
+  check:
+    type: note
+    kind: report
+    n: 1
+- id: DFSV-04
+  text: Firmware updatable in the field (OTA or service tool) with rollback
+  check:
+    type: manual
+- id: DFSV-05
+  text: 'Right-to-repair: parts, tools and documentation availability considered'
+  check:
+    type: manual

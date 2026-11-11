@@ -1,0 +1,61 @@
+id: manufacturing
+name: Design for Manufacturing (DfM)
+short: DfM
+focus: manufacturing
+standard: DFMA (Boothroyd–Dewhurst), AIAG APQP
+items:
+- id: DFM-01
+  text: Every part has a discipline and a make/buy decision
+  check:
+    type: attr
+    kind: parts
+    key: make_buy
+    min_share: 1.0
+- id: DFM-02
+  text: Buy parts have an approved supplier
+  check:
+    type: coverage
+    key: buy_parts_without_supplier
+    max: 0
+- id: DFM-03
+  text: A process flow exists for the product (process steps modelled)
+  check:
+    type: collection
+    kind: process_steps
+    n: 1
+- id: DFM-04
+  text: Every process step has a PFMEA
+  check:
+    type: coverage
+    key: process_steps_without_pfmea
+    max: 0
+- id: DFM-05
+  text: Parts carry a manufacturing process attribute (molding, machining, PCBA, …)
+  check:
+    type: attr
+    kind: parts
+    key: process
+    min_share: 0.8
+- id: DFM-06
+  text: Tolerances and critical-to-quality characteristics identified on mechanical
+    parts
+  check:
+    type: attr
+    kind: parts
+    key: ctq
+    min_share: 0.5
+    filter:
+      discipline: mechanical
+- id: DFM-07
+  text: 'Part count minimised: no two parts with the same function and discipline
+    that could be combined'
+  check:
+    type: manual
+- id: DFM-08
+  text: Standard / catalogue components preferred over custom where performance allows
+  check:
+    type: manual
+- id: DFM-09
+  text: Draft angles, wall thickness and undercuts reviewed for molded parts
+  check:
+    type: manual

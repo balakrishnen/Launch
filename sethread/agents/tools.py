@@ -1,7 +1,7 @@
 """In-process MCP tools the role agents use. The model is read freely; it is changed only through propose_patch,
 which validates and stages. Tools are built with the Claude Agent SDK (@tool + create_sdk_mcp_server)."""
 from __future__ import annotations
-import json, os
+import json, time, os
 from typing import Any
 from claude_agent_sdk import tool, create_sdk_mcp_server
 from ..store import Store, Patch, Op
@@ -76,6 +76,21 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
     @tool("gate_readiness", "Lifecycle state: current stage, every gate with its exit criteria measured (pass/fail), blockers (open findings, pending handoffs, stale verification) and alerts. Use to plan work before a gate.", {})
     async def gate_readiness(args):
         return _txt(lifecycle.gate_readiness(store.load(), store))
+
+    @tool("dfx_review", "Design-for-X evaluation: x = manufacturing|assembly|testability|reliability|safety|maintainability|service|transportation|cost|environment|emc|security|usability|quality|supply_chain, or omit for the summary of all. Returns guideline items with automatic status (pass/partial/fail/n/a) or 'unknown' for manual items, measured values and evidence ids. Record verdicts with dfx_set (one call per item); if you put them in propose_patch instead, use kind dfx_reviews, id DFX-<x>, value {x, items: {<guideline id>: {status, evidence, note}}}.", {"x": str})
+    async def dfx_review(args):
+        from .. import dfx as DFX
+        m = store.load(); x = (args or {}).get("x")
+        return _txt(DFX.evaluate(m, x, getattr(store, "root", None)) if x else DFX.summary(m, getattr(store, "root", None)))
+
+    @tool("dfx_set", "Record a reviewed status for a DfX guideline item (manual items, or to override an automatic one with justification). status: pass|partial|fail|n/a. evidence: element ids. Applied immediately as a dfx_reviews patch with your name.", {"x": str, "item": str, "status": str, "evidence": list, "note": str})
+    async def dfx_set(args):
+        from ..store import Patch, Op
+        m = store.load(); x = args["x"]; rid = "DFX-" + x; cur = m.get("dfx_reviews", {}).get(rid) or {"x": x, "items": {}}
+        items = dict(cur.get("items") or {}); items[args["item"]] = {"status": args["status"], "evidence": args.get("evidence") or [], "note": args.get("note", ""), "by": author, "date": time.strftime("%Y-%m-%d")}
+        p = Patch(ops=[Op(op="update" if rid in m.get("dfx_reviews", {}) else "add", kind="dfx_reviews", id=rid, value={"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": author})], author=author, rationale=f"DfX {x}: {args['item']} → {args['status']} — {args.get('note', '')}"[:200], sources=args.get("evidence") or [])
+        pid = store.stage(p); store.approve(pid, approver=author)
+        return _txt({"ok": True, "patch": pid})
 
     @tool("team_workload", "Per team: open work items, findings, pending handoffs in/out, owned parts, tests and process steps.", {})
     async def team_workload(args):

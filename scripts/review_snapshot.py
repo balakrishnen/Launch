@@ -12,7 +12,7 @@ from sethread.web.server import STAGE_OF
 D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates')}
 for pid in pids:
     P = {}; g = lambda p: get(f'/api/p/{pid}{p}')
-    for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
+    for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
         v = g(k);  P[k] = v if v is not None else {}
     for kind in list(schema.KINDS) + ['fmea', 'screened', 'unassessed', 'gaps', 'verification_matrix', 'certification_plan']: P['/collection/' + kind] = g('/collection/' + kind) or []
     for f in ['dfmea', 'dvpr', 'vcrm', 'reqspec', 'hazards', 'n2', 'n2l', 'icd', 'pugh', 'fta', 'drbfm', 'pfmea', 'control_plan', 'avl', 'risks', 'fracas', 'work_items', 'findings', 'handoffs']: P['/form/' + f] = g('/form/' + f)
@@ -26,6 +26,7 @@ for pid in pids:
     for t in P.get('/collection/tables') or []: P['/table/' + t['id']] = g('/table/' + t['id'])
     for t in (P['/project'] or {}).get('teams', {}): P['/team/' + t] = g('/team/' + t); P[f'/team/{t}/deliverables'] = g(f'/team/{t}/deliverables')
     P['/me/team'] = g('/me/team')
+    for x in P.get('/dfx') or []: P['/dfx/' + x['id']] = g('/dfx/' + x['id'])
     for t in P.get('/threads') or []: P['/threads/' + t['id']] = g('/threads/' + t['id'])
     for r in P.get('/runs') or []: P['/run/' + r['id']] = g('/run/' + r['id'])
     for f in (P['/artifacts'] or {}).get('sysml', []): P['/file?path=out/sysml/' + f] = None

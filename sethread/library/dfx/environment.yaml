@@ -1,0 +1,32 @@
+id: environment
+name: Design for Environment & Sustainability (DfE)
+short: DfE
+focus: compliance
+standard: RoHS, REACH, WEEE, EU Ecodesign / ESPR, ISO 14006
+items:
+- id: DFE-01
+  text: RoHS / REACH / WEEE (or market equivalents) in the regulatory set
+  check:
+    type: regulation
+    pattern: RoHS|REACH|WEEE|Ecodesign
+- id: DFE-02
+  text: Materials declared per part (compliance and recycling)
+  check:
+    type: attr
+    kind: parts
+    key: material
+    min_share: 0.6
+- id: DFE-03
+  text: Battery removable for recycling and replacement
+  check:
+    type: manual
+- id: DFE-04
+  text: Energy consumption in use measured against a target
+  check:
+    type: manual
+- id: DFE-05
+  text: End-of-life disassembly path considered (disposal requirements)
+  check:
+    type: req_type
+    req: DISP
+    n: 1

@@ -94,6 +94,15 @@ with mitigations. Exit: every failing criterion of the next gate has a work item
 mode was never considered — that is a DFMEA escape). Update O for confirmed modes, set disposition and 8D status, and raise findings for
 systemic issues. Exit: no open field event without a failure mode; every confirmed mode has an updated occurrence and a corrective action.""",
         kinds=["field_events", "fm_assessments", "findings", "work_items"]),
+    "dfx": dict(
+        title="Design-for-X reviewer",
+        prompt="""Stage: Design for X review. Call dfx_review for the requested X (or every enabled X). For each guideline item that is 'unknown',
+decide pass / partial / fail / n/a from the model — read the parts, interfaces, requirements, failure modes and tests that bear on it —
+and record it with dfx_set, citing element ids as evidence and a one-line justification; never guess: if the model holds nothing on it, record
+'fail' with a note saying what is missing. For failed automatic items, propose the patch that would fix them (attributes on parts, missing
+requirements of the right type, regulations, tests) as a staged patch; for the rest, propose work items for the owning team. Prefer standard
+references (DFMA, MIL-HDBK-470, ISO 12100, ISTA, RoHS…) in notes.""",
+        kinds=["dfx_reviews", "work_items"]),
     "reviewer": dict(
         title="Independent reviewer",
         prompt="""Stage: review. Do not propose patches except to fix referential errors. Read the coverage report and derived views; write a short
@@ -102,4 +111,4 @@ diagnostics, requirements that are not testable as written, screened FMEA candid
         kinds=[]),
 }
 
-ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "reviewer"]
+ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "reviewer"]

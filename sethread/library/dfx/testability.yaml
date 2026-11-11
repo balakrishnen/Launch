@@ -1,0 +1,49 @@
+id: testability
+name: Design for Testability (DfT)
+short: DfT
+focus: test
+standard: IEEE 1149 (JTAG), IPC-7912, DfT guidelines
+items:
+- id: DFT-01
+  text: Every requirement has at least one verifying test
+  check:
+    type: coverage
+    key: requirements_without_tests
+    max: 0
+- id: DFT-02
+  text: Every test has a pass/fail criterion
+  check:
+    type: attr
+    kind: tests
+    key: passfail
+    min_share: 1.0
+- id: DFT-03
+  text: Every High-AP failure mode is detected by a test
+  check:
+    type: coverage
+    key: high_ap_fm_without_tests
+    max: 0
+- id: DFT-04
+  text: Electrical boards expose test points / boundary scan for end-of-line test
+  check:
+    type: attr
+    kind: parts
+    key: test_points
+    min_share: 0.7
+    filter:
+      discipline: electrical
+- id: DFT-05
+  text: A built-in self-test covers drive, power, sensors and radios (manufacturing
+    requirement)
+  check:
+    type: req_type
+    req: MFG
+    n: 1
+- id: DFT-06
+  text: End-of-line test time budget defined and met
+  check:
+    type: manual
+- id: DFT-07
+  text: Firmware exposes a diagnostic/telemetry interface usable by test and service
+  check:
+    type: manual

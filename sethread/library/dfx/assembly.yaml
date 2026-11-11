@@ -1,0 +1,31 @@
+id: assembly
+name: Design for Assembly (DfA)
+short: DfA
+focus: manufacturing
+standard: DFMA
+items:
+- id: DFA-01
+  text: Assembly sequence modelled as process steps with the parts consumed
+  check:
+    type: collection
+    kind: process_steps
+    n: 3
+- id: DFA-02
+  text: Parts are self-locating / poka-yoke where orientation matters
+  check:
+    type: manual
+- id: DFA-03
+  text: Fastener count and types minimised; snap-fits where load allows
+  check:
+    type: manual
+- id: DFA-04
+  text: Top-down assembly with no re-orientation of the base part
+  check:
+    type: manual
+- id: DFA-05
+  text: Cable and connector interfaces have keyed, unique mates
+  check:
+    type: attr
+    kind: interfaces
+    key: keyed
+    min_share: 0.6
