@@ -322,6 +322,7 @@ class NewProject(BaseModel):
     id: str
     name: str
     description: str = ""
+    process: str | None = None   # organization process variant to inherit
 
 # ---------------------------------------------------------------------------------------------------------------------
 def create_app(root: str | None = None, model: str | None = None, data_root: str | None = None, database_url: str | None = None, tenant: str = "default") -> FastAPI:
@@ -392,8 +393,21 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant)
         ops = ORG.apply_ops(o, m, body.get("start") or time.strftime("%Y-%m-%d"))
         if not ops: return {"ok": True, "patch_id": None}
-        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Apply organization process and teams ({o.get('name')})", apply=bool(body.get("apply", True))), user)
-        m = S.store.load(); m.setdefault("program", {})["pdp"] = (o.get("process") or {}).get("name", ""); S.store.save(m); return r
+        ops = ORG.apply_ops(o, m, body.get("start") or time.strftime("%Y-%m-%d"), body.get("variant"), set(body["only"]) if body.get("only") else None)
+        if not ops: return {"ok": True, "patch_id": None}
+        pr = ORG.process_variant(o, body.get("variant"))
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Apply organization process '{pr.get('name','')}' and teams" + (f" (re-sync {len(body['only'])} item(s))" if body.get("only") else ""), apply=bool(body.get("apply", True))), user)
+        m = S.store.load(); m.setdefault("program", {}).update(pdp=pr.get("name", ""), pdp_source={"variant": pr.get("id", "default"), "applied": time.strftime("%Y-%m-%d"), "by": user}); S.store.save(m); return r
+    @app.get("/api/p/{pid}/pdp/tailoring")
+    def pdp_tailoring(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant); return {**ORG.tailoring(o, m), "variants": [{"id": x["id"], "name": x.get("name", x["id"])} for x in o.get("processes", [])]}
+    @app.post("/api/p/{pid}/pdp/waive")
+    def pdp_waive(pid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); did = body.get("id")
+        if did not in m.get("deliverables", {}): raise HTTPException(404, "no such deliverable")
+        value = {"waived": {} if body.get("unwaive") else {"by": user, "reason": body.get("reason", ""), "date": time.strftime("%Y-%m-%d")}}
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "deliverables", "id": did, "value": value}], rationale=("Un-waive " if body.get("unwaive") else "Waive ") + f"deliverable {did}: {body.get('reason', '')}", apply=True), user)
+
     @app.get("/api/org/templates")
     def org_templates(user: str = U): return {"templates": pdp.templates(org_root()), "detail": {t["id"]: pdp.template(t["id"], org_root()) for t in pdp.templates(org_root())}}
 
@@ -403,8 +417,10 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def new_project(np: NewProject, user: str = U):
         pid = np.id.strip().lower(); W.create(pid, np.name.strip(), np.description, user)
         try:
-            o = ORG.load(org_root(), W.tenant); S = W.get(pid); m = S.store.load(); ops = ORG.apply_ops(o, m, time.strftime("%Y-%m-%d"))
-            if ops: human_patch(pid, HumanPatch(ops=ops, rationale=f"Organization defaults: teams and process ({o.get('name')})", apply=True), user)
+            o = ORG.load(org_root(), W.tenant); S = W.get(pid); m = S.store.load(); ops = ORG.apply_ops(o, m, time.strftime("%Y-%m-%d"), np.process)
+            if ops:
+                human_patch(pid, HumanPatch(ops=ops, rationale=f"Organization defaults: teams and process ({o.get('name')})", apply=True), user)
+                pr = ORG.process_variant(o, np.process); m = S.store.load(); m.setdefault("program", {}).update(pdp=pr.get("name", ""), pdp_source={"variant": pr.get("id", "default"), "applied": time.strftime("%Y-%m-%d"), "by": user}); S.store.save(m)
         except Exception as e: pass
         return W.summary(pid)
 

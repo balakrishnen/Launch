@@ -45,6 +45,7 @@ def _scope(m, tv):
 def evaluate(m: dict, d: dict, team_id: str | None, tv: dict | None, rep: dict) -> dict:
     """status: done | partial | missing | n/a, with a measured value and a link to the evidence"""
     c = d.get("check") or {}; typ = c.get("type")
+    if d.get("waived"): return {"status": "n/a", "measured": "waived: " + (d["waived"].get("reason") or ""), "link": ""}
     try:
         if typ == "coverage":
             key = c["key"]; v = rep.get(key); n = len(v) if isinstance(v, list) else (v or 0)

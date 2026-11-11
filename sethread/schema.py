@@ -44,7 +44,7 @@ KINDS: dict[str, dict[str, Any]] = {
     # Company product-development process (PDP): phases in order, each closed by a gate; deliverables owed per team (or per team kind/focus)
     # at a gate, each with a check the model can evaluate (see pdp.CHECKS) — the "what does my team owe at CDR" layer.
     "phases": dict(req=["name", "order"], opt={"stage": "", "gate": None, "description": ""}, refs={}),
-    "deliverables": dict(req=["name", "gate"], opt={"team": None, "team_kind": "", "focus": "", "check": {}, "required": True, "description": "", "artifact": "", "owner": ""}, refs={"gate": "gates", "team": "teams"}),
+    "deliverables": dict(req=["name", "gate"], opt={"team": None, "team_kind": "", "focus": "", "check": {}, "required": True, "description": "", "artifact": "", "owner": "", "waived": {}}, refs={"gate": "gates", "team": "teams"}),
     "fm_assessments": dict(req=["element", "guide"], opt={"mode": "", "effect": "", "cause": "", "S": None, "O": None, "D": None, "controls": "", "tests": [], "ncr": ""}, refs={"tests": "tests"}),
     # ---- whole-company layers: teams, manufacturing, supply chain, program, quality/field ----
     # Two kinds of team. subsystem: owns a slice of the architecture (scope = root parts and/or logical components; the closure is computed —
