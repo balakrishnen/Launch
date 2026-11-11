@@ -1,6 +1,8 @@
 // Review build: serve the API from a frozen data.json (no backend). Enabled when VITE_REVIEW=1.
 export function installReviewShim(data: Record<string, any>) {
   const real = window.fetch.bind(window)
+  const dgCache: Record<string, Promise<Record<string, any>>> = {}
+  const diagrams = (pid: string) => dgCache[pid] ??= real(`diagrams_${pid}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}))
   window.fetch = async (input: any, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input.url
     if (!url.startsWith('/api')) return real(input, init)
@@ -17,8 +19,8 @@ export function installReviewShim(data: Record<string, any>) {
     const pid = mm[1], p = mm[2]; const pd = (data.projects || {})[pid]; if (!pd) return json({ detail: 'project not in review snapshot: ' + pid }, 404)
     if (p.startsWith('/search?q=')) { const q = decodeURIComponent(p.slice(10)).toLowerCase(); const hits: any[] = []; for (const n of pd['/graph'].nodes) { if (n.kind === 'fmea') continue; const row = (pd['/collection/' + n.kind] || []).find((r: any) => r.id === n.id); if ((n.id + ' ' + JSON.stringify(row || n)).toLowerCase().includes(q)) hits.push({ kind: n.kind, id: n.id, name: n.name }) } return json(hits.slice(0, 60)) }
     if (p === '/history') return json({ supported: false, note: 'History needs the database store; not in the review snapshot.' })
+    { const base = p.split('?')[0]; if (base.startsWith('/diagram/')) { const dg = await diagrams(pid); if (dg[base]) return json(dg[base]); if (pd[base]) return json(pd[base]); return json({ detail: 'This diagram is not in the review snapshot (it is rendered live in the app).' }, 404) } }
     if (p in pd && pd[p] !== null) return json(pd[p])
-    { const base = p.split('?')[0]; if (base.startsWith('/diagram/') && base in pd && pd[base]) return json(pd[base]) }
     if (p.startsWith('/events')) return new Response('', { status: 204 })
     return json({ detail: 'not in review snapshot: ' + p }, 404)
   }
