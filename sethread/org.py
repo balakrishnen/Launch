@@ -28,6 +28,7 @@ TOOLS = [  # the tool catalog: Launch apps (built in) and integrations (drivers)
     {"id": "plm", "name": "PLM / PDM (Windchill, Teamcenter, Arena, Duro)", "kind": "integration", "default": False, "config": {"url": ""}, "status": "planned"},
     # authoring copilots — discipline agents that live inside the authoring tool; Launch sends the brief, they return the artifact
     {"id": "cad_copilot", "name": "CAD copilot (MecAgent, Zoo, Studio) ← CAD brief from the graph, native CAD/STEP back as attachment", "kind": "integration", "default": True, "config": {}},
+    {"id": "harness", "name": "Wire harness tool (HarnessHive via MCP) ← wire list from the interfaces, harness + BOM + formboard back", "kind": "integration", "default": True, "config": {"mcp_url": ""}},
     {"id": "eda_copilot", "name": "Electronics copilot (CopperPilot, Quilter, Flux) ← board brief from the graph, schematic/BOM back", "kind": "integration", "default": True, "config": {}, "status": "planned"},
     {"id": "git", "name": "Git (firmware / software)", "kind": "integration", "default": False, "config": {"url": ""}, "status": "planned"},
     {"id": "jira", "name": "Jira / Asana (work sync)", "kind": "integration", "default": False, "config": {"url": ""}, "status": "planned"},

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -766,6 +766,20 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         S = W.get(pid); p = os.path.join(S.root, "cad", part + ".mesh.json")
         if not os.path.exists(p): raise HTTPException(404, "not built")
         return Response(open(p, "rb").read(), media_type="application/json")
+
+    # ---- native EDA: the electrical thread as a board
+    @app.get("/api/p/{pid}/eda")
+    def eda_all(pid: str, part: str = "", user: str = U):
+        S = W.get(pid); m = S.store.load(); nl = EDA.netlist(m)
+        return {**nl, "checks": EDA.checks(m, nl), "brief": EDA.board_brief(m, nl, part or None)}
+    @app.get("/api/p/{pid}/eda/wirelist.csv")
+    def eda_wires(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); nl = EDA.netlist(m)
+        return Response(EDA.wire_list(m, nl), media_type="text/csv", headers={"content-disposition": f'attachment; filename="{pid}-wirelist.csv"'})
+    @app.get("/api/p/{pid}/eda/netlist.net")
+    def eda_net(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); nl = EDA.netlist(m)
+        return Response(EDA.kicad_net(m, nl, m["meta"].get("name", pid)), media_type="text/plain", headers={"content-disposition": f'attachment; filename="{pid}.net"'})
 
     @app.get("/api/p/{pid}/cadbrief/{part}")
     def cad_brief(pid: str, part: str, user: str = U):

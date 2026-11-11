@@ -98,6 +98,12 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         pid = store.stage(Patch(ops=ops, author=author, rationale=f"Native CAD build of {part}: {res['bbox_mm']} mm, {res.get('mass_g')} g", sources=[])); store.approve(pid, approver=author)
         return _txt({"ok": True, "patch": pid, "volume_mm3": res["volume_mm3"], "mass_g": res["mass_g"], "bbox_mm": res["bbox_mm"], "checks": chk})
 
+    @tool("eda_board", "Native EDA: the electrical architecture as a board — components from electrical parts, nets from electrical interface items (power rails, buses, signals), test points, checks (dangling nets, missing GND, MPN/AVL, EOL, DfT, ≥48 V safety standard, High-AP modes) and the board brief for a part. Fix findings by patching interface items and part attrs (mpn, package, test_points, ref).", {"part": str})
+    async def eda_board(args):
+        from .. import eda as EDA
+        m = store.load(); nl = EDA.netlist(m); part = (args or {}).get("part") or None
+        return _txt({"summary": {k: nl[k] for k in ("n_components", "n_nets", "n_pins")}, "components": {p: {"ref": c["ref"], "pins": [x["name"] for x in c["pins"]], "mpn": c["mpn"], "supplier": c["supplier"]} for p, c in nl["components"].items()}, "nets": {n: {"kind": v["kind"], "refs": sorted({q["ref"] for q in v["pins"]}), "external": v.get("external", [])} for n, v in nl["nets"].items()}, "checks": EDA.checks(m, nl), "brief": EDA.board_brief(m, nl, part)})
+
     @tool("dfx_review", "Design-for-X evaluation: x = manufacturing|assembly|testability|reliability|safety|maintainability|service|transportation|cost|environment|emc|security|usability|quality|supply_chain, or omit for the summary of all. Returns guideline items with automatic status (pass/partial/fail/n/a) or 'unknown' for manual items, measured values and evidence ids. Record verdicts with dfx_set (one call per item); if you put them in propose_patch instead, use kind dfx_reviews, id DFX-<x>, value {x, items: {<guideline id>: {status, evidence, note}}}.", {"x": str})
     async def dfx_review(args):
         from .. import dfx as DFX
@@ -186,7 +192,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, dfx_review, dfx_set]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

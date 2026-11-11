@@ -1,0 +1,1482 @@
+meta:
+  name: BrewMaster One
+  version: '0.1'
+  method: OOSEM
+  description: 10-cup connected drip coffee maker — first product of a connected-kitchen
+    platform (fictional)
+  system: P-BM1
+  stage: Development
+stakeholders:
+  STK-CONSUMER:
+    name: Household consumer
+    description: Wants consistent great coffee with zero fuss; schedules from the
+      app; descales when told
+    concerns: taste, speed, cleaning, safety
+  STK-SAFETY:
+    name: Safety & certification bodies (UL, NB)
+    description: UL 1082 / IEC 60335-2-15 / 60730 compliance
+    concerns: dry-boil, surface temp, leakage
+  STK-SERVICE:
+    name: Service network
+    description: Repairs under 2-year warranty; needs field-replaceable board and
+      clear diagnostics
+    concerns: diagnosability, spares
+  STK-MFG:
+    name: Contract manufacturer (Vietnam)
+    description: Molds, assembles, tests end-of-line
+    concerns: yield, test time, cosmetic defects
+  STK-PLATFORM:
+    name: Connected-kitchen platform owner
+    description: Controller/radio/HMI/app reused across kettle and grinder
+    concerns: variant control, OTA
+  STK-RETAIL:
+    name: Retail & e-commerce
+    description: Price point $179, packaging, energy label, reviews
+    concerns: returns, star rating
+moes:
+  MOE-01:
+    name: Brew water temperature at shower head
+    target: '>= 92 and <= 96 °C, 10-cup brew, steady state'
+  MOE-02:
+    name: 10-cup brew time
+    target: <= 360 s from start to drip-stop
+  MOE-03:
+    name: Schedule-to-ready notification latency
+    target: <= 30 s app and machine
+  MOE-04:
+    name: Descale detection accuracy
+    target: alert within ±10 % of 60 L at 15 °dH
+  MOE-05:
+    name: Dry-boil protection
+    target: heater off within 5 s of empty, TCO never trips in normal use
+  MOE-06:
+    name: Certifications granted
+    target: UL 1082, EN 60335-2-15, FCC/RED, food-contact DoC before PVT
+  MOE-07:
+    name: Main board replacement time
+    target: <= 15 min with standard tools
+  MOE-08:
+    name: End-of-line test time
+    target: <= 240 s
+  MOE-09:
+    name: Platform reuse
+    target: controller, radio, HMI, app unchanged across 3 products
+  MOE-10:
+    name: Standby power
+    target: <= 0.5 W networked standby
+  MOE-11:
+    name: Keep-warm plate temperature
+    target: 80–85 °C carafe contents for 120 min
+  MOE-12:
+    name: Offline operation
+    target: 100 % of core functions without cloud
+needs:
+  N-01:
+    stk: STK-CONSUMER
+    text: 'Brew coffee that tastes consistently good (Golden Cup: 92–96 °C, 18–22
+      % extraction)'
+    moe: MOE-01
+  N-02:
+    stk: STK-CONSUMER
+    text: Brew 10 cups in under 6 minutes
+    moe: MOE-02
+  N-03:
+    stk: STK-CONSUMER
+    text: Schedule a brew from the app and from the machine, and know when it's ready
+    moe: MOE-03
+  N-04:
+    stk: STK-CONSUMER
+    text: Know when to descale, and descale easily
+    moe: MOE-04
+  N-05:
+    stk: STK-SAFETY
+    text: Never overheat, boil dry, or expose hot surfaces beyond limits
+    moe: MOE-05
+  N-06:
+    stk: STK-SAFETY
+    text: Comply with US and EU appliance safety, EMC, radio, food-contact and energy
+      rules
+    moe: MOE-06
+  N-07:
+    stk: STK-SERVICE
+    text: Diagnose and replace the main board in under 15 minutes
+    moe: MOE-07
+  N-08:
+    stk: STK-MFG
+    text: Assemble and test every unit end-of-line in under 4 minutes
+    moe: MOE-08
+  N-09:
+    stk: STK-PLATFORM
+    text: Share controller, radio, HMI and app with the kettle and grinder
+    moe: MOE-09
+  N-10:
+    stk: STK-RETAIL
+    text: Use ≤0.5 W in standby and carry the EU energy/standby compliance
+    moe: MOE-10
+  N-11:
+    stk: STK-CONSUMER
+    text: Keep coffee warm without burning it for 2 hours (plate variant)
+    moe: MOE-11
+  N-12:
+    stk: STK-CONSUMER
+    text: 'Work without the cloud: brew, schedule and alerts on the machine'
+    moe: MOE-12
+actors: {}
+use_cases: {}
+scenarios: {}
+regulations:
+  REG-UL1082:
+    name: UL 1082 — Household electric coffee makers
+    market: US/CA
+    trigger: coffee maker sold in the US
+    standard: UL 1082
+  REG-60335-2-15:
+    name: IEC/EN 60335-2-15 — Appliances for heating liquids
+    market: EU
+    trigger: coffee maker sold in the EU
+    standard: IEC 60335-2-15
+  REG-60730:
+    name: IEC/UL 60730-1 Annex H — Automatic controls, software class B
+    market: EU/US
+    trigger: software-controlled thermal cutoff
+    standard: IEC 60730-1
+  REG-FCC:
+    name: FCC Part 15 B/C
+    market: US
+    trigger: digital electronics + Wi-Fi/BLE module
+    standard: 47 CFR 15
+  REG-RED:
+    name: Radio Equipment Directive incl. art. 3.3 cybersecurity
+    market: EU
+    trigger: connected appliance
+    standard: EN 300 328; EN 18031
+  REG-EMC:
+    name: EN 55014-1/-2, IEC 61000-3-2/-3-3
+    market: EU
+    trigger: mains-powered appliance with heater
+    standard: EN 55014; IEC 61000-3-2
+  REG-FOOD:
+    name: FDA 21 CFR 174–178 / EU 1935/2004 food contact
+    market: US/EU
+    trigger: water and coffee contact materials
+    standard: 21 CFR 177; EU 10/2011
+  REG-STANDBY:
+    name: EU 2023/826 standby & networked standby
+    market: EU
+    trigger: networked appliance
+    standard: EU 2023/826
+  REG-ROHS:
+    name: RoHS / REACH / WEEE
+    market: EU
+    trigger: electronics sold in the EU
+    standard: 2011/65/EU; 2012/19/EU
+  REG-PROP65:
+    name: California Proposition 65
+    market: US-CA
+    trigger: consumer product sold in California
+    standard: Cal. HSC §25249
+requirements:
+  R-01:
+    type: PERF
+    text: Water at the shower head shall be 92–96 °C throughout a 10-cup brew after
+      the first 100 ml.
+    verify: test
+    tests:
+    - TST-01
+    from_:
+    - N-01
+    regs:
+    - REG-UL1082
+    uc: []
+    attr: brew_temp_c >= 92
+  R-02:
+    type: PERF
+    text: A 10-cup (1,500 ml) brew shall complete in ≤ 360 s from start to drip-stop
+      at 230 V and 120 V.
+    verify: test
+    tests:
+    - TST-02
+    from_:
+    - N-02
+    regs: []
+    uc: []
+    attr: brew_time_s <= 360
+  R-03:
+    type: SAFE
+    text: The heater shall be de-energised within 5 s of the water system detecting
+      an empty reservoir or no flow, independently by software (class B) and by the
+      TCO.
+    verify: test
+    tests:
+    - TST-03
+    - TST-04
+    from_:
+    - N-05
+    regs:
+    - REG-60730
+    - REG-UL1082
+    - REG-60335-2-15
+    uc: []
+    attr: dry_boil_cutoff_s <= 5
+  R-04:
+    type: SAFE
+    text: Accessible surfaces shall not exceed the 60335-1 limits (metal 60 K rise,
+      plastic 75 K rise) during and after brew.
+    verify: test
+    tests:
+    - TST-05
+    from_:
+    - N-05
+    regs:
+    - REG-60335-2-15
+    uc: []
+    attr: surface_rise_K <= 60
+  R-05:
+    type: REGU
+    text: The product shall obtain UL 1082 (US) and EN 60335-1/-2-15 (EU) certification
+      before PVT.
+    verify: inspection
+    tests:
+    - TST-06
+    from_:
+    - N-06
+    regs:
+    - REG-UL1082
+    - REG-60335-2-15
+    uc: []
+    attr: certification = granted
+  R-06:
+    type: FUNC
+    text: The user shall be able to schedule a brew from the app and from the dial;
+      the machine shall notify ready state on the display, by tone and by push within
+      30 s.
+    verify: test
+    tests:
+    - TST-07
+    from_:
+    - N-03
+    regs: []
+    uc: []
+    attr: notify_latency_s <= 30
+  R-07:
+    type: FUNC
+    text: The controller shall estimate scale build-up from water hardness and volume
+      and prompt descaling within ±10 % of the 60 L (15 °dH) reference.
+    verify: analysis
+    tests:
+    - TST-08
+    from_:
+    - N-04
+    regs: []
+    uc: []
+    attr: descale_error_pct <= 10
+  R-08:
+    type: PERF
+    text: Networked standby power shall be ≤ 0.5 W; the display shall power down after
+      5 min idle.
+    verify: test
+    tests:
+    - TST-09
+    from_:
+    - N-10
+    regs:
+    - REG-STANDBY
+    uc: []
+    attr: standby_W <= 0.5
+  R-09:
+    type: REGU
+    text: All water- and coffee-contact materials shall have FDA and EU 10/2011 declarations
+      of compliance.
+    verify: inspection
+    tests:
+    - TST-10
+    from_:
+    - N-06
+    regs:
+    - REG-FOOD
+    uc: []
+    attr: food_contact_doc = complete
+  R-10:
+    type: REGU
+    text: Radiated/conducted emissions shall meet FCC 15B class B and EN 55014-1;
+      harmonics IEC 61000-3-2 class A with the 1,400 W heater.
+    verify: test
+    tests:
+    - TST-11
+    from_:
+    - N-06
+    regs:
+    - REG-FCC
+    - REG-EMC
+    uc: []
+    attr: emc = pass
+  R-11:
+    type: MAINT
+    text: The main board shall be replaceable in ≤ 15 min with a Torx T20 and no soldering;
+      the HMI shall display a fault code for every detected failure.
+    verify: demonstration
+    tests:
+    - TST-12
+    from_:
+    - N-07
+    regs: []
+    uc: []
+    attr: board_swap_min <= 15
+  R-12:
+    type: MFG
+    text: Every unit shall pass an end-of-line test (hipot, ground bond, brew cycle
+      with water, Wi-Fi provisioning) in ≤ 240 s.
+    verify: test
+    tests:
+    - TST-13
+    from_:
+    - N-08
+    regs: []
+    uc: []
+    attr: eol_s <= 240
+  R-13:
+    type: IFACE
+    text: Controller, radio module, HMI and app shall interface through the platform
+      ICD so the same parts serve the kettle and grinder.
+    verify: inspection
+    tests:
+    - TST-14
+    from_:
+    - N-09
+    regs: []
+    uc: []
+    attr: platform_icd = conformant
+  R-14:
+    type: PERF
+    text: The keep-warm plate shall hold carafe contents at 80–85 °C for 120 min then
+      shut off.
+    verify: test
+    tests:
+    - TST-15
+    from_:
+    - N-11
+    regs:
+    - REG-UL1082
+    uc: []
+    attr: keepwarm_c >= 80
+  R-15:
+    type: FUNC
+    text: All brew, schedule and alert functions shall work with no network; cloud
+      adds remote start and telemetry only.
+    verify: test
+    tests:
+    - TST-16
+    from_:
+    - N-12
+    regs:
+    - REG-RED
+    uc: []
+    attr: offline = true
+  R-16:
+    type: SEC
+    text: Firmware updates shall be signed; no default passwords; Wi-Fi credentials
+      stored encrypted (EN 18031).
+    verify: inspection
+    tests:
+    - TST-17
+    from_:
+    - N-06
+    regs:
+    - REG-RED
+    uc: []
+    attr: security = EN18031
+  R-17:
+    type: PERF
+    text: Shower head shall wet ≥ 90 % of the coffee bed within the first 60 s (extraction
+      uniformity).
+    verify: test
+    tests:
+    - TST-18
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: bed_wetting_pct >= 90
+  R-18:
+    type: SAFE
+    text: The carafe-present switch shall stop drip within 2 s of carafe removal and
+      resume on return.
+    verify: test
+    tests:
+    - TST-19
+    from_:
+    - N-05
+    regs:
+    - REG-UL1082
+    uc: []
+    attr: dripstop_s <= 2
+functions:
+  F-01:
+    name: Heat brew water to setpoint
+    alloc:
+    - P-TB
+    - P-NTC
+    - P-TCO
+    - P-PLATE
+    - P-TRIAC
+    reqs:
+    - R-01
+    - R-03
+    - R-04
+    perf: ''
+    safety_decision: safety-critical (60730 class B)
+  F-02:
+    name: Meter and deliver water to the shower head
+    alloc:
+    - P-RES
+    - P-LEVEL
+    - P-PUMP
+    - P-FLOW
+    reqs:
+    - R-02
+    - R-17
+    perf: ''
+    safety_decision: ''
+  F-03:
+    name: Distribute water over the coffee bed
+    alloc:
+    - P-SHOWER
+    - P-BASKET
+    - P-CARAFE
+    - P-CARSW
+    reqs:
+    - R-17
+    perf: ''
+    safety_decision: ''
+  F-04:
+    name: Control drip to the carafe
+    alloc:
+    - P-SHOWER
+    - P-BASKET
+    - P-CARAFE
+    - P-CARSW
+    reqs:
+    - R-18
+    perf: ''
+    safety_decision: safety-critical (60730 class B)
+  F-05:
+    name: Keep coffee warm
+    alloc:
+    - P-TB
+    - P-NTC
+    - P-TCO
+    - P-PLATE
+    - P-TRIAC
+    reqs:
+    - R-14
+    - R-04
+    perf: ''
+    safety_decision: ''
+  F-06:
+    name: Detect water level and flow
+    alloc:
+    - P-RES
+    - P-LEVEL
+    - P-PUMP
+    - P-FLOW
+    reqs:
+    - R-03
+    - R-07
+    perf: ''
+    safety_decision: ''
+  F-07:
+    name: Protect against dry boil and overtemperature
+    alloc:
+    - P-TB
+    - P-NTC
+    - P-TCO
+    - P-PLATE
+    - P-TRIAC
+    reqs:
+    - R-03
+    - R-04
+    perf: ''
+    safety_decision: safety-critical (60730 class B)
+  F-08:
+    name: Run brew schedules and notify
+    alloc:
+    - P-MAIN
+    - P-MCU
+    - P-PSU
+    - P-FW
+    reqs:
+    - R-06
+    - R-15
+    perf: ''
+    safety_decision: ''
+  F-09:
+    name: Estimate scale and prompt descaling
+    alloc:
+    - P-RES
+    - P-LEVEL
+    - P-PUMP
+    - P-FLOW
+    reqs:
+    - R-07
+    perf: ''
+    safety_decision: ''
+  F-10:
+    name: Connect to app and cloud securely
+    alloc:
+    - P-RADIO
+    - P-APP
+    reqs:
+    - R-15
+    - R-16
+    perf: ''
+    safety_decision: ''
+  F-11:
+    name: Present status and faults on the HMI
+    alloc:
+    - P-HMI
+    reqs:
+    - R-06
+    - R-11
+    perf: ''
+    safety_decision: ''
+  F-12:
+    name: Manage power and standby
+    alloc:
+    - P-MAIN
+    - P-MCU
+    - P-PSU
+    - P-FW
+    reqs:
+    - R-08
+    perf: ''
+    safety_decision: ''
+  F-13:
+    name: Self-test at end of line and in service
+    alloc:
+    - P-MAIN
+    - P-MCU
+    - P-PSU
+    - P-FW
+    reqs:
+    - R-12
+    - R-11
+    perf: ''
+    safety_decision: ''
+logical_components:
+  LC-THERMAL:
+    name: Thermal control
+    role: Thermal control
+    funcs:
+    - F-01
+    - F-07
+    - F-05
+    quality: []
+    parts:
+    - P-TB
+    - P-NTC
+    - P-TCO
+    - P-PLATE
+    - P-TRIAC
+  LC-WATER:
+    name: Water delivery
+    role: Water delivery
+    funcs:
+    - F-02
+    - F-06
+    - F-09
+    quality: []
+    parts:
+    - P-RES
+    - P-LEVEL
+    - P-PUMP
+    - P-FLOW
+  LC-BREW:
+    name: Brew & dispense
+    role: Brew & dispense
+    funcs:
+    - F-03
+    - F-04
+    quality: []
+    parts:
+    - P-SHOWER
+    - P-BASKET
+    - P-CARAFE
+    - P-CARSW
+  LC-CTRL:
+    name: Supervisory control
+    role: Supervisory control
+    funcs:
+    - F-08
+    - F-12
+    - F-13
+    quality: []
+    parts:
+    - P-MAIN
+    - P-MCU
+    - P-PSU
+    - P-FW
+  LC-CONN:
+    name: Connectivity
+    role: Connectivity
+    funcs:
+    - F-10
+    quality: []
+    parts:
+    - P-RADIO
+    - P-APP
+  LC-HMI:
+    name: User interface
+    role: User interface
+    funcs:
+    - F-11
+    quality: []
+    parts:
+    - P-HMI
+logical_interfaces:
+  LI-01:
+    a: LC-WATER
+    b: LC-THERMAL
+    flow: water flow rate, level, no-flow
+  LI-02:
+    a: LC-THERMAL
+    b: LC-BREW
+    flow: hot water 92–96 °C
+  LI-03:
+    a: LC-CTRL
+    b: LC-THERMAL
+    flow: setpoint, heater enable, fault
+  LI-04:
+    a: LC-CTRL
+    b: LC-WATER
+    flow: pump/valve commands, flow count
+  LI-05:
+    a: LC-CTRL
+    b: LC-HMI
+    flow: status, faults, schedule input
+  LI-06:
+    a: LC-CTRL
+    b: LC-CONN
+    flow: schedule, telemetry, OTA
+  LI-07:
+    a: LC-BREW
+    b: LC-CTRL
+    flow: carafe present, drip-stop state
+parts:
+  P-BM1:
+    name: BrewMaster One
+    type: BrewMaster One
+    parent: null
+    attrs: {}
+    discipline: system
+    context: false
+    make_buy: make
+    owner_team: null
+  P-ENCL:
+    name: Housing (PP) with stainless trim
+    type: Housing
+    parent: P-BM1
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-ID
+  P-RES:
+    name: 1.6 L reservoir with level sensor
+    type: 1.6 L reservoir with level sensor
+    parent: P-BM1
+    attrs:
+      material: Tritan (food contact)
+      mass_budget_g: 320
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-THERM
+  P-LEVEL:
+    name: Capacitive level sensor
+    type: Capacitive level sensor
+    parent: P-RES
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+  P-PUMP:
+    name: Low-pressure water pump
+    type: Low-pressure water pump
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-THERM
+  P-FLOW:
+    name: Hall flow meter
+    type: Hall flow meter
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-THERM
+  P-TB:
+    name: 1400 W thermoblock heater
+    type: 1400 W thermoblock heater
+    parent: P-BM1
+    attrs:
+      power_W: 1400
+      mass_budget_g: 450
+      envelope_mm: 120x60x45
+      material: aluminium + stainless tube
+      food_contact: stainless 304
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-THERM
+    supplier: SUP-01
+  P-NTC:
+    name: NTC thermistor (thermoblock)
+    type: NTC thermistor
+    parent: P-TB
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+    supplier: SUP-01
+  P-TCO:
+    name: Thermal cutoff (TCO) 192 °C
+    type: Thermal cutoff
+    parent: P-TB
+    attrs:
+      mpn: SF192E
+      package: axial
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+  P-SHOWER:
+    name: Shower head
+    type: Shower head
+    parent: P-BM1
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-BREW
+  P-BASKET:
+    name: Brew basket with drip-stop valve
+    type: Brew basket with drip-stop valve
+    parent: P-BM1
+    attrs: {}
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-BREW
+  P-CARAFE:
+    name: 1.5 L glass carafe
+    type: 1.5 L glass carafe
+    parent: P-BM1
+    attrs:
+      material: borosilicate glass
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-BREW
+  P-PLATE:
+    name: Keep-warm plate 60 W
+    type: Keep-warm plate 60 W
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-THERM
+  P-MAIN:
+    name: Main control board (MCU, PSU, triac, sensors)
+    type: Main control board
+    parent: P-BM1
+    attrs:
+      test_points: 'yes: 3V3, 5V, GND, NTC, TRIAC_GATE, UART'
+      mpn: BM1-MAIN-A
+      package: PCBA 90x60
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-CTRL
+  P-MCU:
+    name: MCU (60730 class B library)
+    type: MCU
+    parent: P-MAIN
+    attrs:
+      mpn: STM32G071
+      package: LQFP48
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+  P-PSU:
+    name: Mains PSU 5 V / 3.3 V
+    type: Mains PSU 5 V / 3.3 V
+    parent: P-MAIN
+    attrs:
+      mpn: HLK-PM01
+      package: module
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+    supplier: SUP-03
+  P-TRIAC:
+    name: Triac + driver for heater
+    type: Triac + driver for heater
+    parent: P-MAIN
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+  P-RADIO:
+    name: Wi-Fi/BLE module (pre-certified)
+    type: Wi-Fi/BLE module
+    parent: P-BM1
+    attrs:
+      mpn: ESP32-C3-MINI-1
+      package: module
+      lifecycle: active
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-CTRL
+    supplier: SUP-02
+  P-HMI:
+    name: 'HMI board: 2.4" display + dial'
+    type: HMI board
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-CTRL
+  P-FW:
+    name: Firmware (platform)
+    type: Firmware
+    parent: P-MAIN
+    attrs: {}
+    discipline: firmware
+    context: false
+    make_buy: make
+    owner_team: TM-CTRL
+  P-APP:
+    name: Mobile app + cloud
+    type: Mobile app + cloud
+    parent: P-BM1
+    attrs: {}
+    discipline: software
+    context: true
+    make_buy: make
+    owner_team: TM-CTRL
+  P-CORD:
+    name: Mains cord set (NEMA 5-15 / Schuko)
+    type: Mains cord set
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-ID
+  P-CARSW:
+    name: Carafe-present switch
+    type: Carafe-present switch
+    parent: P-BM1
+    attrs: {}
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+nodes: {}
+interfaces:
+  IF-01:
+    name: Mains → PSU/heater
+    a: P-CORD
+    b: P-MAIN
+    items:
+    - L
+    - N
+    - PE
+    kind: electrical 120/230 V
+    funcs:
+    - F-12
+  IF-02:
+    name: Triac → thermoblock
+    a: P-MAIN
+    b: P-TB
+    items:
+    - HEATER_L
+    - HEATER_N
+    kind: electrical 230 V switched
+    funcs:
+    - F-01
+    - F-07
+  IF-03:
+    name: NTC → main board
+    a: P-NTC
+    b: P-MAIN
+    items:
+    - NTC
+    - GND
+    kind: electrical signal
+    funcs:
+    - F-01
+    - F-07
+  IF-04:
+    name: TCO in heater line
+    a: P-TCO
+    b: P-TB
+    items:
+    - HEATER_L
+    kind: electrical 230 V
+    funcs:
+    - F-07
+  IF-05:
+    name: Pump drive
+    a: P-MAIN
+    b: P-PUMP
+    items:
+    - PUMP_L
+    - PUMP_N
+    kind: electrical 230 V switched
+    funcs:
+    - F-02
+  IF-06:
+    name: Flow meter → main board
+    a: P-FLOW
+    b: P-MAIN
+    items:
+    - FLOW_PULSE
+    - 5V
+    - GND
+    kind: electrical signal
+    funcs:
+    - F-06
+  IF-07:
+    name: Level sensor → main board
+    a: P-LEVEL
+    b: P-MAIN
+    items:
+    - LEVEL
+    - 3V3
+    - GND
+    kind: electrical signal
+    funcs:
+    - F-06
+  IF-08:
+    name: Main ↔ HMI (platform ICD)
+    a: P-MAIN
+    b: P-HMI
+    items:
+    - UART_TX
+    - UART_RX
+    - 3V3
+    - GND
+    kind: electrical UART
+    funcs:
+    - F-11
+  IF-09:
+    name: Main ↔ radio (platform ICD)
+    a: P-MAIN
+    b: P-RADIO
+    items:
+    - UART_TX
+    - UART_RX
+    - 3V3
+    - GND
+    - EN
+    kind: electrical UART
+    funcs:
+    - F-10
+  IF-10:
+    name: Carafe switch → main board
+    a: P-CARSW
+    b: P-MAIN
+    items:
+    - CARAFE_SW
+    - GND
+    kind: electrical signal
+    funcs:
+    - F-04
+  IF-11:
+    name: Keep-warm plate drive
+    a: P-MAIN
+    b: P-PLATE
+    items:
+    - PLATE_L
+    - PLATE_N
+    kind: electrical 230 V switched
+    funcs:
+    - F-05
+  IF-12:
+    name: Reservoir → pump (water)
+    a: P-RES
+    b: P-PUMP
+    items:
+    - Water
+    kind: fluid
+    funcs:
+    - F-02
+  IF-13:
+    name: Pump → thermoblock (water)
+    a: P-PUMP
+    b: P-TB
+    items:
+    - Water
+    kind: fluid
+    funcs:
+    - F-02
+  IF-14:
+    name: Thermoblock → shower head (hot water)
+    a: P-TB
+    b: P-SHOWER
+    items:
+    - HotWater
+    kind: fluid 92–96 °C
+    funcs:
+    - F-03
+  IF-15:
+    name: Basket ↔ housing (mechanical)
+    a: P-BASKET
+    b: P-ENCL
+    items:
+    - Latch
+    - Seal
+    kind: mechanical
+    funcs:
+    - F-04
+  IF-16:
+    name: Radio ↔ app (Wi-Fi/BLE)
+    a: P-RADIO
+    b: P-APP
+    items:
+    - Schedule
+    - Telemetry
+    - OTA
+    kind: wireless
+    funcs:
+    - F-10
+states:
+  S-OFF:
+    name: Off / standby
+  S-IDLE:
+    name: Idle, ready
+  S-HEAT:
+    name: Pre-heating
+  S-BREW:
+    name: Brewing
+  S-WARM:
+    name: Keep warm
+  S-FAULT:
+    name: Fault / safe state
+  S-DESCALE:
+    name: Descaling
+transitions:
+  T-01:
+    frm: S-OFF
+    to: S-IDLE
+    trigger: dial press or app wake
+    guard: ''
+    sensor: null
+    func: F-12
+  T-02:
+    frm: S-IDLE
+    to: S-HEAT
+    trigger: brew start (dial, app, schedule)
+    guard: water level > min and carafe present
+    sensor: P-LEVEL
+    func: F-08
+  T-03:
+    frm: S-HEAT
+    to: S-BREW
+    trigger: thermoblock at setpoint
+    guard: ''
+    sensor: P-NTC
+    func: F-01
+  T-04:
+    frm: S-BREW
+    to: S-WARM
+    trigger: flow count = target or reservoir empty
+    guard: ''
+    sensor: P-FLOW
+    func: F-02
+  T-05:
+    frm: S-WARM
+    to: S-IDLE
+    trigger: 120 min elapsed or carafe removed > 2 min
+    guard: ''
+    sensor: P-CARSW
+    func: F-05
+  T-06:
+    frm: S-BREW
+    to: S-FAULT
+    trigger: no flow with heater on > 5 s or NTC out of range
+    guard: ''
+    sensor: P-NTC
+    func: F-07
+  T-07:
+    frm: S-IDLE
+    to: S-DESCALE
+    trigger: user starts descale
+    guard: ''
+    sensor: null
+    func: F-09
+  T-08:
+    frm: S-IDLE
+    to: S-OFF
+    trigger: 5 min idle
+    guard: ''
+    sensor: null
+    func: F-12
+constraints: {}
+trades: {}
+arch_decisions: {}
+tests:
+  TST-01:
+    name: Brew temperature profile
+    method: Thermocouple at shower head, 10-cup brew, 120 V and 230 V
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-02:
+    name: 10-cup brew time
+    method: Stopwatch start→drip-stop, 5 units
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-03:
+    name: Dry-boil cutoff (software)
+    method: Empty reservoir with heater on; log heater off time
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-04:
+    name: Dry-boil cutoff (TCO)
+    method: Software disabled; TCO trip; UL 1082 abnormal operation
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-05:
+    name: Surface temperature rise
+    method: 60335-1 cl. 11 thermocouples on accessible surfaces
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-06:
+    name: UL 1082 / EN 60335-2-15 certification
+    method: NRTL / notified body test program
+    gate: PVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-07:
+    name: Schedule & notify latency
+    method: App + machine timing, 20 trials
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-08:
+    name: Descale estimator accuracy
+    method: Bench with 15 °dH water, 60 L, titration
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-09:
+    name: Standby power
+    method: Power analyser, networked standby
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-10:
+    name: Food-contact declarations
+    method: Supplier DoC review + migration test report
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-11:
+    name: EMC pre-compliance & certification
+    method: 'Chamber: FCC 15B, EN 55014, 61000-3-2'
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-12:
+    name: Board swap time
+    method: 3 technicians, timed
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-13:
+    name: End-of-line test time
+    method: Production fixture
+    gate: PVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-14:
+    name: Platform ICD conformance
+    method: Swap HMI/radio with kettle units
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-15:
+    name: Keep-warm temperature
+    method: Thermocouple in carafe over 120 min
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-16:
+    name: Offline operation
+    method: Router off; full function matrix
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-17:
+    name: Security (EN 18031)
+    method: Signed update, credential storage, pen test
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-18:
+    name: Bed wetting uniformity
+    method: Dye test on coffee bed at 60 s
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-19:
+    name: Drip-stop response
+    method: Carafe removal during brew, 20 trials
+    gate: DVT
+    passfail: meets the requirement attribute
+    status: planned
+    owner_team: TM-TEST
+gates: {}
+phases: {}
+deliverables: {}
+fm_assessments: {}
+teams:
+  TM-SE:
+    name: Systems engineering
+    kind: functional
+    focus: systems
+    lead: ''
+    members: []
+  TM-BREW:
+    name: Brew performance
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-SHOWER
+    - P-BASKET
+    - P-CARAFE
+    lcs:
+    - LC-BREW
+    moes:
+    - MOE-01
+    - MOE-02
+  TM-THERM:
+    name: Thermal & water
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-TB
+    - P-RES
+    - P-PUMP
+    - P-FLOW
+    - P-PLATE
+    lcs:
+    - LC-THERMAL
+    - LC-WATER
+    moes:
+    - MOE-05
+    - MOE-11
+  TM-CTRL:
+    name: Controls & connectivity
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-MAIN
+    - P-RADIO
+    - P-HMI
+    - P-FW
+    - P-APP
+    lcs:
+    - LC-CTRL
+    - LC-CONN
+    - LC-HMI
+    moes:
+    - MOE-03
+    - MOE-10
+    - MOE-12
+  TM-ID:
+    name: Industrial design & enclosure
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-ENCL
+    - P-CORD
+    lcs: []
+    moes: []
+  TM-REL:
+    name: Reliability & safety
+    kind: functional
+    focus: reliability
+    lead: ''
+    members: []
+  TM-COMP:
+    name: Compliance
+    kind: functional
+    focus: compliance
+    lead: ''
+    members: []
+  TM-TEST:
+    name: Test
+    kind: functional
+    focus: test
+    lead: ''
+    members: []
+  TM-MFG:
+    name: Manufacturing
+    kind: functional
+    focus: manufacturing
+    lead: ''
+    members: []
+  TM-SC:
+    name: Sourcing
+    kind: functional
+    focus: sourcing
+    lead: ''
+    members: []
+  TM-PM:
+    name: Program
+    kind: functional
+    focus: program
+    lead: ''
+    members: []
+  TM-QA:
+    name: Quality
+    kind: functional
+    focus: quality
+    lead: ''
+    members: []
+  TM-SVC:
+    name: Service
+    kind: functional
+    focus: service
+    lead: ''
+    members: []
+  TM-SAFE:
+    name: Product safety
+    kind: functional
+    focus: safety
+    lead: ''
+    members: []
+process_steps:
+  PS-01:
+    name: Mold and trim housing
+    order: 1
+    station: Molding
+    parts:
+    - P-ENCL
+    team: TM-MFG
+  PS-02:
+    name: PCBA main + HMI
+    order: 2
+    station: EMS
+    parts:
+    - P-MAIN
+    - P-HMI
+    team: TM-MFG
+  PS-03:
+    name: Assemble water/thermal path
+    order: 3
+    station: Line 1
+    parts:
+    - P-RES
+    - P-PUMP
+    - P-TB
+    - P-SHOWER
+    team: TM-MFG
+  PS-04:
+    name: Final assembly & cord
+    order: 4
+    station: Line 1
+    parts:
+    - P-CORD
+    - P-BASKET
+    - P-CARAFE
+    team: TM-MFG
+  PS-05:
+    name: 'End-of-line test: hipot, ground bond, brew, provisioning'
+    order: 5
+    station: EoL
+    parts:
+    - P-BM1
+    team: TM-MFG
+suppliers:
+  SUP-01:
+    name: ThermoTech (thermoblock)
+    parts:
+    - P-TB
+    - P-NTC
+    status: approved
+    risk: single source
+    owner: TM-SC
+  SUP-02:
+    name: Espressif (radio module)
+    parts:
+    - P-RADIO
+    status: approved
+    risk: low
+    owner: TM-SC
+  SUP-03:
+    name: Hi-Link (PSU)
+    parts:
+    - P-PSU
+    status: candidate
+    risk: 60335 compliance of module to verify
+    owner: TM-SC
+work_items: {}
+findings: {}
+handoffs: {}
+field_events: {}
+risks: {}
+reviews: {}
+tables: {}
+test_runs: {}
+simulations: {}
+attachments: {}
+dfx_reviews: {}
+cad_models: {}
+notes: {}
+program:
+  stage: Development

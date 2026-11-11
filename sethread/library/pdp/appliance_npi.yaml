@@ -1,0 +1,187 @@
+name: Consumer appliance NPI (concept → EVT → DVT → PVT → MP with safety certification)
+description: 'Stage-gate for household appliances: safety-certification path (UL/IEC 60335), food-contact and energy compliance, DfM/DfA for high volume, service and field loop.'
+phases:
+- id: PH-CONCEPT
+  name: Concept & business case
+  order: 1
+  stage: Concept
+  gate: G0
+- id: PH-FEAS
+  name: Feasibility & architecture
+  order: 2
+  stage: Concept
+  gate: G1
+- id: PH-EVT
+  name: Engineering validation
+  order: 3
+  stage: Development
+  gate: EVT
+- id: PH-DVT
+  name: Design validation & certification
+  order: 4
+  stage: Development
+  gate: DVT
+- id: PH-PVT
+  name: Production validation
+  order: 5
+  stage: Production
+  gate: PVT
+- id: PH-MP
+  name: Launch & field
+  order: 6
+  stage: Utilization
+  gate: MP
+gates:
+- id: G0
+  name: Concept approval
+  exit: Target consumer, use cases, MoEs, price point and regulatory path agreed
+- id: G1
+  name: Architecture freeze
+  exit: Subsystems and interfaces defined; safety-critical functions identified; key suppliers shortlisted
+- id: EVT
+  name: EVT build
+  exit: Works-like prototypes meet performance MoEs; DFMEA complete; pre-compliance EMC and safety screening done
+- id: DVT
+  name: DVT build
+  exit: Looks-like/works-like units pass DV; UL/IEC certification submitted; food-contact declarations; packaging tests
+- id: PVT
+  name: PVT build
+  exit: Production tooling; PFMEA & control plan; EoL test; yield target; certification granted
+- id: MP
+  name: Mass production / launch
+  exit: Ramp, service and spares in place, field loop live
+deliverables:
+- id: D-SYS-NEEDS
+  name: Consumer needs & MoEs
+  gate: G0
+  focus: systems
+  check:
+    type: coverage
+    key: needs_without_requirements
+    max: 0
+    min_count:
+      kind: needs
+      n: 1
+- id: D-COMP-PATH
+  name: Regulatory path (safety, EMC, food contact, energy, radio)
+  gate: G0
+  focus: compliance
+  check:
+    type: coverage
+    key: regulations_without_requirements
+    max: 0
+    min_count:
+      kind: regulations
+      n: 3
+- id: D-SUB-ARCH
+  name: Subsystem architecture & boundary ICD
+  gate: G1
+  team_kind: subsystem
+  check:
+    type: scope
+    key: boundary_items
+- id: D-SAFE-FUNC
+  name: Safety-critical functions identified (60730 class)
+  gate: G1
+  focus: safety
+  check:
+    type: dfx
+    x: safety
+    min: 50
+- id: D-SUB-DFMEA
+  name: Subsystem DFMEA
+  gate: EVT
+  team_kind: subsystem
+  check:
+    type: scope
+    key: fmea_complete
+- id: D-REL-HIGHAP
+  name: High-AP modes have tests
+  gate: EVT
+  focus: reliability
+  check:
+    type: coverage
+    key: high_ap_fm_without_tests
+    max: 0
+- id: D-EE-PRECOMP
+  name: Pre-compliance EMC / safety screening planned
+  gate: EVT
+  focus: compliance
+  check:
+    type: dfx
+    x: emc
+    min: 60
+- id: D-SUB-CAD
+  name: Released CAD / schematics
+  gate: DVT
+  team_kind: subsystem
+  check:
+    type: attachment
+    roles:
+    - cad
+    - schematic
+- id: D-TEST-DV
+  name: DV results
+  gate: DVT
+  focus: test
+  check:
+    type: tests_passed_share
+    min: 0.9
+- id: D-DFM
+  name: DfM / DfA review
+  gate: DVT
+  focus: manufacturing
+  check:
+    type: dfx
+    x: manufacturing
+    min: 80
+- id: D-SRC-AVL
+  name: Approved vendor list
+  gate: DVT
+  focus: sourcing
+  check:
+    type: coverage
+    key: buy_parts_without_supplier
+    max: 0
+- id: D-MFG-PFMEA
+  name: PFMEA & control plan
+  gate: PVT
+  focus: manufacturing
+  check:
+    type: coverage
+    key: process_steps_without_pfmea
+    max: 0
+    min_count:
+      kind: process_steps
+      n: 1
+- id: D-TEST-PV
+  name: PV & EoL test
+  gate: PVT
+  focus: test
+  check:
+    type: tests_passed_share
+    min: 1.0
+- id: D-QA-FIND
+  name: No open critical findings
+  gate: PVT
+  focus: quality
+  check:
+    type: coverage
+    key: open_findings_critical
+    max: 0
+- id: D-SVC
+  name: Service & spares readiness
+  gate: MP
+  focus: service
+  check:
+    type: dfx
+    x: service
+    min: 70
+- id: D-FIELD
+  name: Field loop (FRACAS) live
+  gate: MP
+  focus: reliability
+  check:
+    type: coverage
+    key: field_events_without_fm
+    max: 0
