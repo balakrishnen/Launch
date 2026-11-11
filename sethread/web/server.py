@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -734,6 +734,11 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         return DG.artifact(m, view, [x for x in ids.split(",") if x])
     @app.get("/api/p/{pid}/diagrams")
     def diagram_list(pid: str, user: str = U): return [{"id": k, "title": v} for k, v in DG.ARTIFACT_VIEWS.items()]
+    @app.get("/api/p/{pid}/cadbrief/{part}")
+    def cad_brief(pid: str, part: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); b = cadbrief.brief(m, part)
+        if not b: raise HTTPException(404, "no such part")
+        return b
     @app.get("/api/p/{pid}/where/{eid}")
     def where_used(pid: str, eid: str, user: str = U):
         S = W.get(pid); m = S.store.load(); return DG.where_used(m, eid, S.store, [S.thread_summary(t) for t in S.threads.values()], S.root)

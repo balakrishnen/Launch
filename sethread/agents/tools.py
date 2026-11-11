@@ -77,6 +77,11 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
     async def gate_readiness(args):
         return _txt(lifecycle.gate_readiness(store.load(), store))
 
+    @tool("cad_brief", "Design brief for a part derived from the graph (purpose, mates/interfaces and items, requirement bounds, budgets, constraints, regulations, failure modes to design out, DfX guidelines). Hand this to a CAD engineer or a text-to-CAD agent; what comes back is attached to the part with role cad.", {"part": str})
+    async def cad_brief(args):
+        from .. import cadbrief
+        return _txt(cadbrief.brief(store.load(), args["part"]))
+
     @tool("dfx_review", "Design-for-X evaluation: x = manufacturing|assembly|testability|reliability|safety|maintainability|service|transportation|cost|environment|emc|security|usability|quality|supply_chain, or omit for the summary of all. Returns guideline items with automatic status (pass/partial/fail/n/a) or 'unknown' for manual items, measured values and evidence ids. Record verdicts with dfx_set (one call per item); if you put them in propose_patch instead, use kind dfx_reviews, id DFX-<x>, value {x, items: {<guideline id>: {status, evidence, note}}}.", {"x": str})
     async def dfx_review(args):
         from .. import dfx as DFX
