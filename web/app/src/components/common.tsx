@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ID_RE, KIND_LABEL, stageColor } from '../api'
+import { ID_RE, KIND_LABEL, stageColor, stageInk } from '../api'
 import { useProject } from '../state'
 
 export const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
@@ -20,7 +20,7 @@ export function IdLink({ id, kind, children }: { id: string; kind?: string; chil
     openTab({ key: `el:${k}:${id}`, title: id, path: `/p/${pid}/element/${k}/${encodeURIComponent(id)}`, stage: '' }) }
   return <a className="id" href="#" onClick={go}>{children ?? id}</a>
 }
-export function StagePill({ stage }: { stage?: string }) { if (!stage) return null; return <span className="pill stage" style={{ background: stageColor(stage) }}>{stage}</span> }
+export function StagePill({ stage }: { stage?: string }) { if (!stage) return null; return <span className="pill stage" style={{ background: stageColor(stage), color: stageInk(stage) }}>{stage}</span> }
 export function KindLabel({ kind }: { kind: string }) { return <>{KIND_LABEL[kind] || kind.replace(/_/g, ' ')}</> }
 export function Cell({ v, col }: { v: any; col?: string }) {
   if (col === 'AP' || col === 'DFMEA AP') return <span className={'ap-' + v}>{v}</span>

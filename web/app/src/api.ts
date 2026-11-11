@@ -16,12 +16,14 @@ export const PROCESS_STAGE: Record<string, string> = {
   'Project planning': 'Management', 'Project assessment and control': 'Management', 'Decision management': 'Management', 'Risk management': 'Management', 'Configuration management': 'Management', 'Information management': 'Management', 'Measurement': 'Management', 'Quality assurance': 'Management',
 }
 export const STAGE_COLOR: Record<string, string> = {
-  Concept: 'var(--s1)', Development: 'var(--s3)', Production: '#7c5c2b', Utilization: '#15803d', Support: '#0e7490', Retirement: '#6b7280', Management: '#6d28d9', 'Risk (derived)': 'var(--sr)',
+  Concept: 'var(--s1)', Development: 'var(--s3)', Production: 'var(--s5)', Utilization: 'var(--s6)', Support: 'var(--s4)', Retirement: 'var(--sx)', Management: 'var(--s2)', 'Risk (derived)': 'var(--sr)',
 }
 export const PROCESS_COLOR: Record<string, string> = {   // distinguish the many Development processes
-  'System requirements definition': 'var(--s2)', 'System architecture definition': 'var(--s3)', 'Design definition': 'var(--s4)', 'System analysis': 'var(--s5)', 'Verification': 'var(--s6)', 'Implementation': '#6d28d9', 'Integration': '#0f766e',
+  'System requirements definition': 'var(--s2)', 'System architecture definition': 'var(--s3)', 'Design definition': 'var(--s4)', 'System analysis': 'var(--s5)', 'Verification': 'var(--s6)', 'Implementation': 'var(--s1)', 'Integration': 'var(--s2)',
 }
 export const stageColor = (s?: string) => !s ? 'var(--sx)' : PROCESS_COLOR[s] || STAGE_COLOR[s] || STAGE_COLOR[PROCESS_STAGE[s]] || 'var(--sx)'
+// Clay brand fills: teal needs light ink, the pastels take near-black
+export const stageInk = (s?: string) => { const c = stageColor(s); return c === 'var(--s3)' || c === 'var(--s2)' || c === 'var(--sr)' ? '#fffaf0' : '#0a0a0a' }
 export const stageOf = (s?: string) => (s && (STAGE_COLOR[s] ? s : PROCESS_STAGE[s])) || ''
 export const FORMS: { id: string; title: string; std: string; stage: string; group: string }[] = [
   { id: 'reqspec', title: 'Requirements specification', std: 'ISO/IEC/IEEE 29148', stage: 'System requirements definition', group: 'Requirements' },

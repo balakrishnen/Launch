@@ -60,7 +60,7 @@ export function RunPage() {
   </div>
 }
 
-const COLORS = ['#2f6fed', '#c2410c', '#15803d', '#7e22ce', '#0e7490', '#b45309', '#9f1239', '#1d4ed8']
+const COLORS = ['#ff4d8b', '#1a3a3a', '#b8a4ed', '#ffb084', '#e8b94a', '#a4d4c5', '#ff6b5a', '#6a6a6a']
 function Chart({ x, channels, sel, colors, limits }: { x: number[]; channels: Record<string, (number | null)[]>; sel: string[]; colors: Record<string, string>; limits: any[] }) {
   const W = 860, H = 340, L = 56, R = 16, T = 12, B = 30
   const ys = sel.flatMap(c => (channels[c] || []).filter((v): v is number => v !== null)); const lv = limits.map(l => l.value)

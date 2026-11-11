@@ -18,11 +18,11 @@ export function Overview() {
   const staged = patches.filter(p => p.status === 'staged'); const name = (project.user || '').split('@')[0]
   const total = Object.values(project.counts).reduce((a, b) => a + b, 0)
   const suggestions = [
-    { icon: <FileSearch size={18} />, bg: '#e9f0ff', color: '#2f6fed', t: 'Ingest documents', d: 'Read the PRD, datasheets and standards; set up stakeholders, needs and MoEs.', q: 'Read the documents in docs/ and set up stakeholders, needs and measures of effectiveness' },
-    { icon: <ListTree size={18} />, bg: '#fff3e0', color: '#c2410c', t: 'Write requirements', d: 'Derive the regulatory context and write testable system requirements.', q: 'Derive the regulatory context and write the system requirements, each with a measurable attribute and a test' },
-    { icon: <Boxes size={18} />, bg: '#e6f7f4', color: '#0f766e', t: 'Design architecture', d: 'Functions, logical components, parts by discipline, interfaces and states.', q: 'Define the logical and physical architecture: functions, logical components, parts by discipline, interfaces, states' },
-    { icon: <ShieldAlert size={18} />, bg: '#fdecec', color: '#b91c1c', t: 'Assess risks', d: 'Systematic DFMEA: every function, interface and transition against guide words.', q: 'Assess or screen every failure-mode candidate systematically with causes derived from the architecture' },
-    { icon: <FlaskConical size={18} />, bg: '#eefbe7', color: '#15803d', t: 'Plan the next gate', d: 'Work items, handoffs and risks for every failing exit criterion.', q: 'Plan the work needed to pass the next gate: work items with owners and due dates for each failing criterion, handoffs for cross-team evidence, and program risks' },
+    { icon: <FileSearch size={18} />, t: 'Ingest documents', d: 'Read the PRD, datasheets and standards; set up stakeholders, needs and MoEs.', q: 'Read the documents in docs/ and set up stakeholders, needs and measures of effectiveness' },
+    { icon: <ListTree size={18} />, t: 'Write requirements', d: 'Derive the regulatory context and write testable system requirements.', q: 'Derive the regulatory context and write the system requirements, each with a measurable attribute and a test' },
+    { icon: <Boxes size={18} />, t: 'Design architecture', d: 'Functions, logical components, parts by discipline, interfaces and states.', q: 'Define the logical and physical architecture: functions, logical components, parts by discipline, interfaces, states' },
+    { icon: <ShieldAlert size={18} />, t: 'Assess risks', d: 'Systematic DFMEA: every function, interface and transition against guide words.', q: 'Assess or screen every failure-mode candidate systematically with causes derived from the architecture' },
+    { icon: <FlaskConical size={18} />, t: 'Plan the next gate', d: 'Work items, handoffs and risks for every failing exit criterion.', q: 'Plan the work needed to pass the next gate: work items with owners and due dates for each failing criterion, handoffs for cross-team evidence, and program risks' },
   ]
   const submit = () => { const t = text.trim(); if (!t) return; setText(''); send(t, undefined, { thread: null, page: true }) }
   const items = seg === 'recent' ? recent.slice().reverse().map((t: any) => ({ t: t.title, k: t.stage ? 'Element' : 'Artifact', s: t.stage || '', path: t.path }))
@@ -37,7 +37,7 @@ export function Overview() {
     <h3 style={{ margin: '0 0 10px' }}>Project overview</h3>
     <ProjectLifecycle />
     <h3 style={{ margin: '28px 0 10px' }}>Suggestions</h3>
-    <div className="sugg">{suggestions.map(s => <button key={s.t} onClick={() => send(s.q)}><span className="ic" style={{ background: s.bg, color: s.color }}>{s.icon}</span><span className="t">{s.t}</span><span className="d">{s.d}</span></button>)}</div>
+    <div className="sugg">{suggestions.map(s => <button key={s.t} onClick={() => send(s.q)}><span className="ic">{s.icon}</span><span className="t">{s.t}</span><span className="d">{s.d}</span></button>)}</div>
     <div className="sechead" style={{ marginTop: 32 }}><div className="seg"><button className={seg === 'recent' ? 'active' : ''} onClick={() => setSeg('recent')}>Recently viewed</button><button className={seg === 'artifacts' ? 'active' : ''} onClick={() => setSeg('artifacts')}>Artifacts</button><button className={seg === 'reviews' ? 'active' : ''} onClick={() => setSeg('reviews')}>Reviews{staged.length ? ` (${staged.length})` : ''}</button></div>
       <button className="btn primary" onClick={() => nav(`/p/${pid}/documents`)}><Plus size={15} />New</button></div>
     <div className="list"><div className="li lh" style={{ cursor: 'default' }}><span>Name</span><span>Type</span><span>Stage</span><span></span></div>

@@ -48,7 +48,7 @@ export function Timeline() {
   const d0 = Math.min(...ds) - 5 * 864e5, d1 = Math.max(...ds) + 10 * 864e5; const W = 1100, L = 220, R = 20, rowH = 26, top = 36
   const H = top + lanes.reduce((a, [, rs]) => a + Math.max(1, rs.length) * rowH + 8, 0) + 10
   const x = (d: string) => L + (Date.parse(d) - d0) / (d1 - d0) * (W - L - R)
-  const col: Record<string, string> = { gates: '#0e7490', handoffs: '#b45309', work_items: '#2f6fed', test_runs: '#15803d', program: '#6d28d9' }
+  const col: Record<string, string> = { gates: '#1a3a3a', handoffs: '#ffb084', work_items: '#b8a4ed', test_runs: '#a4d4c5', program: '#e8b94a' }
   const months: string[] = []; for (let d = new Date(d0); d.getTime() < d1; d.setMonth(d.getMonth() + 1, 1)) months.push(new Date(d).toISOString().slice(0, 10))
   let y = top
   return <div>
@@ -72,7 +72,7 @@ export function Trend() {
   useEffect(() => { P(pid).get('/trend').then(setT).catch(() => { }) }, [pid, patches.length, project?.meta?.rev])
   if (!t) return <div className="empty">Loading…</div>
   if (!t.supported || t.points.length < 2) return <div className="empty">Trend needs the database store and more than one revision. {t.note || ''}</div>
-  const series = [['open_gaps', 'Open trace gaps', '#b91c1c'], ['unassessed', 'Unassessed failure modes', '#c2410c'], ['open_findings', 'Open findings', '#b45309'], ['open_work', 'Open work items', '#2f6fed'], ['tests_passed', 'Tests passed', '#15803d'], ['requirements', 'Requirements', '#6d28d9']]
+  const series = [['open_gaps', 'Open trace gaps', '#ff4d8b'], ['unassessed', 'Unassessed failure modes', '#ff6b5a'], ['open_findings', 'Open findings', '#e8b94a'], ['open_work', 'Open work items', '#b8a4ed'], ['tests_passed', 'Tests passed', '#a4d4c5'], ['requirements', 'Requirements', '#1a3a3a']]
   return <div><h2>Trend</h2><div className="muted small" style={{ marginBottom: 10 }}>The thread's burndown over revisions — what the agents and the team closed, and what grew.</div>
     <div className="grid3">{series.map(([k, label, c]) => <Spark key={k} label={label} color={c} xs={t.points.map((p: any) => p.rev)} ys={t.points.map((p: any) => p[k])} />)}</div></div>
 }

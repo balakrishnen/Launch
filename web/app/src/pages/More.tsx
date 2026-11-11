@@ -151,7 +151,7 @@ function Examples({ ex, busy, onCreate, onOpen }: { ex: any[]; busy: string; onC
   const [open, setOpen] = useState<string>('')
   return <div style={{ marginTop: 40 }}>
     <div className="row between"><div><h2 style={{ margin: 0 }}>Examples</h2><div className="muted small">Real and reference products to assess Launch with — seeded models with deliberate gaps for the agents to close.</div></div></div>
-    <div className="gallery" style={{ marginTop: 14, gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))' }}>{ex.map(e => { const n = Object.values(e.counts || {}).reduce((a: number, b: any) => a + (b as number), 0); const isOpen = open === e.id
+    <div className="gallery brand" style={{ marginTop: 14, gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))' }}>{ex.map(e => { const n = Object.values(e.counts || {}).reduce((a: number, b: any) => a + (b as number), 0); const isOpen = open === e.id
       return <div key={e.id} className="artcard" style={{ cursor: 'default', gridColumn: isOpen ? '1 / -1' : undefined }}>
         <div className="row between"><div className="t" style={{ fontSize: 16 }}>{e.title}</div><span className="pill">{e.category}</span></div>
         <div className="small muted">{e.company}{e.url ? <> · <a href={e.url} target="_blank" rel="noreferrer">{e.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a></> : null}</div>
