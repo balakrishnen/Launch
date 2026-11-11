@@ -18,12 +18,15 @@ for pid in pids:
     for f in ['dfmea', 'dvpr', 'vcrm', 'reqspec', 'hazards', 'n2', 'n2l', 'icd', 'pugh', 'fta', 'drbfm', 'pfmea', 'control_plan', 'avl', 'risks', 'fracas', 'work_items', 'findings', 'handoffs']: P['/form/' + f] = g('/form/' + f)
     for a, b in [('requirements', 'functions'), ('functions', 'parts'), ('requirements', 'tests'), ('needs', 'requirements'), ('regulations', 'requirements'), ('logical_components', 'parts'), ('functions', 'logical_components'), ('constraints', 'tests')]: P[f'/matrix/{a}/{b}'] = g(f'/matrix/{a}/{b}')
     for n in P['/graph'].get('nodes', []):
-        if n['kind'] in ('fmea',): continue
         eid = urllib.parse.quote(n['id'], safe=''); e = g(f"/element/{n['kind']}/{eid}")
         if e:
             for pr in e.get('provenance', []): pr['ops'] = [o for o in pr.get('ops', []) if o.get('id') == n['id']]
-            P[f"/element/{n['kind']}/{eid}"] = e; P[f"/impact/{eid}"] = g(f"/impact/{eid}"); P[f"/memory/{eid}"] = g(f"/memory/{eid}")
+            P[f"/element/{n['kind']}/{eid}"] = e
+            if n['kind'] != 'fmea': P[f"/impact/{eid}"] = g(f"/impact/{eid}"); P[f"/memory/{eid}"] = g(f"/memory/{eid}")
     for t in P.get('/collection/tables') or []: P['/table/' + t['id']] = g('/table/' + t['id'])
+    for f in P.get('/collection/fmea') or []:
+        k = f"/element/fmea/{urllib.parse.quote(f['id'], safe='')}"
+        if k not in P: P[k] = g(k)
     for t in (P['/project'] or {}).get('teams', {}): P['/team/' + t] = g('/team/' + t); P[f'/team/{t}/deliverables'] = g(f'/team/{t}/deliverables')
     P['/me/team'] = g('/me/team')
     for x in P.get('/dfx') or []: P['/dfx/' + x['id']] = g('/dfx/' + x['id'])

@@ -13,7 +13,7 @@ export function Element() {
   useEffect(() => { setE(null); setErr(''); const p = P(pid); p.get(`/element/${kind}/${encodeURIComponent(eid)}`).then(setE).catch(x => setErr(x.message)); p.get(`/impact/${encodeURIComponent(eid)}`).then(setIm).catch(() => setIm(null)); p.get(`/attachments/${encodeURIComponent(eid)}`).then(setAtt).catch(() => setAtt([])); if (kind === 'tests') p.get('/runs').then((rs: any[]) => setRuns(rs.filter(r => r.test === eid))).catch(() => setRuns([])) }, [pid, kind, eid, patches.length, project?.meta?.rev])
   useEffect(() => { if (e) openTab({ key: `el:${kind}:${eid}`, title: eid, path: `/p/${pid}/element/${kind}/${encodeURIComponent(eid)}`, stage: e.stage }) }, [e?.id])
   const title = useMemo(() => e ? (e.data.name || e.data.title || e.data.mode || String(e.data.text || '').slice(0, 120) || eid) : '', [e])
-  if (err) return <div className="empty">{err}</div>
+  if (err) return <div className="empty">Could not open {eid}: {err}</div>
   if (!e) return <div className="empty">Loading…</div>
   const groups = (arr: any[]) => { const g: Record<string, any[]> = {}; for (const x of arr) (g[x.rel] ??= []).push(x); return Object.entries(g) }
   const lst = (xs: string[]) => xs.length ? <span className="row" style={{ gap: 6 }}>{xs.slice(0, 40).map(x => <IdLink key={x} id={x} />)}{xs.length > 40 && <span className="muted">+{xs.length - 40}</span>}</span> : <span className="muted">—</span>
