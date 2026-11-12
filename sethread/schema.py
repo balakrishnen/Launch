@@ -75,12 +75,32 @@ KINDS: dict[str, dict[str, Any]] = {
     # Native CAD: a part's geometry as build123d code, built into STEP/STL + measurements, checked against the thread
     "cad_models": dict(req=["part", "code"], opt={"name": "", "status": "draft", "built": "", "by": "", "volume_mm3": None, "mass_g": None, "bbox_mm": [], "files": {}, "checks": [], "features": [], "notes": "", "error": ""}, refs={"part": "parts"}),
     "quotes": dict(req=["part", "supplier"], opt={"qty": None, "unit_cost_usd": None, "moq": None, "lead_time_d": None, "tooling_usd": None, "nre_usd": None, "valid_until": "", "incoterm": "", "status": "requested", "date": "", "ref": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers"}),
+    # supply chain — industrialization: tooling per part with T-sample milestones and PPAP/FAI status
+    "tooling": dict(req=["part", "supplier"], opt={"tool_id": "", "type": "injection mold", "cavities": None, "cost_usd": None, "owner": "customer", "quote": None, "kickoff": "", "t0": "", "t1": "", "t2": "", "status": "quoted", "ppap": "not started", "ppap_level": 3, "fai": "", "capacity_per_week": None, "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "quote": "quotes"}),
+    # quality — inspections (incoming / in-process / EoL) feed supplier PPM and launch quality
+    "inspections": dict(req=["date", "part", "stage", "qty", "defects"], opt={"supplier": None, "lot": "", "defect_codes": [], "disposition": "", "build": None, "station": "", "by": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "build": "gates"}),
+    # quality — CAPA / 8D: the closed loop from a finding, field event or inspection to a verified corrective action
+    "capa": dict(req=["title", "source", "status"], opt={"source_id": "", "parts": [], "fm": "", "containment": "", "root_cause": "", "corrective": "", "preventive": "", "verification_test": None, "verified": "", "owner": "", "team": None, "due": "", "closed": "", "notes": ""}, refs={"parts": "parts", "verification_test": "tests", "team": "teams"}),
     "claims": dict(req=["text"], opt={"type": "performance", "markets": [], "reqs": [], "tests": [], "regs": [], "owner": "", "approved": "", "status": "draft", "notes": ""}, refs={"reqs": "requirements", "tests": "tests", "regs": "regulations"}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
-TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field",
-              # business functions — the rest of the company on the same graph
-              "marketing", "sales", "finance", "hr", "facilities", "legal", "procurement"]
+# Departments and the functional focuses inside them (Tesla-style: engineering by subsystem + disciplines incl. the design studio;
+# quality split into supplier / launch / field / design; supply chain split into sourcing (GSM) / procurement / industrialization / logistics).
+DEPARTMENTS = {
+    "Engineering": ["systems", "mechanical", "electrical", "software", "firmware", "industrial design", "cmf", "ux", "human factors", "test", "cae", "safety", "reliability", "compliance", "homologation", "ehs"],
+    # Quality does both halves: design quality (reviews, DFMEA completeness, design findings, perceived quality) and
+    # manufacturing quality (supplier PPM/PPAP, launch & in-process & EoL, field loop)
+    "Quality": ["quality", "design_quality", "supplier_quality", "launch_quality", "field_quality"],
+    "Supply chain": ["sourcing", "procurement", "industrialization", "logistics"],
+    "Manufacturing": ["manufacturing", "production_control"],
+    "Program": ["program"],
+    "Service": ["service", "field"],
+    "Go-to-market": ["marketing", "sales"],
+    "Corporate": ["finance", "hr", "facilities", "legal"],
+}
+TEAM_FOCUS = [f for fs in DEPARTMENTS.values() for f in fs]
+DEPARTMENT_OF = {f: d for d, fs in DEPARTMENTS.items() for f in fs}
+QUALITY_HALVES = {"design quality": ["quality", "design_quality"], "manufacturing quality": ["quality", "supplier_quality", "launch_quality", "field_quality"]}
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]
 # INCOSE SE Handbook / ISO/IEC/IEEE 15288 generic life-cycle stages
 LIFECYCLE = ["Concept", "Development", "Production", "Utilization", "Support", "Retirement"]
@@ -96,7 +116,7 @@ PROCESSES = [
     ("Implementation", "Development", ["suppliers", "quotes"]),
     ("Integration", "Development", []),
     ("Verification", "Development", ["tests", "test_runs"]),
-    ("Transition", "Production", ["process_steps"]),
+    ("Transition", "Production", ["process_steps", "inspections"]),
     ("Validation", "Production", []),
     ("Operation", "Utilization", ["field_events"]),
     ("Maintenance", "Support", []),
@@ -111,7 +131,7 @@ MANAGEMENT = [
     ("Configuration management", []),
     ("Information management", ["tables", "notes"]),
     ("Measurement", []),
-    ("Quality assurance", ["findings", "reviews"]),
+    ("Quality assurance", ["findings", "reviews", "capa"]),
 ]
 PROCESS_STAGE = {name: stage for name, stage, _ in PROCESSES}
 STAGE_OF = {k: name for name, _, kinds in PROCESSES for k in kinds} | {k: name for name, kinds in MANAGEMENT for k in kinds}

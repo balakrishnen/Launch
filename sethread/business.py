@@ -195,6 +195,7 @@ def checks_for_pdp(m, typ, c):
         st = staffing(m); bad = [r for r in st if not r["lead"] or r["headcount"] == 0]
         return {"status": "done" if st and not bad else ("partial" if st else "missing"), "measured": f"{len(st) - len(bad)}/{len(st)} teams staffed with a lead", "link": "/form/staffing"}
     if typ == "procurement": return procurement_check(m, c)
+    if typ in ("tooling", "capa", "ppm", "field_loop"): return quality_supply_check(m, typ, c)
     if typ == "fru":
         fru = [p for p, v in m["parts"].items() if str(v.get("attrs", {}).get("field_replaceable", "")).lower() in ("yes", "true", "1")]
         return {"status": "done" if len(fru) >= c.get("n", 1) else "missing", "measured": f"{len(fru)} field-replaceable parts", "link": "/collection/parts"}
@@ -300,3 +301,158 @@ def procurement_check(m, c):
         cr = [r for r in pr if r["critical"]]; ok = [r for r in cr if r["second_source"]]
         return {"status": "done" if len(ok) == len(cr) else ("partial" if ok else "missing"), "measured": f"{len(ok)}/{len(cr)} critical parts dual-sourced", "link": "/form/procurement"}
     return {"status": "missing", "measured": "unknown procurement check", "link": "/form/procurement"}
+
+
+# =====================================================================================================================
+# QUALITY department — supplier / launch / field / design quality, each a closed loop on the graph
+# =====================================================================================================================
+def supplier_ppm(m):
+    """Incoming-inspection PPM per supplier and per part from inspections (stage incoming)."""
+    by_sup = {}; by_part = {}
+    for i, v in m.get("inspections", {}).items():
+        if v.get("stage") != "incoming": continue
+        sup = v.get("supplier") or m["parts"].get(v["part"], {}).get("supplier")
+        q = float(v.get("qty") or 0); d = float(v.get("defects") or 0)
+        for key, store in ((sup, by_sup), (v["part"], by_part)):
+            if not key: continue
+            x = store.setdefault(key, {"qty": 0.0, "defects": 0.0, "lots": 0}); x["qty"] += q; x["defects"] += d; x["lots"] += 1
+    f = lambda x: round(1e6 * x["defects"] / x["qty"]) if x["qty"] else None
+    return {"suppliers": {k: {**v, "ppm": f(v)} for k, v in by_sup.items()}, "parts": {k: {**v, "ppm": f(v)} for k, v in by_part.items()}}
+
+
+def capa_rows(m):
+    out = []
+    for c, v in m.get("capa", {}).items():
+        t = v.get("verification_test"); tv = m["tests"].get(t, {}) if t else {}
+        steps = {"containment": bool(v.get("containment")), "root_cause": bool(v.get("root_cause")), "corrective": bool(v.get("corrective")), "preventive": bool(v.get("preventive")), "verified": bool(v.get("verified")) or tv.get("status") == "passed"}
+        out.append({"id": c, **v, "steps": steps, "done": sum(steps.values()), "overdue": bool(v.get("due")) and v.get("status") != "closed" and str(v["due"]) < _dt.date.today().isoformat()})
+    return out
+
+
+def supplier_quality_view(m, rep):
+    ppm = supplier_ppm(m); t = (m.get("meta") or {}).get("business", {}).get("ppm_target", 500)
+    tl = m.get("tooling", {})
+    return {"suppliers": list(m.get("suppliers", {}).keys()), "suppliers_over_ppm_target": [k for k, v in ppm["suppliers"].items() if v["ppm"] is not None and v["ppm"] > t],
+            "parts_without_incoming_inspection": [p for p, v in m["parts"].items() if (v.get("make_buy") or "buy") == "buy" and not v.get("context") and p not in ppm["parts"]],
+            "ppap_open": [k for k, v in tl.items() if v.get("ppap") not in ("approved",)], "supplier_capa_open": [c["id"] for c in capa_rows(m) if c["source"] in ("inspection", "supplier") and c["status"] != "closed"],
+            "suppliers_without_agreement": [s for s, v in m.get("suppliers", {}).items() if not v.get("agreement")]}
+
+
+def launch_quality_view(m, rep):
+    ins = [i for i, v in m.get("inspections", {}).items() if v.get("stage") in ("in-process", "eol", "end-of-line")]
+    ppm = supplier_ppm(m)
+    return {"build_inspections": ins, "eol_yield": [_yield(m)], "process_steps_without_pfmea": rep.get("process_steps_without_pfmea", []), "open_findings": [f for f, v in m.get("findings", {}).items() if v["status"] != "closed"],
+            "capa_open_before_build": [c["id"] for c in capa_rows(m) if c["status"] != "closed"], "ppap_not_approved": [k for k, v in m.get("tooling", {}).items() if v.get("ppap") != "approved"], "parts_over_ppm": [k for k, v in ppm["parts"].items() if v["ppm"] and v["ppm"] > 1000]}
+
+
+def _yield(m):
+    q = d = 0.0
+    for v in m.get("inspections", {}).values():
+        if v.get("stage") in ("eol", "end-of-line"): q += float(v.get("qty") or 0); d += float(v.get("defects") or 0)
+    return f"EoL first-pass yield {round(100 * (1 - d / q), 1)} % over {int(q)} units" if q else "no end-of-line inspections yet"
+
+
+def field_quality_view(m, rep):
+    fe = m.get("field_events", {}); units = (m.get("meta") or {}).get("business", {}).get("units_in_field")
+    by_fm = {}
+    for f, v in fe.items():
+        by_fm.setdefault(v.get("fm") or "unlinked", 0); by_fm[v.get("fm") or "unlinked"] += int(v.get("count") or 1)
+    pareto = sorted(by_fm.items(), key=lambda kv: -kv[1])
+    total = sum(by_fm.values())
+    return {"field_events_open": [f for f, v in fe.items() if v.get("status", "open") != "closed"], "events_without_failure_mode": [f for f, v in fe.items() if not v.get("fm")],
+            "pareto": [f"{k}: {n}" for k, n in pareto[:8]], "field_rate": [f"{total} events" + (f" over {units} units = {round(1000 * total / units, 2)} per 1,000" if units else " — set meta.business.units_in_field for a rate")],
+            "capa_open": [c["id"] for c in capa_rows(m) if c["source"] == "field" and c["status"] != "closed"], "capa_unverified": [c["id"] for c in capa_rows(m) if c["status"] == "closed" and not c["steps"]["verified"]],
+            "high_ap_without_diagnostic": [x["id"] for x in D.fmea(m) if x.get("AP") == "H" and not x.get("controls")]}
+
+
+def design_quality_view(m, rep):
+    cmf = [p for p, v in m["parts"].items() if str(v.get("attrs", {}).get("visible", "")).lower() in ("yes", "true", "1")]
+    return {"visible_parts": cmf, "visible_parts_without_cmf": [p for p in cmf if not m["parts"][p].get("attrs", {}).get("cmf")], "design_reviews": [r for r, v in m.get("reviews", {}).items() if "design" in v.get("name", "").lower()],
+            "open_findings_design": [f for f, v in m.get("findings", {}).items() if v.get("source") == "design" and v["status"] != "closed"], "perceived_quality_notes": [n for n, v in m.get("notes", {}).items() if v.get("kind") in ("design_quality", "perceived_quality", "cmf")]}
+
+
+# =====================================================================================================================
+# SUPPLY CHAIN department — sourcing (AVL, exists) / procurement (exists) / industrialization / logistics
+# =====================================================================================================================
+def tooling_rows(m):
+    out = []
+    for t, v in m.get("tooling", {}).items():
+        p = m["parts"].get(v["part"], {}); gates = m["gates"]
+        need = next((g for g, gv in sorted(gates.items(), key=lambda kv: kv[1]["date"]) if (m.get("meta") or {}).get("business", {}).get("builds", {}).get(g)), None)
+        out.append({"id": t, **v, "part_name": p.get("name", ""), "first_build": need, "first_build_date": gates.get(need, {}).get("date", "") if need else "",
+                    "t1_late": bool(v.get("t1")) and need and str(v["t1"]) > str(gates.get(need, {}).get("date", "9999")), "late": not v.get("kickoff") and need and _days_to(gates[need]["date"]) is not None and _days_to(gates[need]["date"]) < 120})
+    return out
+
+
+def industrialization_view(m, rep):
+    tr = tooling_rows(m)
+    tooled = {t["part"] for t in tr}
+    need_tool = [p for p, v in m["parts"].items() if not v.get("context") and (v.get("make_buy") or "buy") in ("make", "buy") and any(k in (v.get("attrs", {}).get("material", "") + v.get("type", "") + v["name"]).lower() for k in ("pp", "abs", "polycarbonate", "tritan", "injection", "housing", "basket", "molded", "mold", "stamp", "cast", "die"))]
+    dfx = None
+    try:
+        from . import dfx as DFX
+        dfx = DFX.evaluate(m, "manufacturing")
+    except Exception: pass
+    return {"tooling": [t["id"] for t in tr], "parts_needing_tooling_without_tool": [p for p in need_tool if p not in tooled], "tooling_not_kicked_off": [t["id"] for t in tr if not t.get("kickoff")],
+            "t1_after_first_build": [t["id"] for t in tr if t["t1_late"]], "ppap_open": [t["id"] for t in tr if t.get("ppap") != "approved"], "fai_missing": [t["id"] for t in tr if t.get("t1") and not t.get("fai")],
+            "dfm_score": [f"Design for manufacturing {dfx['score']} %" if dfx and dfx.get("score") is not None else "DfM not evaluated"], "capacity_short": [t["id"] for t in tr if t.get("capacity_per_week") and (m.get("meta") or {}).get("business", {}).get("annual_volume") and float(t["capacity_per_week"]) * 50 < float(m["meta"]["business"]["annual_volume"])]}
+
+
+def logistics_view(m, rep):
+    b = _business(m); q = m.get("quotes", {})
+    pkg = [p for p, v in m["parts"].items() if "pack" in (v.get("type", "") + v["name"]).lower() and "pack" in v["name"].lower() and "battery" not in v["name"].lower()]
+    return {"incoterm": [b.get("incoterm") or "— set meta.business.incoterm"], "quotes_without_incoterm": [k for k, v in q.items() if not v.get("incoterm")], "packaging_parts": pkg,
+            "transport_tests": [t for t, v in m["tests"].items() if any(k in (v.get("method", "") + v["name"]).lower() for k in ("ista", "drop", "transport", "vibration", "shipping"))],
+            "long_lead_imports": [r["part"] for r in procurement(m) if r["lead_time_d"] not in (None, "") and int(r["lead_time_d"]) >= 56], "freight_notes": [n for n, v in m.get("notes", {}).items() if v.get("kind") in ("logistics", "freight", "packaging")]}
+
+
+FOCUS_VIEWS.update({"supplier_quality": supplier_quality_view, "launch_quality": launch_quality_view, "field_quality": field_quality_view, "design_quality": design_quality_view,
+                    "industrialization": industrialization_view, "logistics": logistics_view})
+
+
+def ppm_form(m):
+    ppm = supplier_ppm(m); rows = []
+    for s, v in sorted(ppm["suppliers"].items(), key=lambda kv: -(kv[1]["ppm"] or 0)):
+        rows.append([s, m.get("suppliers", {}).get(s, {}).get("name", ""), int(v["qty"]), int(v["defects"]), v["ppm"], v["lots"], ", ".join(p for p, pv in m["parts"].items() if pv.get("supplier") == s)])
+    headers = ["Supplier", "Name", "Units inspected", "Defects", "PPM", "Lots", "Parts"]
+    return [("SUPPLIER QUALITY — INCOMING PPM", len(headers))], headers, [10, 26, 12, 10, 8, 6, 30], rows
+
+
+def capa_form(m):
+    rows = [[c["id"], c["title"], c["source"], c.get("source_id", ""), ", ".join(c.get("parts", [])), c.get("fm", ""), "✓" if c["steps"]["containment"] else "", "✓" if c["steps"]["root_cause"] else "", "✓" if c["steps"]["corrective"] else "", "✓" if c["steps"]["preventive"] else "", c.get("verification_test") or "", "✓" if c["steps"]["verified"] else "", c.get("owner", ""), c.get("due", ""), c["status"] + (" OVERDUE" if c["overdue"] else "")] for c in capa_rows(m)]
+    headers = ["CAPA", "Title", "Source", "Source id", "Parts", "Failure mode", "D3 contain", "D4 root cause", "D5 corrective", "D7 preventive", "Verification test", "D6 verified", "Owner", "Due", "Status"]
+    return [("CAPA / 8D LOG (every quality loop closed with a verified corrective action)", len(headers))], headers, [8, 28, 9, 9, 14, 8, 6, 6, 6, 6, 10, 6, 10, 9, 10], rows
+
+
+def tooling_form(m):
+    rows = [[t["id"], t["part"], t["part_name"], t.get("supplier", ""), t.get("type", ""), t.get("cavities") or "", t.get("cost_usd") or "", t.get("owner", ""), t.get("kickoff", ""), t.get("t0", ""), t.get("t1", ""), t.get("t2", ""), t["first_build"] or "", t["first_build_date"], t.get("status", ""), t.get("ppap", ""), t.get("fai", ""), "T1 LATE" if t["t1_late"] else ("KICK OFF" if t["late"] else "")] for t in tooling_rows(m)]
+    headers = ["Tool", "Part", "Name", "Supplier", "Type", "Cav.", "Cost (USD)", "Owner", "Kick-off", "T0", "T1", "T2", "First build", "Build date", "Status", "PPAP", "FAI", "Flag"]
+    return [("TOOLING & PPAP — LAUNCH READINESS", len(headers))], headers, [7, 8, 22, 10, 12, 5, 9, 8, 9, 9, 9, 9, 7, 9, 9, 10, 8, 8], rows
+
+
+FORMS.update({"ppm": ("Supplier PPM", "Incoming-inspection PPM per supplier and part", ppm_form), "capa": ("CAPA / 8D log", "Closed-loop corrective actions from findings, field events and inspections", capa_form),
+              "tooling": ("Tooling & PPAP", "Tools per part with T-samples, PPAP and FAI against the first build", tooling_form)})
+
+
+def quality_supply_check(m, typ, c):
+    key = c.get("key")
+    if typ == "tooling":
+        tr = tooling_rows(m)
+        if not tr: return {"status": "missing", "measured": "no tooling records", "link": "/form/tooling"}
+        if key == "kicked_off": ok = [t for t in tr if t.get("kickoff")]; lab = "kicked off"
+        elif key == "t1": ok = [t for t in tr if t.get("t1") and not t["t1_late"]]; lab = "T1 before first build"
+        elif key == "ppap": ok = [t for t in tr if t.get("ppap") == "approved"]; lab = "PPAP approved"
+        else: ok = []; lab = key
+        return {"status": "done" if len(ok) == len(tr) else ("partial" if ok else "missing"), "measured": f"{len(ok)}/{len(tr)} {lab}", "link": "/form/tooling"}
+    if typ == "capa":
+        rows = [x for x in capa_rows(m) if not c.get("source") or x["source"] == c["source"]]
+        op = [x for x in rows if x["status"] != "closed"]; unver = [x for x in rows if x["status"] == "closed" and not x["steps"]["verified"]]
+        return {"status": "done" if not op and not unver else ("partial" if rows else "missing" if c.get("n", 0) else "done"), "measured": f"{len(op)} open · {len(unver)} closed without verification · {len(rows)} total", "link": "/form/capa"}
+    if typ == "ppm":
+        ppm = supplier_ppm(m); t = c.get("max", 500); over = [k for k, v in ppm["suppliers"].items() if v["ppm"] is not None and v["ppm"] > t]
+        if not ppm["suppliers"]: return {"status": "missing", "measured": "no incoming inspections", "link": "/form/ppm"}
+        return {"status": "done" if not over else "partial", "measured": f"{len(over)} suppliers over {t} PPM", "link": "/form/ppm"}
+    if typ == "field_loop":
+        fe = m.get("field_events", {}); unl = [f for f, v in fe.items() if not v.get("fm")]; op = [x for x in capa_rows(m) if x["source"] == "field" and x["status"] != "closed"]
+        return {"status": "done" if not unl and not op else "partial", "measured": f"{len(fe)} events · {len(unl)} without failure mode · {len(op)} CAPA open", "link": "/form/fracas"}
+    return None

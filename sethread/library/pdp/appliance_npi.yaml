@@ -297,3 +297,59 @@ deliverables:
   check:
     type: procurement
     key: second_source
+- id: D-IND-TOOL-KO
+  name: Tooling kicked off for every molded/stamped/cast part
+  gate: EVT
+  focus: industrialization
+  check:
+    type: tooling
+    key: kicked_off
+- id: D-IND-T1
+  name: T1 samples before the DVT build
+  gate: DVT
+  focus: industrialization
+  check:
+    type: tooling
+    key: t1
+- id: D-IND-PPAP
+  name: PPAP / FAI approved for every tool
+  gate: PVT
+  focus: industrialization
+  check:
+    type: tooling
+    key: ppap
+- id: D-SQ-PPM
+  name: Suppliers within PPM target on incoming inspection
+  gate: PVT
+  focus: supplier_quality
+  check:
+    type: ppm
+    max: 500
+- id: D-LQ-CAPA
+  name: No open CAPA from the previous build
+  gate: DVT
+  focus: launch_quality
+  check:
+    type: capa
+    n: 0
+- id: D-LQ-CAPA-PVT
+  name: No open CAPA before mass production
+  gate: MP
+  focus: launch_quality
+  check:
+    type: capa
+    n: 0
+- id: D-DQ-REV
+  name: Design review findings closed
+  gate: DVT
+  focus: design_quality
+  check:
+    type: capa
+    source: review
+    n: 0
+- id: D-FQ-LOOP
+  name: 'Field loop live: every field event linked to a failure mode, CAPAs closed'
+  gate: MP
+  focus: field_quality
+  check:
+    type: field_loop

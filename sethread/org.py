@@ -5,6 +5,7 @@ Stored per tenant at <data_root>/.org/org.yaml; applied to a project as one revi
 from __future__ import annotations
 import os, time, yaml
 from . import pdp as PDP
+from . import schema
 from .schema import TEAM_FOCUS
 
 TOOLS = [  # the tool catalog: Launch apps (built in) and integrations (drivers)
@@ -42,10 +43,10 @@ def default(tenant: str) -> dict:
     t = PDP.template("stage_gate") or {"phases": [], "gates": [], "deliverables": []}
     return {"name": tenant, "created": time.time(), "process": {"template": "stage_gate", "name": t.get("name", ""), "phases": t["phases"], "gates": t["gates"], "deliverables": t["deliverables"], "spacing_days": 45},
             "teams": [{"id": "TM-SE", "name": "Systems engineering", "kind": "functional", "focus": "systems"}, {"id": "TM-REL", "name": "Reliability", "kind": "functional", "focus": "reliability"},
-                      {"id": "TM-QA", "name": "Quality & compliance", "kind": "functional", "focus": "quality"}, {"id": "TM-TEST", "name": "Test", "kind": "functional", "focus": "test"},
+                      {"id": "TM-QA", "name": "Quality", "kind": "functional", "focus": "quality"}, {"id": "TM-DQ", "name": "Design quality", "kind": "functional", "focus": "design_quality"}, {"id": "TM-SQ", "name": "Supplier quality", "kind": "functional", "focus": "supplier_quality"}, {"id": "TM-LQ", "name": "Launch quality", "kind": "functional", "focus": "launch_quality"}, {"id": "TM-FQ", "name": "Field quality", "kind": "functional", "focus": "field_quality"}, {"id": "TM-COMP", "name": "Regulatory compliance", "kind": "functional", "focus": "compliance"}, {"id": "TM-ID", "name": "Design studio", "kind": "functional", "focus": "industrial design"}, {"id": "TM-TEST", "name": "Test", "kind": "functional", "focus": "test"},
                       {"id": "TM-MFG", "name": "Manufacturing", "kind": "functional", "focus": "manufacturing"}, {"id": "TM-SC", "name": "Supply chain", "kind": "functional", "focus": "sourcing"}, {"id": "TM-PM", "name": "Program", "kind": "functional", "focus": "program"},
                       {"id": "TM-SVC", "name": "Service", "kind": "functional", "focus": "service"}, {"id": "TM-MKT", "name": "Marketing", "kind": "functional", "focus": "marketing"}, {"id": "TM-SALES", "name": "Sales", "kind": "functional", "focus": "sales"},
-                      {"id": "TM-FIN", "name": "Finance", "kind": "functional", "focus": "finance"}, {"id": "TM-HR", "name": "People", "kind": "functional", "focus": "hr"}, {"id": "TM-FAC", "name": "Facilities", "kind": "functional", "focus": "facilities"}, {"id": "TM-LEGAL", "name": "Legal", "kind": "functional", "focus": "legal"}, {"id": "TM-PROC", "name": "Procurement", "kind": "functional", "focus": "procurement"}],
+                      {"id": "TM-FIN", "name": "Finance", "kind": "functional", "focus": "finance"}, {"id": "TM-HR", "name": "People", "kind": "functional", "focus": "hr"}, {"id": "TM-FAC", "name": "Facilities", "kind": "functional", "focus": "facilities"}, {"id": "TM-LEGAL", "name": "Legal", "kind": "functional", "focus": "legal"}, {"id": "TM-PROC", "name": "Procurement", "kind": "functional", "focus": "procurement"}, {"id": "TM-IND", "name": "Industrialization", "kind": "functional", "focus": "industrialization"}, {"id": "TM-LOG", "name": "Logistics", "kind": "functional", "focus": "logistics"}],
             "members": [], "tools": [{"id": x["id"], "enabled": x["default"], "config": x.get("config", {})} for x in TOOLS],
             "policy": {"auto_apply_kinds": ["fm_assessments", "work_items", "notes", "tables"], "require_review_kinds": ["requirements", "interfaces", "gates", "parts"]}, "focus_options": TEAM_FOCUS}
 
@@ -53,7 +54,7 @@ def load(data_root: str, tenant: str) -> dict:
     p = path(data_root)
     if os.path.exists(p): o = yaml.safe_load(open(p)) or {}
     else: o = {}
-    d = default(tenant); d.update({k: v for k, v in o.items() if v is not None}); d["focus_options"] = TEAM_FOCUS; d["tool_catalog"] = TOOLS; d["roles"] = ROLES
+    d = default(tenant); d.update({k: v for k, v in o.items() if v is not None}); d["focus_options"] = TEAM_FOCUS; d["departments"] = schema.DEPARTMENTS; d["quality_halves"] = schema.QUALITY_HALVES; d["tool_catalog"] = TOOLS; d["roles"] = ROLES
     # process variants: a multi-product organization keeps several (platform, derivative, accessory…); `process` is the default one
     if not d.get("processes"): d["processes"] = [{"id": "default", **d["process"]}]
     if not any(x.get("id") == d.get("default_process", "default") for x in d["processes"]): d["default_process"] = d["processes"][0]["id"]

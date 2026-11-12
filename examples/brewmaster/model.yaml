@@ -21,6 +21,8 @@ meta:
       PVT: 600
     annual_volume: 150000
     incoterm: FCA Haiphong
+    ppm_target: 500
+    units_in_field: 0
 stakeholders:
   STK-CONSUMER:
     name: Household consumer
@@ -692,10 +694,13 @@ parts:
     parent: P-BM1
     attrs:
       cost_usd: 6.4
+      visible: 'yes'
+      cmf: 'PP matte black RAL 9005, stainless trim #4 brushed'
     discipline: mechanical
     context: false
-    make_buy: make
+    make_buy: buy
     owner_team: TM-ID
+    supplier: SUP-05
   P-RES:
     name: 1.6 L reservoir with level sensor
     type: 1.6 L reservoir with level sensor
@@ -706,8 +711,9 @@ parts:
       cost_usd: 2.1
     discipline: mechanical
     context: false
-    make_buy: make
+    make_buy: buy
     owner_team: TM-THERM
+    supplier: SUP-05
   P-LEVEL:
     name: Capacitive level sensor
     type: Capacitive level sensor
@@ -798,8 +804,9 @@ parts:
       user_replaceable: 'yes'
     discipline: mechanical
     context: false
-    make_buy: make
+    make_buy: buy
     owner_team: TM-BREW
+    supplier: SUP-05
   P-CARAFE:
     name: 1.5 L glass carafe
     type: 1.5 L glass carafe
@@ -808,6 +815,7 @@ parts:
       material: borosilicate glass
       cost_usd: 6.1
       user_replaceable: 'yes'
+      visible: 'yes'
     discipline: mechanical
     context: false
     make_buy: buy
@@ -892,6 +900,8 @@ parts:
     attrs:
       cost_usd: 7.3
       field_replaceable: 'yes'
+      visible: 'yes'
+      cmf: 2.4" IPS, black glass bezel, aluminium dial
     discipline: electrical
     context: false
     make_buy: make
@@ -1683,7 +1693,7 @@ teams:
     - MOE-10
     - MOE-12
   TM-ID:
-    name: Industrial design & enclosure
+    name: Design studio & enclosure
     kind: subsystem
     discipline: mechanical
     lead: ''
@@ -1700,7 +1710,7 @@ teams:
     lead: ''
     members: []
   TM-COMP:
-    name: Compliance
+    name: Regulatory compliance
     kind: functional
     focus: compliance
     lead: ''
@@ -1789,6 +1799,42 @@ teams:
     focus: procurement
     lead: ''
     members: []
+  TM-DQ:
+    name: Design quality
+    kind: functional
+    focus: design_quality
+    lead: ''
+    members: []
+  TM-SQ:
+    name: Supplier quality
+    kind: functional
+    focus: supplier_quality
+    lead: ''
+    members: []
+  TM-LQ:
+    name: Launch quality
+    kind: functional
+    focus: launch_quality
+    lead: ''
+    members: []
+  TM-FQ:
+    name: Field quality
+    kind: functional
+    focus: field_quality
+    lead: ''
+    members: []
+  TM-IND:
+    name: Industrialization
+    kind: functional
+    focus: industrialization
+    lead: ''
+    members: []
+  TM-LOG:
+    name: Logistics
+    kind: functional
+    focus: logistics
+    lead: ''
+    members: []
 process_steps:
   PS-01:
     name: Mold and trim housing
@@ -1870,6 +1916,17 @@ suppliers:
     risk: no UL file yet
     owner: TM-PROC
     lead_time_d: 70
+  SUP-05:
+    name: Mold-Viet (housing, basket, reservoir tooling)
+    parts:
+    - P-ENCL
+    - P-BASKET
+    - P-RES
+    status: approved
+    risk: low
+    owner: TM-IND
+    lead_time_d: 60
+    agreement: MSA-2026-021
 work_items: {}
 findings: {}
 handoffs: {}
@@ -2009,3 +2066,100 @@ quotes:
     tooling_usd: 38000
     status: requested
     date: '2026-11-10'
+tooling:
+  TL-01:
+    part: P-ENCL
+    supplier: SUP-05
+    tool_id: MV-26-0117
+    type: injection mold
+    cavities: 1
+    cost_usd: 185000
+    owner: customer
+    quote: null
+    kickoff: '2026-11-20'
+    t0: '2027-01-25'
+    t1: '2027-02-20'
+    t2: ''
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    fai: ''
+    capacity_per_week: 4000
+  TL-02:
+    part: P-BASKET
+    supplier: SUP-05
+    tool_id: MV-26-0118
+    type: injection mold
+    cavities: 2
+    cost_usd: 42000
+    owner: customer
+    kickoff: '2026-11-20'
+    t0: '2027-01-15'
+    t1: '2027-02-10'
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 8000
+  TL-03:
+    part: P-RES
+    supplier: SUP-05
+    tool_id: ''
+    type: injection mold (Tritan)
+    cavities: 1
+    cost_usd: 61000
+    owner: customer
+    kickoff: ''
+    status: quoted
+    ppap: not started
+    ppap_level: 3
+inspections:
+  INS-01:
+    date: '2026-11-05'
+    part: P-TB
+    stage: incoming
+    qty: 40
+    defects: 1
+    supplier: SUP-01
+    lot: TT-L2611
+    defect_codes:
+    - NTC lead bent
+    disposition: use-as-is after rework
+    by: TM-SQ
+  INS-02:
+    date: '2026-11-06'
+    part: P-RADIO
+    stage: incoming
+    qty: 150
+    defects: 0
+    supplier: SUP-02
+    lot: ESP-D7781
+    by: TM-SQ
+  INS-03:
+    date: '2026-11-08'
+    part: P-PSU
+    stage: incoming
+    qty: 60
+    defects: 3
+    supplier: SUP-03
+    lot: HLK-2611
+    defect_codes:
+    - output ripple > spec
+    disposition: reject lot
+    by: TM-SQ
+capa:
+  CAPA-01:
+    title: PSU output ripple above spec on incoming lot HLK-2611
+    source: inspection
+    source_id: INS-03
+    parts:
+    - P-PSU
+    fm: ''
+    containment: lot rejected; 10 known-good units from prior lot for EVT
+    root_cause: ''
+    corrective: ''
+    preventive: ''
+    verification_test: TST-11
+    owner: TM-SQ
+    team: TM-SQ
+    due: '2026-12-15'
+    status: open

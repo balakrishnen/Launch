@@ -156,6 +156,46 @@ raise a program risk and a work item for every part that is LATE or whose MOQ ex
 needs a second source: find one in the supplier records or propose a supplier with status candidate. Set meta.business.builds {gate: units} if
 missing. Never invent a price: quotes come from suppliers; estimates are marked status requested with notes.""",
         kinds=["quotes", "suppliers", "parts", "risks", "work_items"]),
+    "design_quality": dict(
+        title="Design quality — reviews, DFMEA completeness, perceived quality",
+        prompt="""Stage: design quality. Every design review (reviews kind) has findings with owners and due dates; every High-AP failure mode has a
+test; visible parts carry a CMF spec (attrs visible=yes, cmf=...) and perceived-quality criteria (notes kind design_quality). Audit the DFMEA
+for completeness (unassessed candidates, screened items with weak reasons), raise findings (source design) for what is missing and work items
+for the owning team. Open a CAPA (source review) for any finding that recurs.""",
+        kinds=["findings", "reviews", "capa", "notes", "work_items"]),
+    "supplier_quality": dict(
+        title="Supplier quality — PPM, PPAP, incoming inspection",
+        prompt="""Stage: supplier quality. Every buy part has an incoming inspection plan (inspections records as lots arrive: date, part, stage
+incoming, qty, defects, defect codes, disposition); PPM per supplier is tracked against meta.business.ppm_target; every tool has a PPAP status and
+an FAI on T1. For suppliers over target or any rejected lot open a CAPA (source inspection or supplier) with containment, root cause, corrective
+and preventive actions and a verification test; escalate single-source suppliers over target as program risks.""",
+        kinds=["inspections", "capa", "tooling", "risks", "work_items"]),
+    "launch_quality": dict(
+        title="Launch quality — builds, in-process and end-of-line",
+        prompt="""Stage: launch. For each build (EVT/DVT/PVT) record in-process and end-of-line inspections (stage in-process | eol, build gate
+id, station, qty, defects, defect codes); compute first-pass yield; every process step has a PFMEA and control plan; open findings and CAPAs are
+closed before the next build. Propose work items for the top defect codes with the manufacturing team as owner.""",
+        kinds=["inspections", "capa", "findings", "work_items"]),
+    "field_quality": dict(
+        title="Field quality — the loop from the field back to the design",
+        prompt="""Stage: field. Every field event is linked to a failure mode (fm) — create the assessment if none fits; compute the Pareto and the
+rate per 1,000 units (meta.business.units_in_field); for the top items open a CAPA (source field) that names containment, root cause,
+corrective action on the design or process, the verification test, and the engineering team that owns it; a CAPA closes only when the test
+passes. Feed High-AP modes without a diagnostic back to the service and firmware teams.""",
+        kinds=["field_events", "capa", "fm_assessments", "work_items"]),
+    "industrialization": dict(
+        title="Industrialization — tooling, PPAP, launch readiness",
+        prompt="""Stage: industrialize. For every molded, stamped, cast or die-cut part create a tooling record (part, supplier, type, cavities, cost,
+owner, quote) and drive it kick-off → T0 → T1 → T2 against the first build that needs it (meta.business.builds); T1 must land before the build.
+Run dfx_review manufacturing and assembly and turn fails into part-attribute patches or work items; PPAP level 3 (or FAI) approved before PVT;
+check weekly capacity against annual volume. Raise program risks for any tool late to kick-off.""",
+        kinds=["tooling", "quotes", "risks", "work_items"]),
+    "logistics": dict(
+        title="Logistics — packaging, freight, incoterms",
+        prompt="""Stage: ship. Packaging is a part (with ISTA transport tests in the model); every quote carries an incoterm; long-lead imports have
+freight lead time added to procurement lead times; notes (kind logistics) hold the freight plan. Propose the packaging part, its tests and the
+missing incoterms as patches.""",
+        kinds=["parts", "tests", "quotes", "notes", "work_items"]),
     "service": dict(
         title="Service — field loop, spares and repairability",
         prompt="""Stage: support. Mark field-replaceable and user-replaceable parts (attrs field_replaceable / user_replaceable yes), make sure every
@@ -170,4 +210,4 @@ diagnostics, requirements that are not testable as written, screened FMEA candid
         kinds=[]),
 }
 
-ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "marketing", "sales", "finance", "people", "facilities", "legal", "procurement", "service", "reviewer"]
+ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "marketing", "sales", "finance", "people", "facilities", "legal", "procurement", "design_quality", "supplier_quality", "launch_quality", "field_quality", "industrialization", "logistics", "service", "reviewer"]

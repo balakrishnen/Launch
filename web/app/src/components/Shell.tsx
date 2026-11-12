@@ -15,10 +15,10 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['diagrams', 'SysML v2 diagrams'], ['views', 'Rendered views']],
   'Design definition': [['eda', 'Electrical (native EDA)'], ['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
   'System analysis': [['dfx', 'Design for X'], ['trades', 'Trade studies'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
-  'Implementation': [['form/procurement', 'Procurement plan', 'quotes'], ['form/avl', 'AVL / sourcing'], ['form/cost', 'Product cost roll-up']],
+  'Implementation': [['form/tooling', 'Tooling & PPAP', 'tooling'], ['form/procurement', 'Procurement plan', 'quotes'], ['form/avl', 'AVL / sourcing'], ['form/cost', 'Product cost roll-up']],
   'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
   'Verification': [['runs', 'Test results', 'test_runs'], ['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
-  'Transition': [['form/pfmea', 'PFMEA'], ['form/control_plan', 'Control plan']],
+  'Transition': [['form/pfmea', 'PFMEA'], ['form/control_plan', 'Control plan'], ['form/ppm', 'Supplier PPM', 'inspections']],
   'Validation': [['matrix/needs/requirements', 'Needs validated'], ['collection/moes', 'Measures of effectiveness'], ['form/claims', 'Claims substantiation', 'claims'], ['form/markets', 'Market readiness']],
   'Operation': [['form/fracas', 'FRACAS']],
   'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
@@ -31,7 +31,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Configuration management': [['history', 'History & baselines']],
   'Information management': [['tables', 'Tables (spreadsheets)', 'tables'], ['notes', 'Notes & specs', 'notes'], ['import', 'Import spreadsheet'], ['documents', 'Source documents'], ['docs', 'Design documentation'], ['sysml', 'SysML v2 text'], ['artifacts', 'Artifact library']],
   'Measurement': [['scorecard', 'Scorecard'], ['gaps', 'Open gaps']],
-  'Quality assurance': [['form/findings', 'Findings log'], ['inbox', 'Review inbox']],
+  'Quality assurance': [['form/capa', 'CAPA / 8D log', 'capa'], ['form/findings', 'Findings log'], ['inbox', 'Review inbox']],
 }
 
 export function Shell() {

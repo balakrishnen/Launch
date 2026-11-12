@@ -559,7 +559,7 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         m = S.store.load(); rep = derive.coverage_report(m)
         return {"id": pid, "user": user, "root": S.root, "meta": m["meta"], "counts": {k: len(m[k]) for k in schema.KINDS}, "teams": m.get("teams", {}), "stage": lifecycle.convergence(m), "stage_of": STAGE_OF, "lifecycle": schema.LIFECYCLE, "processes": [{"name": n, "stage": st, "kinds": ks} for n, st, ks in schema.PROCESSES], "management": [{"name": n, "kinds": ks} for n, ks in schema.MANAGEMENT], "schema": {k: {"req": v["req"], "opt": v["opt"], "refs": v["refs"]} for k, v in schema.KINDS.items()}, "fmea_counts": rep["counts"],
                 "coverage": {k: (len(v) if hasattr(v, "__len__") and not isinstance(v, dict) else v) for k, v in rep.items() if k != "counts"},
-                "staged": len(S.store.list_patches("staged")), "busy": S.busy, "auto": S.auto, "toolchain": S.tc, "roles": {k: v["title"] for k, v in R.ROLES.items()}, "role_order": R.ORDER}
+                "staged": len(S.store.list_patches("staged")), "busy": S.busy, "auto": S.auto, "toolchain": S.tc, "roles": {k: v["title"] for k, v in R.ROLES.items()}, "role_order": R.ORDER, "departments": schema.DEPARTMENTS, "quality_halves": schema.QUALITY_HALVES}
 
     @app.get("/api/p/{pid}/collection/{kind}")
     def collection(pid: str, kind: str, user: str = U):
