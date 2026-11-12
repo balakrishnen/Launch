@@ -7,14 +7,14 @@ import { Building2, GitBranch, Users, UserPlus, Plug, Shield, Save } from 'lucid
 import { api } from '../api'
 
 type Col = { key: string; name: string; type?: 'text' | 'number' | 'list' | 'bool' | 'select'; options?: string[]; width?: number }
-const TABS = ['Process', 'Teams', 'Members', 'Tools', 'Policy']
+const TABS = ['Process', 'Structure', 'Teams', 'Members', 'Tools', 'Policy']
 
 export function Org() {
   const nav = useNavigate()
   const [o, setO] = useState<any>(null); const [tab, setTab] = useState('Process'); const [msg, setMsg] = useState(''); const [dirty, setDirty] = useState(false); const [tpls, setTpls] = useState<any>(null); const [ps, setPs] = useState<any[]>([])
   useEffect(() => { api.get('/org').then(setO).catch(e => setMsg(e.message)); api.get('/org/templates').then(setTpls).catch(() => { }); api.get('/projects').then(setPs).catch(() => { }) }, [])
   const toast = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 2600) }
-  const save = async () => { try { const r = await api.post('/org', { name: o.name, processes: o.processes, default_process: o.default_process, teams: o.teams, members: o.members, tools: o.tools, policy: o.policy }); setO(r); setDirty(false); toast('Organization saved') } catch (e: any) { toast(e.message) } }
+  const save = async () => { try { const r = await api.post('/org', { name: o.name, processes: o.processes, default_process: o.default_process, structure: o.structure, teams: o.teams, members: o.members, tools: o.tools, policy: o.policy }); setO(r); setDirty(false); toast('Organization saved') } catch (e: any) { toast(e.message) } }
   const set = (k: string, v: any) => { setO((x: any) => ({ ...x, [k]: v })); setDirty(true) }
   const [pv, setPv] = useState<string>('')
   const cur = (o && (o.processes || []).find((x: any) => x.id === (pv || o.default_process))) || o?.process
@@ -42,9 +42,10 @@ export function Org() {
         help={<>Checks the model evaluates: <code>{'{"type":"coverage","key":"requirements_without_tests","max":0}'}</code> · <code>{'{"type":"scope","key":"fmea_complete"}'}</code> (subsystem teams: boundary_items, req_coverage, fmea_complete, tests_passed) · <code>{'{"type":"attachment","roles":["cad"]}'}</code> · <code>{'{"type":"note","kind":"report","status":"final"}'}</code> · <code>{'{"type":"collection","kind":"process_steps","n":1}'}</code> · <code>{'{"type":"tests_passed_share","min":1}'}</code></>} />
     </div>}
 
+    {tab === 'Structure' && <StructureTab o={o} set={set} />}
     {tab === 'Teams' && <div className="card" style={{ marginBottom: 10 }}><h4>Departments</h4><div className="muted small" style={{ margin: '4px 0 8px' }}>A team's focus places it in a department. Quality does both halves — design quality and manufacturing quality; regulatory compliance and the design studio sit in Engineering; supply chain is sourcing, procurement, industrialization and logistics.</div>
       <div className="grid3" style={{ gap: 10 }}>{Object.entries((o.departments || {}) as Record<string, string[]>).map(([d, fs]) => <div key={d}><b className="small">{d}</b><div className="row" style={{ flexWrap: 'wrap', gap: 4, marginTop: 4 }}>{fs.map(f => <span key={f} className="pill" style={{ fontWeight: 400 }}>{f.replace(/_/g, ' ')}{o.teams.some((t: any) => t.focus === f) ? '' : ' · none'}</span>)}</div></div>)}</div></div>}
-    {tab === 'Teams' && <Table title="Team catalog" icon={<Users size={14} />} rows={o.teams} onChange={rows => set('teams', rows)} idPrefix="TM-" cols={[{ key: 'id', name: 'id' }, { key: 'name', name: 'name', width: 200 }, { key: 'kind', name: 'kind', type: 'select', options: ['functional', 'subsystem'] }, { key: 'focus', name: 'focus (functional)', type: 'select', options: ['', ...o.focus_options] }, { key: 'discipline', name: 'discipline' }, { key: 'lead', name: 'lead (email)' }, { key: 'parts', name: 'scope root parts (subsystem; per project)', type: 'list' }]}
+    {tab === 'Teams' && <Table title="Team catalog" icon={<Users size={14} />} rows={o.teams} onChange={rows => set('teams', rows)} idPrefix="TM-" cols={[{ key: 'id', name: 'id' }, { key: 'name', name: 'name', width: 200 }, { key: 'kind', name: 'kind', type: 'select', options: ['functional', 'subsystem'] }, { key: 'unit', name: 'unit (org structure)', type: 'select', options: ['', ...(o.structure || []).map((u: any) => u.id)] }, { key: 'focus', name: 'view override (built-in)', type: 'select', options: ['', ...o.focus_options] }, { key: 'discipline', name: 'discipline' }, { key: 'lead', name: 'lead (email)' }, { key: 'parts', name: 'scope root parts (subsystem; per project)', type: 'list' }]}
       help="Subsystem teams are product-specific (wash system, brew performance, BMS, drive). Define them here with the names the company uses; their scope (root parts, logical components, MoEs) is set per project, or proposed by the agent from the architecture." />}
 
     {tab === 'Members' && <Table title="Members" icon={<UserPlus size={14} />} rows={o.members} onChange={rows => set('members', rows)} idPrefix="" idKey="email" cols={[{ key: 'email', name: 'email', width: 220 }, { key: 'name', name: 'name' }, { key: 'role', name: 'role', type: 'select', options: o.roles }, { key: 'teams', name: 'teams', type: 'list' }, { key: 'title', name: 'title' }]}
@@ -82,4 +83,35 @@ function Table({ title, icon, rows, onChange, cols, idPrefix, idKey = 'id', help
                 : <input className="field" style={{ padding: '3px 6px' }} value={r[c.key] ?? ''} onChange={e => upd(i, c.key, e.target.value)} />}</td>)}</tr>)}
       {!rows.length && <tr><td colSpan={cols.length + 1} className="muted" style={{ padding: 14 }}>Empty — add a row.</td></tr>}</tbody></table></div>
     {help && <div className="muted small" style={{ marginTop: 6 }}>{help}</div>}</div>
+}
+
+
+// The organization's own structure: a tree of units (department → sub-function → …). Each unit may adopt a built-in view
+// (the cross-cutting workspace derived from the graph); teams point at a unit and inherit the nearest view above them.
+function StructureTab({ o, set }: { o: any; set: (k: string, v: any) => void }) {
+  const units: any[] = o.structure || []
+  const kids = (id: string | null) => units.filter(u => (u.parent || null) === id)
+  const [sel, setSel] = useState<string | null>(null)
+  const upd = (id: string, patch: any) => set('structure', units.map(u => u.id === id ? { ...u, ...patch } : u))
+  const add = (parent: string | null) => { const base = (parent ? parent + '-' : 'U-') + 'NEW'; let id = base, n = 1; while (units.some(u => u.id === id)) id = base + (++n); set('structure', [...units, { id, name: 'New unit', parent, view: '', description: '' }]); setSel(id) }
+  const del = (id: string) => { const drop = new Set<string>(); const walk = (x: string) => { drop.add(x); kids(x).forEach(k => walk(k.id)) }; walk(id); set('structure', units.filter(u => !drop.has(u.id))); setSel(null) }
+  const teamsOf = (id: string) => (o.teams || []).filter((t: any) => t.unit === id)
+  const Node = ({ u, depth }: { u: any; depth: number }) => <div>
+    <div className={'row between' + (sel === u.id ? ' sel' : '')} style={{ padding: '5px 8px', paddingLeft: 8 + depth * 18, borderRadius: 8, background: sel === u.id ? 'var(--surface-3)' : undefined, cursor: 'pointer' }} onClick={() => setSel(u.id)}>
+      <span className="row" style={{ gap: 8 }}><b style={{ fontWeight: depth ? 500 : 600 }}>{u.name}</b>{u.view && <span className="pill" style={{ fontWeight: 400 }}>view: {u.view.replace(/_/g, ' ')}</span>}{teamsOf(u.id).length > 0 && <span className="muted small">{teamsOf(u.id).map((t: any) => t.name).join(', ')}</span>}</span>
+      <span className="row" style={{ gap: 4 }} onClick={e => e.stopPropagation()}><button className="btn ghost sm" onClick={() => add(u.id)}>+ sub-unit</button>{!u.fixed && <button className="btn ghost sm" onClick={() => del(u.id)} style={{ color: 'var(--bad)' }}>remove</button>}{u.fixed && <span className="muted small">fixed</span>}</span></div>
+    {kids(u.id).map(k => <Node key={k.id} u={k} depth={depth + 1} />)}</div>
+  const cur = units.find(u => u.id === sel)
+  return <div className="grid2" style={{ gap: 14, alignItems: 'start' }}>
+    <div className="card"><div className="row between"><h4>Organization structure</h4></div>
+      <div className="muted small" style={{ margin: '4px 0 10px' }}>The eight departments are fixed by the platform — each has its own tab with its artifacts. Everything under them is yours: add, rename and nest sub-units (Engineering → Thermal → CAE…) and place teams in them. A unit may adopt a built-in view — the workspace Launch derives from the model for that function; teams inherit the nearest view above them.</div>
+      {kids(null).map(u => <Node key={u.id} u={u} depth={0} />)}{!units.length && <div className="empty">No structure yet — add a department.</div>}</div>
+    <div className="card">{cur ? <div className="stack" style={{ gap: 8 }}><h4>Unit</h4>
+      <label className="small muted">id</label><input className="field" value={cur.id} readOnly />
+      <label className="small muted">name</label><input className="field" value={cur.name} readOnly={!!cur.fixed} onChange={e => upd(cur.id, { name: e.target.value })} />
+      <label className="small muted">parent</label>{cur.fixed ? <input className="field" value="— fixed department" readOnly /> : <select className="field" value={cur.parent || ''} onChange={e => upd(cur.id, { parent: e.target.value || null })}>{units.filter(u => u.id !== cur.id).map(u => <option key={u.id} value={u.id}>{u.name} ({u.id})</option>)}</select>}
+      <label className="small muted">built-in view (what Launch derives for this unit)</label><select className="field" value={cur.view || ''} onChange={e => upd(cur.id, { view: e.target.value })}><option value="">— none / inherit from parent</option>{(o.views || o.focus_options || []).map((v: string) => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}</select>
+      <label className="small muted">description</label><textarea className="field" rows={3} value={cur.description || ''} onChange={e => upd(cur.id, { description: e.target.value })} />
+      <div className="small muted">Teams in this unit: {teamsOf(cur.id).map((t: any) => t.name).join(', ') || '— assign under Teams'}</div></div> : <div className="muted small">Select a unit to edit it. Built-in views: {(o.views || []).length}.</div>}</div>
+  </div>
 }

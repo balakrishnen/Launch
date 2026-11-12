@@ -385,8 +385,19 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def set_org(body: dict, user: str = U):
         o = ORG.load(org_root(), W.tenant)
         if ORG.role_of(o, user) not in ("admin", "program_manager"): raise HTTPException(403, "admins and program managers edit the organization")
-        for k in ("name", "process", "teams", "members", "tools", "policy"):
+        for k in ("name", "process", "processes", "default_process", "structure", "teams", "members", "tools", "policy"):
             if k in body: o[k] = body[k]
+        if "structure" in body: o["structure"] = ORG.enforce_fixed(o["structure"])
+        # structure hygiene: ids unique, parents exist, no cycles
+        ids = [u["id"] for u in o.get("structure", [])]
+        if len(ids) != len(set(ids)): raise HTTPException(400, "duplicate unit id in structure")
+        idx = {u["id"]: u for u in o.get("structure", [])}
+        for u in o.get("structure", []):
+            seen = set(); x = u.get("parent")
+            while x:
+                if x not in idx: raise HTTPException(400, f"unit {u['id']}: parent {x} does not exist")
+                if x in seen or x == u["id"]: raise HTTPException(400, f"unit {u['id']}: cycle in structure")
+                seen.add(x); x = idx[x].get("parent")
         ORG.save(org_root(), o); return get_org(user)
     @app.post("/api/org/apply/{pid}")
     def apply_org(pid: str, body: dict, user: str = U):
@@ -422,6 +433,28 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         value = {"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": user}
         return human_patch(pid, HumanPatch(ops=[{"op": "update" if rid in m.get("dfx_reviews", {}) else "add", "kind": "dfx_reviews", "id": rid, "value": value}], rationale=f"DfX {x}: {iid} → {body.get('status') or 'auto'}" + (f" — {body.get('note')}" if body.get("note") else ""), apply=True), user)
 
+    @app.get("/api/p/{pid}/departments")
+    def departments(pid: str, user: str = U):
+        """The department tabs: fixed departments with the org's sub-units, the project's teams in each, their gate deliverables and the department's artifacts with counts."""
+        S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant); mx = pdp.matrix(m)
+        units = o.get("structure", []); out = []
+        for dept in schema.DEPARTMENTS:
+            root = next((u for u in units if u["parent"] is None and u["name"] == dept), None)
+            sub = []
+            def walk(uid, depth):
+                for u in units:
+                    if u.get("parent") == uid: sub.append({**u, "depth": depth}); walk(u["id"], depth + 1)
+            if root: walk(root["id"], 1)
+            unit_ids = {root["id"]} | {u["id"] for u in sub} if root else set()
+            teams = [t for t, v in m.get("teams", {}).items() if (v.get("unit") in unit_ids) or (not v.get("unit") and schema.DEPARTMENT_OF.get(v.get("focus") or v.get("discipline") or "") == dept)]
+            deliv = []
+            for g, by_team in mx["cells"].items():
+                for t in teams:
+                    for d in by_team.get(t, []): deliv.append({**d, "gate": g, "team": t, "gate_date": m["gates"].get(g, {}).get("date", "")})
+            arts = [{"path": a[0], "label": a[1], "kind": a[2] if len(a) > 2 else None, "count": len(m.get(a[2], {})) if len(a) > 2 and a[2] in m else None} for a in schema.DEPARTMENT_ARTIFACTS.get(dept, [])]
+            out.append({"name": dept, "root": root, "units": sub, "teams": teams, "deliverables": deliv, "artifacts": arts, "focuses": schema.DEPARTMENTS[dept],
+                        "open": sum(1 for d in deliv if d.get("status") not in ("done", "n/a", "waived"))})
+        return out
     @app.get("/api/p/{pid}/rfq/{part}")
     def rfq(pid: str, part: str, user: str = U):
         from .. import business as B

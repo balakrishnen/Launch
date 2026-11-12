@@ -12,7 +12,7 @@ from sethread.web.server import STAGE_OF
 D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates')}
 for pid in pids:
     P = {}; g = lambda p: get(f'/api/p/{pid}{p}')
-    for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
+    for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/departments', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
         v = g(k);  P[k] = v if v is not None else {}
     for kind in list(schema.KINDS) + ['fmea', 'screened', 'unassessed', 'gaps', 'verification_matrix', 'certification_plan']: P['/collection/' + kind] = g('/collection/' + kind) or []
     for f in ['dfmea', 'dvpr', 'vcrm', 'reqspec', 'hazards', 'n2', 'n2l', 'icd', 'pugh', 'fta', 'drbfm', 'pfmea', 'control_plan', 'avl', 'risks', 'fracas', 'work_items', 'findings', 'handoffs', 'claims', 'cost', 'markets', 'staffing', 'procurement', 'ppm', 'capa', 'tooling']: P['/form/' + f] = g('/form/' + f)

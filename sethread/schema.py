@@ -51,7 +51,7 @@ KINDS: dict[str, dict[str, Any]] = {
     # Two kinds of team. subsystem: owns a slice of the architecture (scope = root parts and/or logical components; the closure is computed —
     # subtree, functions, requirements, boundary interfaces, failure modes, tests, MoEs). functional: cuts across all subsystems with a focus
     # (reliability, quality, safety, compliance, test, manufacturing, sourcing, program, systems, software…).
-    "teams": dict(req=["name"], opt={"kind": "functional", "discipline": "", "focus": "", "lead": "", "members": [], "parts": [], "lcs": [], "moes": []}, refs={"parts": "parts", "lcs": "logical_components", "moes": "moes"}),
+    "teams": dict(req=["name"], opt={"kind": "functional", "discipline": "", "focus": "", "unit": None, "unit_path": [], "lead": "", "members": [], "parts": [], "lcs": [], "moes": []}, refs={"parts": "parts", "lcs": "logical_components", "moes": "moes"}),
     "process_steps": dict(req=["name", "station"], opt={"seq": 0, "parts": [], "output": None, "characteristics": [], "controls": "", "cycle_s": None, "team": None, "eol_test": None}, refs={"parts": "parts", "output": "parts", "team": "teams", "eol_test": "tests"}),
     "suppliers": dict(req=["name"], opt={"parts": [], "status": "approved", "lead_time_d": None, "country": "", "risk": "", "second_source": None, "owner": ""}, refs={"parts": "parts", "second_source": "suppliers"}),
     "work_items": dict(req=["title", "owner", "status"], opt={"team": None, "due": "", "links": [], "gate": None, "priority": "P2", "notes": ""}, refs={"team": "teams", "gate": "gates"}),
@@ -99,6 +99,19 @@ DEPARTMENTS = {
     "Corporate": ["finance", "hr", "facilities", "legal"],
 }
 TEAM_FOCUS = [f for fs in DEPARTMENTS.values() for f in fs]
+# The artifacts each department owns — the department tab. (path, label, optional kind for counts). Life-cycle navigation is the other axis.
+DEPARTMENT_ARTIFACTS = {
+    "Engineering": [("collection/requirements", "Requirements", "requirements"), ("form/reqspec", "Requirement specification"), ("collection/functions", "Functions", "functions"), ("collection/logical_components", "Logical architecture", "logical_components"), ("collection/parts", "Parts / BOM", "parts"), ("collection/interfaces", "Interfaces", "interfaces"), ("form/icd", "ICD index"), ("diagrams", "SysML v2 diagrams"),
+                    ("eda", "Electrical (native EDA)"), ("trades", "Trade studies", "trades"), ("collection/arch_decisions", "Architecture decisions", "arch_decisions"), ("form/dfmea", "DFMEA"), ("form/fta", "Fault trees"), ("form/hazards", "Hazard register"), ("dfx", "Design for X"), ("collection/simulations", "Simulations", "simulations"),
+                    ("form/dvpr", "DVP&R"), ("form/vcrm", "VCRM / RTM"), ("runs", "Test results", "test_runs"), ("collection/regulations", "Regulations", "regulations"), ("form/certification", "Certification plan"), ("form/markets", "Market readiness"), ("budgets", "Mass / power / cost budgets")],
+    "Quality": [("form/findings", "Findings log", "findings"), ("collection/reviews", "Design reviews", "reviews"), ("form/capa", "CAPA / 8D log", "capa"), ("form/ppm", "Supplier PPM", "inspections"), ("collection/inspections", "Inspections", "inspections"), ("form/fracas", "FRACAS"), ("collection/field_events", "Field events", "field_events"), ("form/dfmea", "DFMEA (completeness)"), ("dfx/quality", "Design for quality"), ("inbox", "Review inbox")],
+    "Supply chain": [("form/avl", "AVL / sourcing", "suppliers"), ("collection/suppliers", "Suppliers", "suppliers"), ("form/procurement", "Procurement plan", "quotes"), ("collection/quotes", "Quotes", "quotes"), ("form/tooling", "Tooling & PPAP", "tooling"), ("collection/tooling", "Tooling", "tooling"), ("dfx/supply_chain", "Design for supply chain"), ("dfx/transportation", "Design for transportation")],
+    "Manufacturing": [("collection/process_steps", "Process steps", "process_steps"), ("form/pfmea", "PFMEA"), ("form/control_plan", "Control plan"), ("collection/inspections", "In-process / EoL inspections", "inspections"), ("dfx/manufacturing", "Design for manufacturing"), ("dfx/assembly", "Design for assembly"), ("dfx/testability", "Design for testability"), ("form/tooling", "Tooling & PPAP"), ("form/cost", "Cost roll-up (capex)")],
+    "Service": [("form/fracas", "FRACAS"), ("collection/field_events", "Field events", "field_events"), ("dfx/service", "Design for service"), ("dfx/maintainability", "Design for maintainability"), ("collection/parts", "FRUs (parts)", "parts"), ("notes", "Service notes & spares plan")],
+    "Program": [("pdp", "Development process & gates"), ("board", "Board"), ("timeline", "Timeline"), ("trend", "Trend"), ("form/risks", "Risk register", "risks"), ("form/handoffs", "Handoffs"), ("teams", "Teams & handoffs"), ("scorecard", "Scorecard"), ("history", "History & baselines")],
+    "Go-to-market": [("form/claims", "Claims substantiation", "claims"), ("form/markets", "Market readiness"), ("collection/moes", "Measures of effectiveness", "moes"), ("collection/stakeholders", "Stakeholders", "stakeholders"), ("notes", "Positioning & launch notes")],
+    "Corporate": [("form/cost", "Product cost roll-up"), ("form/staffing", "Staffing plan"), ("collection/teams", "Teams", "teams"), ("form/claims", "Claims (legal approval)"), ("collection/regulations", "Regulations"), ("notes", "Facility, IP & contract notes")],
+}
 DEPARTMENT_OF = {f: d for d, fs in DEPARTMENTS.items() for f in fs}
 QUALITY_HALVES = {"design quality": ["quality", "design_quality"], "manufacturing quality": ["quality", "supplier_quality", "launch_quality", "field_quality"]}
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]

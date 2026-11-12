@@ -232,7 +232,7 @@ def team_workspace(m, tid: str, store=None, threads: list | None = None) -> dict
     sub = subsystem_scope(m, tv) if tv.get("kind") == "subsystem" else None
     focus = None
     if tv.get("kind") != "subsystem":
-        fv = FOCUS_VIEWS.get(tv.get("focus") or tv.get("discipline") or "")
+        fv = FOCUS_VIEWS.get(tv.get("focus") or tv.get("discipline") or "")   # a custom unit with no view inherits nothing cross-cutting yet
         if fv:
             try: focus = {"name": tv.get("focus") or tv.get("discipline"), **fv(m, D.coverage_report(m))}
             except Exception: focus = None

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
+import { Building2, Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
 import { useProject } from '../state'
 import { FORMS, KIND_LABEL, STAGE_COLOR, stageColor, LIFECYCLE } from '../api'
 import { AgentDrawer } from './Agent'
@@ -100,6 +100,9 @@ function Tree() {
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />
     <Item to={`/p/${pid}/graph`} label="Graph" icon={<GitBranch size={17} />} />
+    {/* Departments — fixed top level; the organization defines sub-units and teams. Each department tab holds its artifacts. */}
+    <h4>Departments</h4>
+    {['Engineering', 'Quality', 'Supply chain', 'Manufacturing', 'Service', 'Program', 'Go-to-market', 'Corporate'].map(d => <Item key={d} to={`/p/${pid}/dept/${encodeURIComponent(d)}`} label={d} icon={<Building2 size={15} />} />)}
     {/* Life cycle per INCOSE SE Handbook / ISO 15288: stage → technical process → artifacts */}
     <h4>Life cycle</h4>
     {LIFECYCLE.map(st => { const procs = project.processes.filter(p => p.stage === st); const n = procs.reduce((a, p) => a + p.kinds.reduce((b, k) => b + (project.counts[k] || 0), 0), 0)

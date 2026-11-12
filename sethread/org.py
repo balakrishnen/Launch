@@ -39,6 +39,62 @@ ROLES = ["admin", "program_manager", "engineer", "reviewer", "viewer"]
 
 def path(data_root): return os.path.join(data_root, ".org", "org.yaml")
 
+# Built-in views a structure node can adopt: each is a cross-cutting workspace derived from the graph (lifecycle.FOCUS_VIEWS keys).
+# An organization's own sub-function (e.g. "Thermal CAE" under Engineering) picks the nearest built-in view, or none.
+VIEWS = list(schema.TEAM_FOCUS)
+
+def default_structure() -> list[dict]:
+    """The starter org structure as a tree: departments → sub-functions. Organizations rename, nest and extend it freely;
+    `view` ties a node to a built-in workspace. Teams point at a node by `unit`."""
+    out = []
+    for dept, focuses in schema.DEPARTMENTS.items():
+        did = "U-" + dept.upper().replace(" ", "-").replace("&", "AND")[:12]
+        single = len(focuses) == 1   # a one-function department is its own unit (Manufacturing, Program)
+        out.append({"id": did, "name": dept, "parent": None, "view": "quality" if dept == "Quality" else (focuses[0] if single else ""), "description": ""})
+        for f in focuses:
+            if f in ("quality",) or single: continue
+            out.append({"id": did + "-" + f.upper().replace(" ", "-").replace("_", "-")[:22], "name": f.replace("_", " ").capitalize(), "parent": did, "view": f, "description": ""})
+    # Quality's two halves as intermediate nodes
+    q = next(x for x in out if x["name"] == "Quality")
+    out.insert(out.index(q) + 1, {"id": q["id"] + "-DESIGN", "name": "Design quality", "parent": q["id"], "view": "design_quality", "description": "reviews, DFMEA completeness, perceived quality"})
+    out.insert(out.index(q) + 2, {"id": q["id"] + "-MFG", "name": "Manufacturing quality", "parent": q["id"], "view": "", "description": "supplier, launch and field quality"})
+    for x in out:
+        if x["parent"] == q["id"] and x["view"] in ("supplier_quality", "launch_quality", "field_quality"): x["parent"] = q["id"] + "-MFG"
+    out = [x for x in out if not (x["parent"] == q["id"] and x["view"] == "design_quality" and x["id"] != q["id"] + "-DESIGN")]
+    return out
+
+FIXED_DEPARTMENTS = list(schema.DEPARTMENTS.keys())
+
+def enforce_fixed(structure: list[dict]) -> list[dict]:
+    """Top-level units are the platform's fixed departments; organizations add, rename and nest sub-units under them."""
+    defaults = {u["name"]: u for u in default_structure() if u["parent"] is None}
+    by_name = {u["name"]: u for u in structure if not u.get("parent")}
+    out = []
+    for d in FIXED_DEPARTMENTS:
+        u = by_name.get(d) or defaults[d]; out.append({**u, "parent": None, "fixed": True})
+    ids = {u["id"] for u in out}
+    for u in structure:
+        if u.get("parent"): out.append({**u, "fixed": False})
+        elif u["name"] not in defaults: out.append({**u, "parent": out[0]["id"], "fixed": False})   # a stray top-level unit becomes a sub-unit of Engineering
+    return out
+
+def unit_index(org: dict) -> dict:
+    return {u["id"]: u for u in org.get("structure", [])}
+
+def unit_path(org: dict, uid: str | None) -> list[str]:
+    idx = unit_index(org); out = []
+    while uid and uid in idx and len(out) < 8: out.insert(0, idx[uid]["name"]); uid = idx[uid].get("parent")
+    return out
+
+def view_of(org: dict, team: dict) -> str:
+    """The built-in view for a team: its own focus, else the nearest ancestor unit's view."""
+    if team.get("focus"): return team["focus"]
+    idx = unit_index(org); uid = team.get("unit")
+    while uid and uid in idx:
+        if idx[uid].get("view"): return idx[uid]["view"]
+        uid = idx[uid].get("parent")
+    return ""
+
 def default(tenant: str) -> dict:
     t = PDP.template("stage_gate") or {"phases": [], "gates": [], "deliverables": []}
     return {"name": tenant, "created": time.time(), "process": {"template": "stage_gate", "name": t.get("name", ""), "phases": t["phases"], "gates": t["gates"], "deliverables": t["deliverables"], "spacing_days": 45},
@@ -47,14 +103,20 @@ def default(tenant: str) -> dict:
                       {"id": "TM-MFG", "name": "Manufacturing", "kind": "functional", "focus": "manufacturing"}, {"id": "TM-SC", "name": "Supply chain", "kind": "functional", "focus": "sourcing"}, {"id": "TM-PM", "name": "Program", "kind": "functional", "focus": "program"},
                       {"id": "TM-SVC", "name": "Service", "kind": "functional", "focus": "service"}, {"id": "TM-MKT", "name": "Marketing", "kind": "functional", "focus": "marketing"}, {"id": "TM-SALES", "name": "Sales", "kind": "functional", "focus": "sales"},
                       {"id": "TM-FIN", "name": "Finance", "kind": "functional", "focus": "finance"}, {"id": "TM-HR", "name": "People", "kind": "functional", "focus": "hr"}, {"id": "TM-FAC", "name": "Facilities", "kind": "functional", "focus": "facilities"}, {"id": "TM-LEGAL", "name": "Legal", "kind": "functional", "focus": "legal"}, {"id": "TM-PROC", "name": "Procurement", "kind": "functional", "focus": "procurement"}, {"id": "TM-IND", "name": "Industrialization", "kind": "functional", "focus": "industrialization"}, {"id": "TM-LOG", "name": "Logistics", "kind": "functional", "focus": "logistics"}],
-            "members": [], "tools": [{"id": x["id"], "enabled": x["default"], "config": x.get("config", {})} for x in TOOLS],
+            "structure": default_structure(), "members": [], "tools": [{"id": x["id"], "enabled": x["default"], "config": x.get("config", {})} for x in TOOLS],
             "policy": {"auto_apply_kinds": ["fm_assessments", "work_items", "notes", "tables"], "require_review_kinds": ["requirements", "interfaces", "gates", "parts"]}, "focus_options": TEAM_FOCUS}
 
 def load(data_root: str, tenant: str) -> dict:
     p = path(data_root)
     if os.path.exists(p): o = yaml.safe_load(open(p)) or {}
     else: o = {}
-    d = default(tenant); d.update({k: v for k, v in o.items() if v is not None}); d["focus_options"] = TEAM_FOCUS; d["departments"] = schema.DEPARTMENTS; d["quality_halves"] = schema.QUALITY_HALVES; d["tool_catalog"] = TOOLS; d["roles"] = ROLES
+    d = default(tenant); d.update({k: v for k, v in o.items() if v is not None}); d["focus_options"] = TEAM_FOCUS; d["views"] = VIEWS; d["departments"] = schema.DEPARTMENTS; d["quality_halves"] = schema.QUALITY_HALVES;
+    d["structure"] = enforce_fixed(d.get("structure") or default_structure())
+    # teams without a unit are placed under the unit whose view equals their focus
+    by_view = {u["view"]: u["id"] for u in d["structure"] if u.get("view")}
+    for t in d.get("teams", []):
+        if not t.get("unit") and t.get("focus") in by_view: t["unit"] = by_view[t["focus"]]
+    d["tool_catalog"] = TOOLS; d["roles"] = ROLES
     # process variants: a multi-product organization keeps several (platform, derivative, accessory…); `process` is the default one
     if not d.get("processes"): d["processes"] = [{"id": "default", **d["process"]}]
     if not any(x.get("id") == d.get("default_process", "default") for x in d["processes"]): d["default_process"] = d["processes"][0]["id"]
@@ -67,7 +129,7 @@ def process_variant(org: dict, vid: str | None) -> dict:
 
 def save(data_root: str, org: dict) -> dict:
     os.makedirs(os.path.dirname(path(data_root)), exist_ok=True)
-    keep = {k: org.get(k) for k in ("name", "created", "processes", "default_process", "teams", "members", "tools", "policy")}
+    keep = {k: org.get(k) for k in ("name", "created", "processes", "default_process", "structure", "teams", "members", "tools", "policy")}
     if not keep.get("processes"): keep["processes"] = [{"id": "default", **(org.get("process") or {})}]
     keep["process"] = next((x for x in keep["processes"] if x["id"] == keep.get("default_process")), keep["processes"][0])
     yaml.safe_dump(keep, open(path(data_root), "w"), sort_keys=False, allow_unicode=True); return keep
@@ -80,7 +142,7 @@ def apply_ops(org: dict, m: dict, start_date: str, variant: str | None = None, o
     for u in org.get("members", []):
         for t in u.get("teams", []): members_of.setdefault(t, []).append(u["email"])
     for t in org.get("teams", []):
-        v = {"name": t["name"], "kind": t.get("kind", "functional"), "focus": t.get("focus", ""), "discipline": t.get("discipline", ""), "lead": t.get("lead", ""), "members": sorted(set(members_of.get(t["id"], [])) | set(m.get("teams", {}).get(t["id"], {}).get("members", [])))}
+        v = {"name": t["name"], "kind": t.get("kind", "functional"), "focus": t.get("focus") or view_of(org, t), "unit": t.get("unit"), "unit_path": unit_path(org, t.get("unit")), "discipline": t.get("discipline", ""), "lead": t.get("lead", ""), "members": sorted(set(members_of.get(t["id"], [])) | set(m.get("teams", {}).get(t["id"], {}).get("members", [])))}
         if t.get("kind") == "subsystem": v.update(parts=[p for p in t.get("parts", []) if p in m["parts"]], lcs=[l for l in t.get("lcs", []) if l in m["logical_components"]], moes=[x for x in t.get("moes", []) if x in m["moes"]])
         ops.append({"op": "update" if t["id"] in m.get("teams", {}) else "add", "kind": "teams", "id": t["id"], "value": v})
     pr = process_variant(org, variant) or {}
