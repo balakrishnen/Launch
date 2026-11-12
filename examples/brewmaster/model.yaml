@@ -757,6 +757,7 @@ parts:
       food_contact: stainless 304
       cost_usd: 9.8
       field_replaceable: 'yes'
+      cost_actual_usd: 10.55
     discipline: electrical
     context: false
     make_buy: buy
@@ -888,6 +889,7 @@ parts:
       package: module
       lifecycle: active
       cost_usd: 2.1
+      cost_actual_usd: 2.05
     discipline: electrical
     context: false
     make_buy: buy
@@ -2163,3 +2165,128 @@ capa:
     team: TM-SQ
     due: '2026-12-15'
     status: open
+change_orders:
+  ECO-001:
+    title: 'Shower head: 19 → 23 holes for bed wetting ≥ 90 %'
+    reason: TST-18 dye test showed 84 % wetting at 60 s
+    affected:
+    - P-SHOWER
+    - R-17
+    status: in review
+    approvers:
+    - TM-BREW
+    - TM-IND
+    approvals:
+      TM-BREW:
+        decision: approved
+        by: bala@twinmo.ai
+        date: '2026-11-10'
+        note: CFD shows 92 %
+    effectivity: DVT build
+    owner: TM-BREW
+    date: '2026-11-09'
+    source: TST-18
+work_orders:
+  WO-EVT-01:
+    build: EVT
+    qty: 25
+    line: Line 1 (Haiphong)
+    routing:
+    - PS-03
+    - PS-04
+    - PS-05
+    status: in progress
+    start: '2027-03-18'
+units:
+  U-WO-EVT-01-BM1-0001:
+    serial: BM1-0001
+    work_order: WO-EVT-01
+    components:
+      P-TB: TT-L2611-007
+      P-MAIN: PCBA-26-0112
+      P-RADIO: ESP-D7781-0410
+      P-PSU: HLK-2611-003
+    stations:
+      PS-03:
+        result: pass
+        date: '2027-03-18'
+      PS-04:
+        result: pass
+        date: '2027-03-18'
+      PS-05:
+        result: pass
+        date: '2027-03-18'
+        data:
+          hipot_mA: 0.21
+          ground_bond_mohm: 42
+          brew_time_s: 338
+    status: complete
+    built: '2027-03-18'
+  U-WO-EVT-01-BM1-0002:
+    serial: BM1-0002
+    work_order: WO-EVT-01
+    components:
+      P-TB: TT-L2611-011
+      P-MAIN: PCBA-26-0113
+      P-RADIO: ESP-D7781-0411
+      P-PSU: HLK-2611-009
+    stations:
+      PS-03:
+        result: pass
+      PS-04:
+        result: pass
+      PS-05:
+        result: fail
+        defect_codes:
+        - brew_time > 360 s
+        data:
+          brew_time_s: 371
+    status: failed
+    built: '2027-03-18'
+  U-WO-EVT-01-BM1-0003:
+    serial: BM1-0003
+    work_order: WO-EVT-01
+    components:
+      P-TB: TT-L2611-012
+      P-MAIN: PCBA-26-0114
+    stations:
+      PS-03:
+        result: pass
+    status: in progress
+purchase_orders:
+  PO-0001:
+    supplier: SUP-01
+    status: partial
+    date: '2026-11-11'
+    lines:
+    - part: P-TB
+      qty: 120
+      unit_cost_usd: 10.4
+      quote: Q-01
+    incoterm: FCA
+    currency: USD
+    by: bala@twinmo.ai
+    receipts:
+    - part: P-TB
+      qty: 40
+      lot: TT-L2611
+      date: '2026-11-05'
+      unit_cost_usd: 10.55
+  PO-0002:
+    supplier: SUP-02
+    status: received
+    date: '2026-10-22'
+    lines:
+    - part: P-RADIO
+      qty: 150
+      unit_cost_usd: 2.05
+      quote: Q-03
+    incoterm: EXW
+    currency: USD
+    by: bala@twinmo.ai
+    receipts:
+    - part: P-RADIO
+      qty: 150
+      lot: ESP-D7781
+      date: '2026-11-06'
+      unit_cost_usd: 2.05

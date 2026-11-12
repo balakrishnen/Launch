@@ -78,9 +78,16 @@ KINDS: dict[str, dict[str, Any]] = {
     # supply chain — industrialization: tooling per part with T-sample milestones and PPAP/FAI status
     "tooling": dict(req=["part", "supplier"], opt={"tool_id": "", "type": "injection mold", "cavities": None, "cost_usd": None, "owner": "customer", "quote": None, "kickoff": "", "t0": "", "t1": "", "t2": "", "status": "quoted", "ppap": "not started", "ppap_level": 3, "fai": "", "capacity_per_week": None, "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "quote": "quotes"}),
     # quality — inspections (incoming / in-process / EoL) feed supplier PPM and launch quality
-    "inspections": dict(req=["date", "part", "stage", "qty", "defects"], opt={"supplier": None, "lot": "", "defect_codes": [], "disposition": "", "build": None, "station": "", "by": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "build": "gates"}),
+    "inspections": dict(req=["date", "part", "stage", "qty", "defects"], opt={"supplier": None, "lot": "", "unit": "", "defect_codes": [], "disposition": "", "build": None, "station": "", "by": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "build": "gates"}),
     # quality — CAPA / 8D: the closed loop from a finding, field event or inspection to a verified corrective action
     "capa": dict(req=["title", "source", "status"], opt={"source_id": "", "parts": [], "fm": "", "containment": "", "root_cause": "", "corrective": "", "preventive": "", "verification_test": None, "verified": "", "owner": "", "team": None, "due": "", "closed": "", "notes": ""}, refs={"parts": "parts", "verification_test": "tests", "team": "teams"}),
+    # PLM-lite: engineering change orders
+    "change_orders": dict(req=["title", "affected"], opt={"reason": "", "description": "", "status": "draft", "approvers": [], "approvals": {}, "effectivity": "", "released": "", "released_by": "", "source": "", "owner": "", "date": ""}, refs={}),
+    # MES-lite: work orders and serialized units
+    "work_orders": dict(req=["build", "qty"], opt={"line": "", "routing": [], "status": "planned", "start": "", "end": "", "notes": ""}, refs={}),   # build = gate id; gates arrive with the PDP, so not a hard ref
+    "units": dict(req=["serial", "work_order"], opt={"components": {}, "stations": {}, "status": "in progress", "built": "", "shipped": "", "notes": ""}, refs={"work_order": "work_orders"}),
+    # ERP-lite: purchase orders
+    "purchase_orders": dict(req=["supplier", "lines"], opt={"status": "issued", "date": "", "incoterm": "", "currency": "USD", "by": "", "receipts": [], "notes": ""}, refs={"supplier": "suppliers"}),
     "claims": dict(req=["text"], opt={"type": "performance", "markets": [], "reqs": [], "tests": [], "regs": [], "owner": "", "approved": "", "status": "draft", "notes": ""}, refs={"reqs": "requirements", "tests": "tests", "regs": "regulations"}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
@@ -101,12 +108,12 @@ DEPARTMENTS = {
 TEAM_FOCUS = [f for fs in DEPARTMENTS.values() for f in fs]
 # The artifacts each department owns — the department tab. (path, label, optional kind for counts). Life-cycle navigation is the other axis.
 DEPARTMENT_ARTIFACTS = {
-    "Engineering": [("collection/requirements", "Requirements", "requirements"), ("form/reqspec", "Requirement specification"), ("collection/functions", "Functions", "functions"), ("collection/logical_components", "Logical architecture", "logical_components"), ("collection/parts", "Parts / BOM", "parts"), ("collection/interfaces", "Interfaces", "interfaces"), ("form/icd", "ICD index"), ("diagrams", "SysML v2 diagrams"),
+    "Engineering": [("form/eco", "Change orders (ECO)", "change_orders"), ("collection/requirements", "Requirements", "requirements"), ("form/reqspec", "Requirement specification"), ("collection/functions", "Functions", "functions"), ("collection/logical_components", "Logical architecture", "logical_components"), ("collection/parts", "Parts / BOM", "parts"), ("collection/interfaces", "Interfaces", "interfaces"), ("form/icd", "ICD index"), ("diagrams", "SysML v2 diagrams"),
                     ("eda", "Electrical (native EDA)"), ("trades", "Trade studies", "trades"), ("collection/arch_decisions", "Architecture decisions", "arch_decisions"), ("form/dfmea", "DFMEA"), ("form/fta", "Fault trees"), ("form/hazards", "Hazard register"), ("dfx", "Design for X"), ("collection/simulations", "Simulations", "simulations"),
                     ("form/dvpr", "DVP&R"), ("form/vcrm", "VCRM / RTM"), ("runs", "Test results", "test_runs"), ("collection/regulations", "Regulations", "regulations"), ("form/certification", "Certification plan"), ("form/markets", "Market readiness"), ("budgets", "Mass / power / cost budgets")],
     "Quality": [("form/findings", "Findings log", "findings"), ("collection/reviews", "Design reviews", "reviews"), ("form/capa", "CAPA / 8D log", "capa"), ("form/ppm", "Supplier PPM", "inspections"), ("collection/inspections", "Inspections", "inspections"), ("form/fracas", "FRACAS"), ("collection/field_events", "Field events", "field_events"), ("form/dfmea", "DFMEA (completeness)"), ("dfx/quality", "Design for quality"), ("inbox", "Review inbox")],
-    "Supply chain": [("form/avl", "AVL / sourcing", "suppliers"), ("collection/suppliers", "Suppliers", "suppliers"), ("form/procurement", "Procurement plan", "quotes"), ("collection/quotes", "Quotes", "quotes"), ("form/tooling", "Tooling & PPAP", "tooling"), ("collection/tooling", "Tooling", "tooling"), ("dfx/supply_chain", "Design for supply chain"), ("dfx/transportation", "Design for transportation")],
-    "Manufacturing": [("collection/process_steps", "Process steps", "process_steps"), ("form/pfmea", "PFMEA"), ("form/control_plan", "Control plan"), ("collection/inspections", "In-process / EoL inspections", "inspections"), ("dfx/manufacturing", "Design for manufacturing"), ("dfx/assembly", "Design for assembly"), ("dfx/testability", "Design for testability"), ("form/tooling", "Tooling & PPAP"), ("form/cost", "Cost roll-up (capex)")],
+    "Supply chain": [("form/purchase_orders", "Purchase orders", "purchase_orders"), ("form/avl", "AVL / sourcing", "suppliers"), ("collection/suppliers", "Suppliers", "suppliers"), ("form/procurement", "Procurement plan", "quotes"), ("collection/quotes", "Quotes", "quotes"), ("form/tooling", "Tooling & PPAP", "tooling"), ("collection/tooling", "Tooling", "tooling"), ("dfx/supply_chain", "Design for supply chain"), ("dfx/transportation", "Design for transportation")],
+    "Manufacturing": [("form/work_orders", "Work orders & units", "work_orders"), ("collection/units", "Serialized units", "units"), ("collection/process_steps", "Process steps", "process_steps"), ("form/pfmea", "PFMEA"), ("form/control_plan", "Control plan"), ("collection/inspections", "In-process / EoL inspections", "inspections"), ("dfx/manufacturing", "Design for manufacturing"), ("dfx/assembly", "Design for assembly"), ("dfx/testability", "Design for testability"), ("form/tooling", "Tooling & PPAP"), ("form/cost", "Cost roll-up (capex)")],
     "Service": [("form/fracas", "FRACAS"), ("collection/field_events", "Field events", "field_events"), ("dfx/service", "Design for service"), ("dfx/maintainability", "Design for maintainability"), ("collection/parts", "FRUs (parts)", "parts"), ("notes", "Service notes & spares plan")],
     "Program": [("pdp", "Development process & gates"), ("board", "Board"), ("timeline", "Timeline"), ("trend", "Trend"), ("form/risks", "Risk register", "risks"), ("form/handoffs", "Handoffs"), ("teams", "Teams & handoffs"), ("scorecard", "Scorecard"), ("history", "History & baselines")],
     "Go-to-market": [("form/claims", "Claims substantiation", "claims"), ("form/markets", "Market readiness"), ("collection/moes", "Measures of effectiveness", "moes"), ("collection/stakeholders", "Stakeholders", "stakeholders"), ("notes", "Positioning & launch notes")],
@@ -129,7 +136,7 @@ PROCESSES = [
     ("Implementation", "Development", ["suppliers", "quotes"]),
     ("Integration", "Development", []),
     ("Verification", "Development", ["tests", "test_runs"]),
-    ("Transition", "Production", ["process_steps", "inspections"]),
+    ("Transition", "Production", ["process_steps", "work_orders", "units", "inspections"]),
     ("Validation", "Production", []),
     ("Operation", "Utilization", ["field_events"]),
     ("Maintenance", "Support", []),
@@ -141,7 +148,7 @@ MANAGEMENT = [
     ("Project assessment and control", ["teams", "handoffs"]),
     ("Decision management", []),
     ("Risk management", ["risks"]),
-    ("Configuration management", []),
+    ("Configuration management", ["change_orders"]),
     ("Information management", ["tables", "notes"]),
     ("Measurement", []),
     ("Quality assurance", ["findings", "reviews", "capa"]),

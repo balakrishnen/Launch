@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -432,6 +432,74 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         else: items[iid] = {"status": body["status"], "evidence": body.get("evidence", []), "note": body.get("note", ""), "by": user, "date": time.strftime("%Y-%m-%d")}
         value = {"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": user}
         return human_patch(pid, HumanPatch(ops=[{"op": "update" if rid in m.get("dfx_reviews", {}) else "add", "kind": "dfx_reviews", "id": rid, "value": value}], rationale=f"DfX {x}: {iid} → {body.get('status') or 'auto'}" + (f" — {body.get('note')}" if body.get("note") else ""), apply=True), user)
+
+    # ---- operations modules: PLM-lite (ECO), MES-lite (work orders, units), ERP-lite (purchase orders)
+    @app.get("/api/p/{pid}/eco")
+    def eco_list(pid: str, user: str = U):
+        S = W.get(pid); return OPS.change_orders(S.store.load())
+    @app.get("/api/p/{pid}/eco/{cid}")
+    def eco_one(pid: str, cid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); x = next((c for c in OPS.change_orders(m) if c["id"] == cid), None)
+        if not x: raise HTTPException(404, "no such change order")
+        return x
+    @app.post("/api/p/{pid}/eco/{cid}/approve")
+    def eco_approve(pid: str, cid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); co = m.get("change_orders", {}).get(cid)
+        if not co: raise HTTPException(404, "no such change order")
+        appr = dict(co.get("approvals") or {}); team = body.get("team") or user
+        appr[team] = {"decision": body.get("decision", "approved"), "by": user, "date": time.strftime("%Y-%m-%d"), "note": body.get("note", "")}
+        x = {**co, "approvals": appr}; need = set(co.get("approvers") or OPS.change_order_impact(m, co)["owning_teams"]); got = {k for k, a in appr.items() if a.get("decision") == "approved"}
+        value = {"approvals": appr, "status": "approved" if need and need <= got else ("rejected" if any(a.get("decision") == "rejected" for a in appr.values()) else "in review")}
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "change_orders", "id": cid, "value": value}], rationale=f"{cid}: {team} {body.get('decision', 'approved')}" + (f" — {body['note']}" if body.get("note") else ""), apply=True), user)
+    @app.post("/api/p/{pid}/eco/{cid}/release")
+    def eco_release(pid: str, cid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); x = next((c for c in OPS.change_orders(m) if c["id"] == cid), None)
+        if not x: raise HTTPException(404, "no such change order")
+        if not x["ready_to_release"]: raise HTTPException(400, "approvals outstanding: " + ", ".join(sorted(set(x["approvals_needed"]) - set(x["approvals_got"]))))
+        r = human_patch(pid, HumanPatch(ops=OPS.release_ops(m, cid, user), rationale=f"Release {cid}: {x['title']} — revs bumped on {', '.join(x['impact']['parts'])}", apply=True), user)
+        try: S.store.baseline(f"{cid} {x['title']}"[:80], user)
+        except Exception: pass
+        return r
+    @app.get("/api/p/{pid}/work_orders")
+    def wo_list(pid: str, user: str = U):
+        S = W.get(pid); return OPS.work_orders(S.store.load())
+    @app.get("/api/p/{pid}/unit/{uid}")
+    def unit_one(pid: str, uid: str, user: str = U):
+        S = W.get(pid); g = OPS.unit_genealogy(S.store.load(), uid)
+        if not g: raise HTTPException(404, "no such unit")
+        return g
+    @app.post("/api/p/{pid}/work_orders/{wid}/station")
+    def wo_station(pid: str, wid: str, body: dict, user: str = U):
+        """a station result for one serial: {serial, step, result pass|fail, data{}, components{part: serial_or_lot}} — creates the unit on first sight"""
+        S = W.get(pid); m = S.store.load(); wo = m.get("work_orders", {}).get(wid)
+        if not wo: raise HTTPException(404, "no such work order")
+        serial = body["serial"]; uid = next((u for u, v in m.get("units", {}).items() if v.get("serial") == serial and v.get("work_order") == wid), None)
+        cur = m["units"][uid] if uid else {"serial": serial, "work_order": wid, "components": {}, "stations": {}, "status": "in progress", "built": time.strftime("%Y-%m-%d")}
+        st = dict(cur.get("stations") or {}); st[body["step"]] = {"result": body.get("result", "pass"), "date": time.strftime("%Y-%m-%d"), "by": user, "data": body.get("data") or {}, "defect_codes": body.get("defect_codes") or []}
+        comps = {**(cur.get("components") or {}), **(body.get("components") or {})}
+        routing = wo.get("routing") or sorted(m.get("process_steps", {}), key=lambda s_: m["process_steps"][s_].get("order", 0))
+        status = "failed" if any(v.get("result") == "fail" for v in st.values()) else ("complete" if all(st.get(s_, {}).get("result") == "pass" for s_ in routing) else "in progress")
+        value = {**cur, "stations": st, "components": comps, "status": status}
+        ops = [{"op": "update" if uid else "add", "kind": "units", "id": uid or f"U-{wid}-{serial}", "value": value}]
+        if body.get("result") == "fail":   # a station failure is an in-process inspection record too
+            n = len(m.get("inspections", {})) + 1
+            ops.append({"op": "add", "kind": "inspections", "id": f"INS-{n:02d}", "value": {"date": time.strftime("%Y-%m-%d"), "part": m["process_steps"].get(body["step"], {}).get("parts", ["P-?"])[0] if m["process_steps"].get(body["step"], {}).get("parts") else list(m["parts"])[0], "stage": "in-process", "qty": 1, "defects": 1, "station": body["step"], "unit": uid or f"U-{wid}-{serial}", "defect_codes": body.get("defect_codes") or [], "build": wo.get("build"), "by": user}})
+        return human_patch(pid, HumanPatch(ops=ops, rationale=f"{wid} {serial} @ {body['step']}: {body.get('result', 'pass')}", apply=True), user)
+    @app.get("/api/p/{pid}/purchase_orders")
+    def po_list(pid: str, user: str = U):
+        S = W.get(pid); return OPS.purchase_orders(S.store.load())
+    @app.post("/api/p/{pid}/purchase_orders/from_quote")
+    def po_create(pid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); q = m.get("quotes", {}).get(body.get("quote"))
+        if not q: raise HTTPException(404, "no such quote")
+        if q.get("status") != "awarded": raise HTTPException(400, "only awarded quotes become purchase orders")
+        poid, val = OPS.po_from_quote(m, body["quote"], body.get("qty") or q.get("qty"), user)
+        return human_patch(pid, HumanPatch(ops=[{"op": "add", "kind": "purchase_orders", "id": poid, "value": val}], rationale=f"{poid} from {body['quote']}: {val['lines'][0]['qty']} × {val['lines'][0]['part']} @ {val['lines'][0]['unit_cost_usd']}", apply=True), user)
+    @app.post("/api/p/{pid}/purchase_orders/{poid}/receive")
+    def po_receive(pid: str, poid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load()
+        if poid not in m.get("purchase_orders", {}): raise HTTPException(404, "no such purchase order")
+        return human_patch(pid, HumanPatch(ops=OPS.receive_ops(m, poid, body["part"], body["qty"], body.get("lot", ""), body.get("unit_cost_usd"), user), rationale=f"{poid}: received {body['qty']} × {body['part']} lot {body.get('lot', '')}", apply=True), user)
 
     @app.get("/api/p/{pid}/departments")
     def departments(pid: str, user: str = U):

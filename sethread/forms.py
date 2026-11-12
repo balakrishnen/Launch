@@ -359,3 +359,5 @@ FORMS.update({
 
 from . import business as _B
 FORMS.update(_B.FORMS)   # claims, cost, markets, staffing
+from . import ops as _OPS
+FORMS.update(_OPS.FORMS)   # eco, work_orders, purchase_orders

@@ -120,6 +120,11 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         from .. import business as B
         return _txt({"rows": B.procurement(store.load())})
 
+    @tool("change_order_impact", "PLM: impact of changing a set of items (parts, requirements) derived from the graph — functions, requirements, interfaces, tests to re-run, failure modes, tooling, awarded quotes, open purchase orders, owning teams (= approvers). Use before proposing a change_orders record (title, reason, affected[], approvers[], effectivity).", {"affected": list})
+    async def change_order_impact(args):
+        from .. import ops as OPS
+        return _txt(OPS.change_order_impact(store.load(), {"affected": args.get("affected") or []}))
+
     @tool("trade_study", "Evaluate a trade study from the model: weighted decision matrix (scores 1–5 or raw values normalized by direction), ranking, Pugh view vs the datum, and sensitivity (flip weight per criterion; ±25 % weight and −1 leader score perturbations; robust yes/no). Omit id for the list with hygiene checks. To create or change a study use propose_patch on kind trades: {name, question, options[], criteria[], weights[], criteria_meta{crit:{direction:max|min, unit, moe, req, basis}}, raw{option:{crit:value}} or scores{option:{crit:1-5}}, evidence{option:{crit:[ids]}}, datum, affects[], elements[]}. Tie criteria to MoEs/requirements and cite tests, simulations, suppliers or notes as evidence; never score from opinion alone.", {"id": str})
     async def trade_study(args):
         m = store.load(); tid = args.get("id")
@@ -217,7 +222,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide, rfq_package, procurement_plan]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide, rfq_package, procurement_plan, change_order_impact]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names
