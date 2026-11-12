@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, analytics as AN, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -500,6 +500,11 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         S = W.get(pid); m = S.store.load()
         if poid not in m.get("purchase_orders", {}): raise HTTPException(404, "no such purchase order")
         return human_patch(pid, HumanPatch(ops=OPS.receive_ops(m, poid, body["part"], body["qty"], body.get("lot", ""), body.get("unit_cost_usd"), user), rationale=f"{poid}: received {body['qty']} × {body['part']} lot {body.get('lot', '')}", apply=True), user)
+
+    @app.get("/api/p/{pid}/analytics")
+    def analytics(pid: str, user: str = U):
+        """Project status and analytics in one aggregate: headline, burndown, gates, departments, teams, verification, risk, quality, supply, cost, maturity (TRL, CDA, composite project maturity vs the expected profile), change, activity."""
+        S = W.get(pid); m = S.store.load(); return AN.compute(m, S.store)
 
     @app.get("/api/p/{pid}/indicators")
     def indicators(pid: str, user: str = U):

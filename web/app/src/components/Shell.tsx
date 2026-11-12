@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Building2, Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
+import { BarChart3, Building2, Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
 import { useProject } from '../state'
 import { FORMS, KIND_LABEL, STAGE_COLOR, stageColor, LIFECYCLE } from '../api'
 import { AgentDrawer } from './Agent'
@@ -24,7 +24,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
   'Disposal': [['search?q=disposal', 'Disposal requirements']],
   'Project planning': [['pdp', 'Development process'], ['form/staffing', 'Staffing plan'], ['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
-  'Project assessment and control': [['indicators', 'Leading indicators'], ['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
+  'Project assessment and control': [['analytics', 'Analytics & maturity'], ['indicators', 'Leading indicators'], ['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
   // team workspaces are added dynamically from project.teams
   'Decision management': [['trades', 'Trade studies'], ['collection/arch_decisions', 'Architecture decisions']],
   'Risk management': [['form/risks', 'Risk register']],
@@ -96,6 +96,7 @@ function Tree() {
     <Item to={`/p/${pid}`} end label="Home" icon={<Home size={17} />} />
     <Item to={`/p/${pid}/chat`} label="Conversations" icon={<Sparkles size={17} />} />
     {myTeams.map(t => <Item key={t} to={`/p/${pid}/team/${t}`} label={`My team · ${project.teams?.[t]?.name || t}`} icon={<Users size={17} />} />)}
+    <Item to={`/p/${pid}/analytics`} label="Analytics" icon={<BarChart3 size={17} />} />
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />
