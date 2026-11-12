@@ -15,6 +15,12 @@ meta:
     - Target
     - D2C
     currency: USD
+    builds:
+      EVT: 25
+      DVT: 120
+      PVT: 600
+    annual_volume: 150000
+    incoterm: FCA Haiphong
 stakeholders:
   STK-CONSUMER:
     name: Household consumer
@@ -1777,6 +1783,12 @@ teams:
     focus: legal
     lead: ''
     members: []
+  TM-PROC:
+    name: Procurement
+    kind: functional
+    focus: procurement
+    lead: ''
+    members: []
 process_steps:
   PS-01:
     name: Mold and trim housing
@@ -1832,6 +1844,8 @@ suppliers:
     risk: single source
     owner: TM-SC
     agreement: MSA-2026-014
+    lead_time_d: 84
+    second_source: SUP-04
   SUP-02:
     name: Espressif (radio module)
     parts:
@@ -1840,6 +1854,7 @@ suppliers:
     risk: low
     owner: TM-SC
     agreement: distributor terms
+    lead_time_d: 21
   SUP-03:
     name: Hi-Link (PSU)
     parts:
@@ -1847,6 +1862,14 @@ suppliers:
     status: candidate
     risk: 60335 compliance of module to verify
     owner: TM-SC
+    lead_time_d: 35
+  SUP-04:
+    name: Alt-Therm (thermoblock, second source)
+    parts: []
+    status: candidate
+    risk: no UL file yet
+    owner: TM-PROC
+    lead_time_d: 70
 work_items: {}
 findings: {}
 handoffs: {}
@@ -1930,3 +1953,59 @@ claims:
     reqs: []
     owner: TM-MKT
     notes: no requirement yet for the descale prompt UX
+quotes:
+  Q-01:
+    part: P-TB
+    supplier: SUP-01
+    qty: 120
+    unit_cost_usd: 10.4
+    moq: 500
+    lead_time_d: 84
+    tooling_usd: 0
+    valid_until: '2027-03-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-11-01'
+    ref: TT-26-118
+  Q-02:
+    part: P-TB
+    supplier: SUP-04
+    qty: 120
+    unit_cost_usd: 9.1
+    moq: 1000
+    lead_time_d: 70
+    tooling_usd: 12000
+    valid_until: '2027-02-28'
+    status: received
+    date: '2026-11-08'
+    ref: AT-Q-0442
+  Q-03:
+    part: P-RADIO
+    supplier: SUP-02
+    qty: 120
+    unit_cost_usd: 2.05
+    moq: 100
+    lead_time_d: 21
+    status: awarded
+    date: '2026-10-20'
+    ref: ESP-dist-7781
+  Q-04:
+    part: P-PSU
+    supplier: SUP-03
+    qty: 120
+    unit_cost_usd: 1.55
+    moq: 200
+    lead_time_d: 35
+    status: received
+    date: '2026-11-05'
+    ref: HLK-2611
+  Q-05:
+    part: P-CARAFE
+    supplier: SUP-01
+    qty: 120
+    unit_cost_usd: 6.9
+    moq: 2000
+    lead_time_d: 90
+    tooling_usd: 38000
+    status: requested
+    date: '2026-11-10'

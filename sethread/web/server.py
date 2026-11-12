@@ -422,6 +422,12 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         value = {"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": user}
         return human_patch(pid, HumanPatch(ops=[{"op": "update" if rid in m.get("dfx_reviews", {}) else "add", "kind": "dfx_reviews", "id": rid, "value": value}], rationale=f"DfX {x}: {iid} → {body.get('status') or 'auto'}" + (f" — {body.get('note')}" if body.get("note") else ""), apply=True), user)
 
+    @app.get("/api/p/{pid}/rfq/{part}")
+    def rfq(pid: str, part: str, user: str = U):
+        from .. import business as B
+        S = W.get(pid); m = S.store.load(); r = B.rfq_package(m, part)
+        if not r: raise HTTPException(404, "no such part")
+        return r
     @app.get("/api/p/{pid}/trades")
     def trades_list(pid: str, user: str = U):
         S = W.get(pid); m = S.store.load(); return {"studies": TRADES.summary(m), "checks": TRADES.checks(m)}

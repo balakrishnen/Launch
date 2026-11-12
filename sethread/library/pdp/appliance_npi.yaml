@@ -276,3 +276,24 @@ deliverables:
     type: note
     kind: spares
     status: final
+- id: D-PROC-RFQ
+  name: Every buy part quoted (RFQ packages sent, quotes received)
+  gate: G1
+  focus: procurement
+  check:
+    type: procurement
+    key: quotes
+- id: D-PROC-LL
+  name: Long-lead parts ordered for the EVT build
+  gate: EVT
+  focus: procurement
+  check:
+    type: procurement
+    key: long_lead_ordered
+- id: D-PROC-2S
+  name: Critical parts dual-sourced
+  gate: DVT
+  focus: procurement
+  check:
+    type: procurement
+    key: second_source

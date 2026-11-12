@@ -15,7 +15,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['diagrams', 'SysML v2 diagrams'], ['views', 'Rendered views']],
   'Design definition': [['eda', 'Electrical (native EDA)'], ['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
   'System analysis': [['dfx', 'Design for X'], ['trades', 'Trade studies'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
-  'Implementation': [['form/avl', 'AVL / sourcing'], ['form/cost', 'Product cost roll-up']],
+  'Implementation': [['form/procurement', 'Procurement plan', 'quotes'], ['form/avl', 'AVL / sourcing'], ['form/cost', 'Product cost roll-up']],
   'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
   'Verification': [['runs', 'Test results', 'test_runs'], ['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
   'Transition': [['form/pfmea', 'PFMEA'], ['form/control_plan', 'Control plan']],

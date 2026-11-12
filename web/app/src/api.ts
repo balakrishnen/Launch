@@ -5,7 +5,7 @@ export const KIND_LABEL: Record<string, string> = {
   regulations: 'Regulations', requirements: 'Requirements', functions: 'Functions', logical_components: 'Logical components', logical_interfaces: 'Logical interfaces',
   parts: 'Parts', nodes: 'Physical nodes', interfaces: 'Interfaces', states: 'States', transitions: 'Transitions', arch_decisions: 'Architecture decisions',
   trades: 'Trade studies', constraints: 'Constraints', tests: 'Tests', gates: 'Gates', fm_assessments: 'FMEA assessments', fmea: 'Failure modes',
-  teams: 'Teams', process_steps: 'Process steps', suppliers: 'Suppliers', work_items: 'Work items', findings: 'Findings', handoffs: 'Handoffs', field_events: 'Field events', risks: 'Program risks', reviews: 'Design reviews', tables: 'Tables', notes: 'Notes', test_runs: 'Test runs', phases: 'Phases', deliverables: 'Deliverables', dfx_reviews: 'DfX reviews', claims: 'Claims', cad_models: 'CAD models', simulations: 'Simulations', attachments: 'Attachments',
+  teams: 'Teams', process_steps: 'Process steps', suppliers: 'Suppliers', work_items: 'Work items', findings: 'Findings', handoffs: 'Handoffs', field_events: 'Field events', risks: 'Program risks', reviews: 'Design reviews', tables: 'Tables', notes: 'Notes', test_runs: 'Test runs', phases: 'Phases', deliverables: 'Deliverables', dfx_reviews: 'DfX reviews', claims: 'Claims', quotes: 'Quotes', cad_models: 'CAD models', simulations: 'Simulations', attachments: 'Attachments',
 }
 // INCOSE SE Handbook / ISO 15288: life-cycle stages, technical processes (each in the stage where it is primarily exercised), management processes
 export const LIFECYCLE = ['Concept', 'Development', 'Production', 'Utilization', 'Support', 'Retirement']

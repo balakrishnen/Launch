@@ -10,7 +10,7 @@ import { CadPanel } from '../components/Cad'
 
 export function Element() {
   const { kind = '', id = '' } = useParams(); const { pid, send, openTab, project, patches } = useProject(); const nav = useNavigate()
-  const [e, setE] = useState<ElementPage | null>(null); const [im, setIm] = useState<any>(null); const [tab, setTab] = useState('overview'); const [err, setErr] = useState(''); const [att, setAtt] = useState<any[]>([]); const [runs, setRuns] = useState<any[]>([]); const [mem, setMem] = useState<any>(null); const [where, setWhere] = useState<any[]>([]); const [brief, setBrief] = useState<string | null>(null); const { toast } = useProject()
+  const [e, setE] = useState<ElementPage | null>(null); const [im, setIm] = useState<any>(null); const [tab, setTab] = useState('overview'); const [err, setErr] = useState(''); const [att, setAtt] = useState<any[]>([]); const [runs, setRuns] = useState<any[]>([]); const [mem, setMem] = useState<any>(null); const [where, setWhere] = useState<any[]>([]); const [brief, setBrief] = useState<string | null>(null); const [rfq, setRfq] = useState<any>(null); const { toast } = useProject()
   const eid = decodeURIComponent(id)
   useEffect(() => { setE(null); setErr(''); const p = P(pid); p.get(`/element/${kind}/${encodeURIComponent(eid)}`).then(setE).catch(x => setErr(x.message)); p.get(`/impact/${encodeURIComponent(eid)}`).then(setIm).catch(() => setIm(null)); p.get(`/attachments/${encodeURIComponent(eid)}`).then(setAtt).catch(() => setAtt([])); p.get(`/where/${encodeURIComponent(eid)}`).then(setWhere).catch(() => setWhere([])); if (kind === 'tests') p.get('/runs').then((rs: any[]) => setRuns(rs.filter(r => r.test === eid))).catch(() => setRuns([])) }, [pid, kind, eid, patches.length, project?.meta?.rev])
   useEffect(() => { if (e) openTab({ key: `el:${kind}:${eid}`, title: eid, path: `/p/${pid}/element/${kind}/${encodeURIComponent(eid)}`, stage: e.stage }) }, [e?.id])
@@ -28,12 +28,14 @@ export function Element() {
       </div>
       <div className="row" style={{ flex: 'none' }}>
         {kind === 'parts' && <button className="btn sm" onClick={() => brief !== null ? setBrief(null) : P(pid).get(`/cadbrief/${encodeURIComponent(eid)}`).then(b => setBrief(b.markdown)).catch(x => toast(x.message))}><FileText size={14} />CAD brief</button>}
+        {kind === 'parts' && (e.data?.make_buy || 'buy') === 'buy' && <button className="btn sm" onClick={() => rfq !== null ? setRfq(null) : P(pid).get(`/rfq/${encodeURIComponent(eid)}`).then(setRfq).catch(x => toast(x.message))}><FileText size={14} />RFQ package</button>}
         <button className="btn sm" onClick={() => nav(`/p/${pid}/graph/${encodeURIComponent(eid)}`)}><GitBranch size={14} />Graph</button>
         <button className="btn sm" onClick={() => send(`Review ${eid} and everything linked to it; tell me what is inconsistent or missing`)}><Search size={14} />Review</button>
         <button className="btn sm" onClick={() => send(`I want to change ${eid}. Run an impact analysis, tell me which requirements, failure modes and tests are affected, and propose the patch set that keeps the thread consistent`)}><MessageSquare size={14} />Plan a change</button>
       </div>
     </div>
     <div className="sectabs">{[['overview', 'Overview'], ['diagram', 'SysML v2'], ['trace', `Trace (${e.up.length + e.down.length})`], ['fmea', `Failure modes${e.fmea ? ` (${e.fmea.length})` : ''}`], ['impact', `Impact${im ? ` (${im.affected.length})` : ''}`], ['files', `Files (${att.length})`], ...(kind === 'tests' ? [['runs', `Results (${runs.length})`]] : []), ['memory', 'Memory'], ['history', `History (${e.provenance.length})`]].filter(([k]) => k !== 'fmea' || e.fmea || e.unassessed).map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
+    {rfq !== null && <div className="card" style={{ marginBottom: 14, borderColor: 'var(--accent)' }}><div className="row between"><h4>RFQ package — derived from the graph; send to suppliers, record answers as quotes</h4><button className="btn sm" onClick={() => { navigator.clipboard?.writeText(rfqText(rfq)).then(() => toast('Copied')).catch(() => { }) }}>Copy</button></div><pre className="diff" style={{ whiteSpace: 'pre-wrap', maxHeight: 420 }}>{rfqText(rfq)}</pre></div>}
     {brief !== null && <div className="card" style={{ marginBottom: 14, borderColor: 'var(--accent)' }}><div className="row between"><h4>CAD brief — derived from the graph; hand it to a mechanical engineer or a text-to-CAD copilot (MecAgent, Zoo, Studio)</h4><button className="btn sm" onClick={() => { navigator.clipboard?.writeText(brief).then(() => toast('Copied')).catch(() => { }) }}>Copy</button></div><pre className="diff" style={{ whiteSpace: 'pre-wrap', maxHeight: 420 }}>{brief}</pre></div>}
     {tab === 'overview' && kind === 'parts' && <CadPanel part={eid} />}
     {tab === 'overview' && <SysmlDiagram path={`/diagram/element/${kind}/${encodeURIComponent(eid)}`} height={300} />}
@@ -74,4 +76,17 @@ function MemoryPanel({ pid, eid, mem, setMem }: { pid: string; eid: string; mem:
     </div>
     <div className="card"><h4>What the agent is handed</h4><pre className="diff" style={{ maxHeight: 520, whiteSpace: 'pre-wrap' }}>{mem.text}</pre><div className="muted small">Recalled automatically for any message that mentions {eid} or is sent while viewing it.</div></div>
   </div>
+}
+
+function rfqText(r: any): string {
+  const L: string[] = [`RFQ — ${r.part} ${r.name} (${r.type}${r.discipline ? ', ' + r.discipline : ''})`, '']
+  L.push('ATTRIBUTES'); for (const [k, v] of Object.entries(r.attrs || {})) L.push(`  ${k}: ${v}`)
+  L.push('', 'INTERFACES THE PART MUST MATE'); for (const i of r.interfaces) L.push(`  ${i.id} ${i.name} — with ${i.with} (${i.kind}): ${(i.items || []).join(', ')}`)
+  L.push('', 'REQUIREMENTS'); for (const q of r.requirements) L.push(`  ${q.id} ${q.text}${q.attr ? ' [' + q.attr + ']' : ''}`)
+  L.push('', 'REGULATIONS / DECLARATIONS'); for (const g of r.regulations) L.push(`  ${g.id} ${g.name} (${g.standard})`)
+  L.push('', 'DRAWINGS / CAD'); for (const d of r.drawings) L.push(`  ${d.file} (${d.role}${d.rev ? ', rev ' + d.rev : ''})`); if (!r.drawings.length) L.push('  — none attached yet')
+  L.push('', 'QUANTITIES'); for (const q of r.quantities) L.push(`  ${q.build}: ${q.units} units by ${q.date}`); if (r.annual_volume) L.push(`  annual volume: ${r.annual_volume}`)
+  L.push('', 'QUALITY'); for (const x of r.quality.high_ap_failure_modes) L.push(`  High-AP failure mode to control: ${x.id} ${x.mode} — ${x.controls}`); for (const a of r.quality.asks.filter(Boolean)) L.push(`  ${a}`)
+  L.push('', `COMMERCIAL (${r.commercial.incoterm}, ${r.commercial.currency})`); for (const a of r.commercial.ask) L.push(`  ${a}`)
+  return L.join('\n')
 }

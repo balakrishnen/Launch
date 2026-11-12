@@ -110,6 +110,16 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         m = store.load(); x = (args or {}).get("x")
         return _txt(DFX.evaluate(m, x, getattr(store, "root", None)) if x else DFX.summary(m, getattr(store, "root", None)))
 
+    @tool("rfq_package", "Procurement: the RFQ package for a buy part derived from the graph — attributes and bounds, interfaces it must mate, drawings/CAD, applicable requirements and regulations (food contact, RoHS, UL), quantities per build and annual volume, quality asks (PPAP/FAI, CoC, DoCs), commercial asks. Send it to suppliers; record their answers as quotes (propose_patch kind quotes: part, supplier, qty, unit_cost_usd, moq, lead_time_d, tooling_usd, valid_until, status requested|received|awarded).", {"part": str})
+    async def rfq_package(args):
+        from .. import business as B
+        m = store.load(); r = B.rfq_package(m, args["part"]); return _txt(r or {"error": "no such part"})
+
+    @tool("procurement_plan", "Procurement status for every buy part: supplier, quote status and best unit cost vs BOM cost, lead time against the first build that needs it (order-by date, LATE flag), MOQ vs build quantity, second source, critical flag (High-AP or NRND/EOL). Builds come from meta.business.builds {gate: units}.", {})
+    async def procurement_plan(args):
+        from .. import business as B
+        return _txt({"rows": B.procurement(store.load())})
+
     @tool("trade_study", "Evaluate a trade study from the model: weighted decision matrix (scores 1–5 or raw values normalized by direction), ranking, Pugh view vs the datum, and sensitivity (flip weight per criterion; ±25 % weight and −1 leader score perturbations; robust yes/no). Omit id for the list with hygiene checks. To create or change a study use propose_patch on kind trades: {name, question, options[], criteria[], weights[], criteria_meta{crit:{direction:max|min, unit, moe, req, basis}}, raw{option:{crit:value}} or scores{option:{crit:1-5}}, evidence{option:{crit:[ids]}}, datum, affects[], elements[]}. Tie criteria to MoEs/requirements and cite tests, simulations, suppliers or notes as evidence; never score from opinion alone.", {"id": str})
     async def trade_study(args):
         m = store.load(); tid = args.get("id")
@@ -207,7 +217,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide, rfq_package, procurement_plan]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

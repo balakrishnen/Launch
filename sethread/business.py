@@ -194,7 +194,109 @@ def checks_for_pdp(m, typ, c):
     if typ == "staffing":
         st = staffing(m); bad = [r for r in st if not r["lead"] or r["headcount"] == 0]
         return {"status": "done" if st and not bad else ("partial" if st else "missing"), "measured": f"{len(st) - len(bad)}/{len(st)} teams staffed with a lead", "link": "/form/staffing"}
+    if typ == "procurement": return procurement_check(m, c)
     if typ == "fru":
         fru = [p for p, v in m["parts"].items() if str(v.get("attrs", {}).get("field_replaceable", "")).lower() in ("yes", "true", "1")]
         return {"status": "done" if len(fru) >= c.get("n", 1) else "missing", "measured": f"{len(fru)} field-replaceable parts", "link": "/collection/parts"}
     return None
+
+
+# ---------- procurement: quotes, lead times vs gates, MOQ vs builds, single source ----------
+import datetime as _dt
+
+
+def _days_to(date):
+    try: return (_dt.date.fromisoformat(str(date)[:10]) - _dt.date.today()).days
+    except Exception: return None
+
+
+def procurement(m):
+    """Per buy part: supplier, best quote, lead time, the earliest gate whose build needs it, whether the order date has passed,
+    MOQ against the build quantity, second source, and the quote-vs-BOM variance."""
+    b = _business(m); builds = b.get("builds") or {}   # {gate_id: units}
+    gates = sorted(((g, v.get("date", "")) for g, v in m["gates"].items() if v.get("date")), key=lambda kv: kv[1])
+    quotes = m.get("quotes", {})
+    rows = []
+    for p, v in m["parts"].items():
+        if v.get("context") or (v.get("make_buy") or "buy") != "buy": continue
+        qs = [(q, x) for q, x in quotes.items() if x.get("part") == p]
+        awarded = [x for _, x in qs if x.get("status") == "awarded"]; received = [x for _, x in qs if x.get("status") in ("received", "awarded")]
+        best = awarded[0] if awarded else (min(received, key=lambda x: float(x.get("unit_cost_usd") or 1e12)) if received else None)   # the awarded quote is the price; else the cheapest received
+        lead = (awarded[0] if awarded else best or {}).get("lead_time_d")
+        if lead in (None, ""): lead = (m.get("suppliers", {}).get(v.get("supplier") or "", {}) or {}).get("lead_time_d")
+        first_gate = next(((g, d) for g, d in gates if builds.get(g)), gates[0] if gates else (None, None))
+        need_by = first_gate[1]; days = _days_to(need_by) if need_by else None
+        order_by = None; late = None
+        if days is not None and lead not in (None, ""):
+            order_by = (_dt.date.fromisoformat(str(need_by)[:10]) - _dt.timedelta(days=int(lead))).isoformat(); late = _days_to(order_by) is not None and _days_to(order_by) < 0 and not awarded
+        qty = builds.get(first_gate[0]) if first_gate[0] else None
+        moq = (awarded[0] if awarded else best or {}).get("moq")
+        sup = v.get("supplier") or (best or {}).get("supplier") or (qs[0][1].get("supplier") if qs else None); second = (m.get("suppliers", {}).get(sup or "", {}) or {}).get("second_source") or any(x.get("supplier") != sup for x in received)
+        bom = (v.get("attrs") or {}).get("cost_usd")
+        try: var = round(float(best["unit_cost_usd"]) - float(bom), 2) if best and bom not in (None, "") else None
+        except (TypeError, ValueError): var = None
+        crit = any(x.get("AP") == "H" for x in D.fmea(m) if x.get("element") == p) or (v.get("discipline") in ("electrical",) and (v.get("attrs") or {}).get("lifecycle") in ("nrnd", "eol"))
+        rows.append({"part": p, "name": v["name"], "supplier": sup, "quotes": len(qs), "quote_status": "awarded" if awarded else ("received" if received else ("requested" if qs else "none")),
+                     "unit_cost_quote": best.get("unit_cost_usd") if best else None, "bom_cost": bom, "variance_usd": var, "lead_time_d": lead, "need_by": need_by, "need_for": first_gate[0], "order_by": order_by, "late": bool(late),
+                     "qty_first_build": qty, "moq": moq, "moq_exceeds_build": (moq not in (None, "") and qty is not None and float(moq) > float(qty)), "second_source": bool(second), "critical": crit, "owner_team": v.get("owner_team")})
+    return rows
+
+
+def procurement_view(m, rep):
+    pr = procurement(m)
+    return {"buy_parts": [r["part"] for r in pr], "buy_parts_without_supplier": [r["part"] for r in pr if not r["supplier"]], "parts_without_quote": [r["part"] for r in pr if r["quote_status"] == "none"],
+            "late_to_order": [r["part"] for r in pr if r["late"]], "long_lead_parts": [r["part"] for r in pr if r["lead_time_d"] not in (None, "") and int(r["lead_time_d"]) >= 56],
+            "single_source_critical": [r["part"] for r in pr if r["critical"] and not r["second_source"]], "moq_exceeds_first_build": [r["part"] for r in pr if r["moq_exceeds_build"]],
+            "quote_over_bom": [r["part"] for r in pr if r["variance_usd"] is not None and r["variance_usd"] > 0], "quotes": list(m.get("quotes", {}).keys())}
+
+
+FOCUS_VIEWS["procurement"] = procurement_view
+
+
+def rfq_package(m, part):
+    """What a supplier needs to quote, derived from the graph: the part, its attributes and bounds, the interfaces it must mate,
+    drawings/CAD attached, requirements and regulations that apply (food contact, RoHS, UL recognition), quantities per build, quality asks."""
+    v = m["parts"].get(part)
+    if not v: return None
+    b = _business(m); builds = b.get("builds") or {}
+    ifaces = {i: iv for i, iv in m["interfaces"].items() if iv.get("a") == part or iv.get("b") == part}
+    funcs = [f for f, fv in m["functions"].items() if part in fv.get("alloc", [])]
+    reqs = sorted({r for f in funcs for r in m["functions"][f].get("reqs", [])})
+    regs = sorted({g for r in reqs for g in m["requirements"][r].get("regs", [])})
+    att = [a for a in m.get("attachments", {}).values() if a.get("element") == part]
+    cad = [c for c in m.get("cad_models", {}).values() if c.get("part") == part]
+    fms = [x for x in D.fmea(m) if x.get("element") == part and x.get("AP") == "H"]
+    return {"part": part, "name": v["name"], "type": v.get("type", ""), "discipline": v.get("discipline", ""), "attrs": v.get("attrs", {}), "parent": v.get("parent"),
+            "interfaces": [{"id": i, "name": iv["name"], "with": iv["b"] if iv["a"] == part else iv["a"], "items": iv.get("items", []), "kind": iv.get("kind", "")} for i, iv in ifaces.items()],
+            "requirements": [{"id": r, "text": m["requirements"][r]["text"], "attr": m["requirements"][r].get("attr", "")} for r in reqs],
+            "regulations": [{"id": g, "name": m["regulations"][g]["name"], "standard": m["regulations"][g].get("standard", "")} for g in regs if g in m["regulations"]],
+            "drawings": [{"file": a["file"], "role": a["role"], "rev": a.get("rev", "")} for a in att] + [{"file": (c.get("files") or {}).get("step", ""), "role": "cad", "rev": c.get("built", "")} for c in cad if (c.get("files") or {}).get("step")],
+            "quantities": [{"build": g, "units": n, "date": m["gates"].get(g, {}).get("date", "")} for g, n in builds.items()], "annual_volume": b.get("annual_volume"),
+            "quality": {"high_ap_failure_modes": [{"id": x["id"], "mode": x["mode"], "controls": x.get("controls", "")} for x in fms], "asks": ["PPAP level 3 or equivalent FAI", "CoC per lot", "RoHS/REACH declaration" if any("rohs" in (g["name"] + g["standard"]).lower() for g in [{"name": m["regulations"][g]["name"], "standard": m["regulations"][g].get("standard", "")} for g in regs if g in m["regulations"]]) else "", "food-contact DoC" if any("food" in m["regulations"][g]["name"].lower() for g in regs if g in m["regulations"]) else ""]},
+            "commercial": {"incoterm": b.get("incoterm", "FCA"), "currency": b.get("currency", "USD"), "ask": ["unit price at each build quantity and annual volume", "MOQ and lead time", "tooling cost and ownership", "second-source availability", "lifecycle status / EOL notice terms"]}}
+
+
+def procurement_form(m):
+    rows = [[r["part"], r["name"], r["supplier"] or "— none", r["quote_status"], r["unit_cost_quote"] if r["unit_cost_quote"] is not None else "", r["bom_cost"] if r["bom_cost"] not in (None, "") else "", r["variance_usd"] if r["variance_usd"] is not None else "", r["lead_time_d"] or "", r["need_for"] or "", r["need_by"] or "", r["order_by"] or "", "LATE" if r["late"] else "", r["qty_first_build"] or "", r["moq"] or "", "yes" if r["second_source"] else "no", "critical" if r["critical"] else ""] for r in procurement(m)]
+    rows.sort(key=lambda r: (r[11] != "LATE", r[10] or "9999"))
+    headers = ["Part", "Name", "Supplier", "Quote", "Quote unit cost", "BOM cost", "Variance", "Lead time (d)", "First build", "Need by", "Order by", "Status", "Build qty", "MOQ", "2nd source", "Critical"]
+    return [("PROCUREMENT PLAN (buy parts: quotes, lead time against the first build that needs them, MOQ, second source)", len(headers))], headers, [8, 24, 12, 9, 9, 8, 8, 8, 8, 10, 10, 6, 8, 7, 8, 8], rows
+
+
+FORMS["procurement"] = ("Procurement plan", "Quotes, lead times vs gates, MOQ vs build quantities, second sources", procurement_form)
+
+
+def procurement_check(m, c):
+    pr = procurement(m)
+    if c.get("key") == "long_lead_ordered":
+        ll = [r for r in pr if r["lead_time_d"] not in (None, "") and r["need_for"] == c.get("gate_ref", r["need_for"])]
+        ok = [r for r in ll if r["quote_status"] == "awarded"]
+        if not ll: return {"status": "partial", "measured": "no lead times known", "link": "/form/procurement"}
+        return {"status": "done" if len(ok) == len(ll) else ("partial" if ok else "missing"), "measured": f"{len(ok)}/{len(ll)} ordered · {len([r for r in ll if r['late']])} late", "link": "/form/procurement"}
+    if c.get("key") == "quotes":
+        q = [r for r in pr if r["quote_status"] in ("received", "awarded")]
+        return {"status": "done" if pr and len(q) == len(pr) else ("partial" if q else "missing"), "measured": f"{len(q)}/{len(pr)} buy parts quoted", "link": "/form/procurement"}
+    if c.get("key") == "second_source":
+        cr = [r for r in pr if r["critical"]]; ok = [r for r in cr if r["second_source"]]
+        return {"status": "done" if len(ok) == len(cr) else ("partial" if ok else "missing"), "measured": f"{len(ok)}/{len(cr)} critical parts dual-sourced", "link": "/form/procurement"}
+    return {"status": "missing", "measured": "unknown procurement check", "link": "/form/procurement"}

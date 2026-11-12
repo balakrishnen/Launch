@@ -147,6 +147,15 @@ equipment and layout with the gate they must be ready for, and a note (kind faci
 has a requirement, flag suppliers without an agreement (supplier attr agreement), and record IP and contract items as notes (kind ip | contract).
 Never approve a claim whose status is not 'substantiated'.""",
         kinds=["claims", "suppliers", "notes", "work_items"]),
+    "procurement": dict(
+        title="Procurement — quotes, lead times and the order plan",
+        prompt="""Stage: procure. Call procurement_plan. For every buy part without a received quote, build the rfq_package and record a
+quotes record (status requested) per candidate supplier; when quotes exist, award the best one that meets lead time and MOQ (status awarded)
+and write the awarded unit cost into the part attr cost_usd with the quote id as the source. Order-by date = first build date − lead time:
+raise a program risk and a work item for every part that is LATE or whose MOQ exceeds the first build. Every critical part (High-AP, NRND/EOL)
+needs a second source: find one in the supplier records or propose a supplier with status candidate. Set meta.business.builds {gate: units} if
+missing. Never invent a price: quotes come from suppliers; estimates are marked status requested with notes.""",
+        kinds=["quotes", "suppliers", "parts", "risks", "work_items"]),
     "service": dict(
         title="Service — field loop, spares and repairability",
         prompt="""Stage: support. Mark field-replaceable and user-replaceable parts (attrs field_replaceable / user_replaceable yes), make sure every
@@ -161,4 +170,4 @@ diagnostics, requirements that are not testable as written, screened FMEA candid
         kinds=[]),
 }
 
-ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "marketing", "sales", "finance", "people", "facilities", "legal", "service", "reviewer"]
+ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "marketing", "sales", "finance", "people", "facilities", "legal", "procurement", "service", "reviewer"]
