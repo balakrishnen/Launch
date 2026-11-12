@@ -15,6 +15,16 @@ import datetime as _dt
 from . import derive as D
 
 
+# GAO evidence themes (NASA project reports): TRL technology readiness · PA project assessment · CDA critical design attributes ·
+# C&SP cost & schedule performance · RA&CNTRL risk assessment & control · KM knowledge management
+THEMES = {"TRL": "Technology readiness", "PA": "Project assessment", "CDA": "Critical design attributes", "C&SP": "Cost & schedule performance", "RA&CNTRL": "Risk assessment & control", "KM": "Knowledge management"}
+THEME_OF = {"trl_below_gate": "TRL", "trl_overstated": "TRL", "req_churn": "PA", "req_unverified": "PA", "teams_without_lead": "PA", "handoffs_waiting": "PA", "parts_unquoted": "PA",
+            "cda_violating": "CDA", "cda_tight": "CDA", "cda_worsening": "CDA", "cda_unmeasured": "CDA",
+            "bom_vs_target": "C&SP", "parts_late_to_order": "C&SP", "tooling_risk": "C&SP", "work_overdue": "C&SP", "eco_rate": "C&SP",
+            "fm_unassessed": "RA&CNTRL", "high_ap_untested": "RA&CNTRL", "test_fail_rate": "RA&CNTRL", "capa_overdue": "RA&CNTRL", "supplier_ppm": "RA&CNTRL",
+            "test_stale": "KM", "eco_open": "KM"}
+
+
 def _days(date):
     try: return (_dt.date.fromisoformat(str(date)[:10]) - _dt.date.today()).days
     except Exception: return None
@@ -39,7 +49,25 @@ def compute(m, store=None, window_revs: int = 25) -> dict:
     ind = []
 
     def add(key, name, value, unit, amber, red, higher_worse=True, ids=None, gate_scope="all", note=""):
-        ind.append({"key": key, "name": name, "value": value, "unit": unit, "amber": amber, "red": red, "higher_worse": higher_worse, "level": _level(value, amber, red, higher_worse), "ids": (ids or [])[:12], "n": len(ids or []), "gate_scope": gate_scope, "note": note})
+        ind.append({"key": key, "name": name, "value": value, "unit": unit, "amber": amber, "red": red, "higher_worse": higher_worse, "level": _level(value, amber, red, higher_worse), "ids": (ids or [])[:12], "n": len(ids or []), "gate_scope": gate_scope, "note": note, "theme": THEME_OF.get(key, "PA")})
+
+    # --- TRL and critical design attributes (GAO themes TRL, CDA)
+    try:
+        from . import maturity as MAT
+        tr = [r for r in MAT.trl_rows(m) if r["new_technology"]]
+        need = MAT.TRL_MIN.get(nxt[0], 5) if nxt[0] else 5
+        below = [r["part"] for r in tr if (r["declared"] if r["declared"] is not None else r["demonstrated"]) < need]
+        over = [r["part"] for r in tr if r["gap"] is not None and r["gap"] >= 2]
+        add("trl_below_gate", f"New technologies below TRL {need} for {nxt[0] or 'the next gate'}", len(below), "parts", 1, 2, ids=below)
+        add("trl_overstated", "Declared TRL ≥ 2 above what the evidence shows", len(over), "parts", 1, 2, ids=over, note="declared maturity without tests, units or qualification behind it")
+        cd = MAT.cda_rows(m)
+        viol = [r["id"] for r in cd if r["status"] == "violating limit"]; tight = [r["id"] for r in cd if r["status"] in ("tight", "below target")]; wors = [r["id"] for r in cd if r["trend"] == "worsening"]; unm = [r["id"] for r in cd if r["current"] is None]
+        add("cda_violating", "Critical design attributes over their limit", len(viol), "CDAs", 1, 1, ids=viol)
+        add("cda_tight", "Critical design attributes below target or within 10 % of limit", len(tight), "CDAs", 1, 3, ids=tight)
+        add("cda_worsening", "Critical design attributes trending the wrong way", len(wors), "CDAs", 1, 2, ids=wors)
+        add("cda_unmeasured", "Critical design attributes never measured", len(unm), "CDAs", 1, 3, ids=unm)
+    except Exception as e:
+        ind.append({"key": "maturity", "name": "TRL / CDA indicators", "level": "unknown", "note": str(e), "theme": "TRL"})
 
     # --- requirements stability
     n_req = max(1, len(m["requirements"]))
@@ -109,7 +137,8 @@ def compute(m, store=None, window_revs: int = 25) -> dict:
     except Exception as e:
         gate_risk.append({"gate": "?", "note": str(e)})
     summary = {"red": sum(1 for i in ind if i.get("level") == "red"), "amber": sum(1 for i in ind if i.get("level") == "amber"), "green": sum(1 for i in ind if i.get("level") == "green"), "unknown": sum(1 for i in ind if i.get("level") == "unknown")}
-    return {"indicators": ind, "gates": gate_risk, "next_gate": nxt[0], "days_to_next": days_to_next, "summary": summary, "window_revs": window_revs if prev is not None else 0}
+    themes = {k: {"name": v, "red": sum(1 for i in ind if i.get("theme") == k and i.get("level") == "red"), "amber": sum(1 for i in ind if i.get("theme") == k and i.get("level") == "amber"), "n": sum(1 for i in ind if i.get("theme") == k)} for k, v in THEMES.items()}
+    return {"indicators": ind, "gates": gate_risk, "themes": themes, "next_gate": nxt[0], "days_to_next": days_to_next, "summary": summary, "window_revs": window_revs if prev is not None else 0}
 
 
 def interventions(res: dict) -> list[dict]:
@@ -132,6 +161,12 @@ def interventions(res: dict) -> list[dict]:
         "teams_without_lead": ("people", "Propose leads for every team without one and the hiring/reassignment work items"),
         "handoffs_waiting": ("program", "Chase every waiting handoff: owner, due, blocker"),
         "work_overdue": ("program", "Re-plan or close every overdue work item with the owning team"),
+        "trl_below_gate": ("analysis", "For every new technology below the gate's TRL: name the test, build or qualification that raises it, plan it before the gate, or raise a program risk"),
+        "trl_overstated": ("reviewer", "Challenge the declared TRL of these parts: list the evidence the model holds, and lower the declared level or add the missing evidence"),
+        "cda_violating": ("analysis", "For every critical design attribute over its limit: root cause from the architecture, the design change or trade study that recovers it, and the test that proves it"),
+        "cda_tight": ("analysis", "For every critical design attribute below target or inside 10 % of its limit: margin recovery options with evidence"),
+        "cda_worsening": ("verification", "Explain the worsening trend from the runs (scale, drift, fixture) and plan the next measurement"),
+        "cda_unmeasured": ("verification", "Plan the test run or station that measures every unmeasured critical design attribute before the next gate"),
     }
     out = []
     for i in res["indicators"]:

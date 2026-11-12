@@ -120,6 +120,11 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         from .. import business as B
         return _txt({"rows": B.procurement(store.load())})
 
+    @tool("maturity", "GAO themes TRL and CDA from the model: per part the declared vs demonstrated TRL with evidence (simulation, passed tests, built units, PPAP, certification, service), and every critical design attribute (kind cdas: name, unit, target, limit, direction, moe/req, owner_team, source{kind test_run|unit_station|part_attr|simulation, test/step/part, key}) with its current value, margins and trend. Set attrs.trl and attrs.new_technology on parts, and create cdas, via propose_patch.", {})
+    async def maturity(args):
+        from .. import maturity as MAT
+        m = store.load(); return _txt({"trl": MAT.trl_rows(m), "cdas": MAT.cda_rows(m), "trl_min_by_gate": MAT.TRL_MIN})
+
     @tool("leading_indicators", "Early warning: leading indicators computed from the model and its history (requirement churn, unverified requirements, unassessed failure modes, High-AP without test, test fail rate and staleness, ECO rate, overdue CAPA, supplier PPM, parts late to order, tooling vs build, BOM vs target, staffing, handoffs, deliverable burn) with thresholds, the gate-slip risk per upcoming gate and the intervention each one calls for. Use it to anticipate, not report: act on reds before the gate review.", {})
     async def leading_indicators(args):
         from .. import indicators as IND
@@ -227,7 +232,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide, rfq_package, procurement_plan, change_order_impact, leading_indicators]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide, rfq_package, procurement_plan, change_order_impact, leading_indicators, maturity]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

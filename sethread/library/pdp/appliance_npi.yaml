@@ -353,3 +353,39 @@ deliverables:
   focus: field_quality
   check:
     type: field_loop
+- id: D-SYS-CDA
+  name: Critical design attributes defined with targets, limits and sources
+  gate: G1
+  focus: systems
+  check:
+    type: cda
+- id: D-SYS-CDA-DVT
+  name: Every critical design attribute measured within target
+  gate: DVT
+  focus: systems
+  check:
+    type: cda
+- id: D-SYS-TRL-G1
+  name: New technologies at TRL ≥ 4 (bench)
+  gate: G1
+  focus: systems
+  check:
+    type: trl
+- id: D-SYS-TRL-EVT
+  name: New technologies at TRL ≥ 5
+  gate: EVT
+  focus: systems
+  check:
+    type: trl
+- id: D-SYS-TRL-DVT
+  name: New technologies at TRL ≥ 6 (built units)
+  gate: DVT
+  focus: systems
+  check:
+    type: trl
+- id: D-SYS-TRL-PVT
+  name: New technologies at TRL ≥ 8 (qualified)
+  gate: PVT
+  focus: systems
+  check:
+    type: trl

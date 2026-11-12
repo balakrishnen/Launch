@@ -361,3 +361,5 @@ from . import business as _B
 FORMS.update(_B.FORMS)   # claims, cost, markets, staffing
 from . import ops as _OPS
 FORMS.update(_OPS.FORMS)   # eco, work_orders, purchase_orders
+from . import maturity as _MAT
+FORMS.update(_MAT.FORMS)   # trl, cda

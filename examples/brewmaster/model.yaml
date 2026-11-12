@@ -720,6 +720,8 @@ parts:
     parent: P-RES
     attrs:
       cost_usd: 0.9
+      trl: 5
+      new_technology: 'yes'
     discipline: electrical
     context: false
     make_buy: buy
@@ -741,6 +743,7 @@ parts:
     parent: P-BM1
     attrs:
       cost_usd: 1.1
+      trl: 8
     discipline: electrical
     context: false
     make_buy: buy
@@ -758,6 +761,9 @@ parts:
       cost_usd: 9.8
       field_replaceable: 'yes'
       cost_actual_usd: 10.55
+      trl: 6
+      new_technology: 'yes'
+      mass_g: 446
     discipline: electrical
     context: false
     make_buy: buy
@@ -792,6 +798,8 @@ parts:
     parent: P-BM1
     attrs:
       cost_usd: 0.8
+      trl: 4
+      new_technology: 'yes'
     discipline: mechanical
     context: false
     make_buy: make
@@ -841,6 +849,7 @@ parts:
       package: PCBA 90x60
       cost_usd: 11.5
       field_replaceable: 'yes'
+      trl: 5
     discipline: electrical
     context: false
     make_buy: make
@@ -865,6 +874,7 @@ parts:
       mpn: HLK-PM01
       package: module
       cost_usd: 1.4
+      trl: 8
     discipline: electrical
     context: false
     make_buy: buy
@@ -890,6 +900,7 @@ parts:
       lifecycle: active
       cost_usd: 2.1
       cost_actual_usd: 2.05
+      trl: 9
     discipline: electrical
     context: false
     make_buy: buy
@@ -912,7 +923,9 @@ parts:
     name: Firmware (platform)
     type: Firmware
     parent: P-MAIN
-    attrs: {}
+    attrs:
+      trl: 4
+      new_technology: 'yes'
     discipline: firmware
     context: false
     make_buy: make
@@ -1936,7 +1949,44 @@ field_events: {}
 risks: {}
 reviews: {}
 tables: {}
-test_runs: {}
+test_runs:
+  RUN-01:
+    test: TST-01
+    date: '2026-11-03'
+    result: pass
+    unit: bench-A
+    metrics:
+      brew_temp_c: 93.1
+    station: thermal bench
+  RUN-02:
+    test: TST-01
+    date: '2026-11-07'
+    result: pass
+    unit: bench-A
+    metrics:
+      brew_temp_c: 92.6
+  RUN-03:
+    test: TST-01
+    date: '2026-11-10'
+    result: pass
+    unit: bench-A
+    metrics:
+      brew_temp_c: 92.2
+    notes: scale forming on block after 40 L
+  RUN-04:
+    test: TST-18
+    date: '2026-11-08'
+    result: fail
+    unit: bench-B
+    metrics:
+      wetting_pct: 84
+  RUN-05:
+    test: TST-09
+    date: '2026-11-09'
+    result: pass
+    unit: bench-A
+    metrics:
+      standby_W: 0.41
 simulations: {}
 attachments: {}
 dfx_reviews: {}
@@ -2290,3 +2340,81 @@ purchase_orders:
       lot: ESP-D7781
       date: '2026-11-06'
       unit_cost_usd: 2.05
+cdas:
+  CDA-01:
+    name: Brew water temperature at shower head
+    unit: °C
+    target: 94
+    limit: 92
+    direction: max
+    moe: MOE-01
+    req: R-01
+    owner_team: TM-THERM
+    source:
+      kind: test_run
+      test: TST-01
+      key: brew_temp_c
+    rationale: Golden Cup window 92–96; limit is the low edge
+  CDA-02:
+    name: 10-cup brew time
+    unit: s
+    target: 330
+    limit: 360
+    direction: min
+    moe: MOE-02
+    req: R-02
+    owner_team: TM-THERM
+    source:
+      kind: unit_station
+      step: PS-05
+      key: brew_time_s
+    rationale: R-02 ≤ 360 s; target leaves 30 s for scale build-up
+  CDA-03:
+    name: Networked standby power
+    unit: W
+    target: 0.35
+    limit: 0.5
+    direction: min
+    moe: MOE-10
+    req: R-08
+    owner_team: TM-CTRL
+    source:
+      kind: test_run
+      test: TST-09
+      key: standby_W
+  CDA-04:
+    name: Dry-boil heater cutoff time
+    unit: s
+    target: 3
+    limit: 5
+    direction: min
+    moe: MOE-05
+    req: R-03
+    owner_team: TM-THERM
+    source:
+      kind: test_run
+      test: TST-03
+      key: cutoff_s
+  CDA-05:
+    name: Coffee bed wetting at 60 s
+    unit: '%'
+    target: 92
+    limit: 90
+    direction: max
+    req: R-17
+    owner_team: TM-BREW
+    source:
+      kind: test_run
+      test: TST-18
+      key: wetting_pct
+  CDA-06:
+    name: Thermoblock mass
+    unit: g
+    target: 430
+    limit: 450
+    direction: min
+    owner_team: TM-THERM
+    source:
+      kind: part_attr
+      part: P-TB
+      key: mass_g

@@ -80,6 +80,12 @@ def evaluate(m: dict, d: dict, team_id: str | None, tv: dict | None, rep: dict) 
             e = DFX.evaluate(m, c["x"])
             if not e: return {"status": "missing", "measured": "no such DfX set", "link": "/dfx"}
             sc = e["score"] or 0; return {"status": "done" if sc >= c.get("min", 90) else ("partial" if sc > 0 else "missing"), "measured": f"{e['short']} {sc}% ({e['failed']} failed, {e['unknown']} unknown)", "link": f"/dfx/{c['x']}"}
+        if typ == "trl":
+            from . import maturity as MAT
+            return MAT.trl_check(m, {**c, "gate_ref": c.get("gate_ref") or d.get("gate")})
+        if typ == "cda":
+            from . import maturity as MAT
+            return MAT.cda_check(m, c)
         if typ in ("claims", "cost", "markets", "staffing", "fru", "procurement", "tooling", "capa", "ppm", "field_loop"):
             from . import business as B
             r = B.checks_for_pdp(m, typ, c)
