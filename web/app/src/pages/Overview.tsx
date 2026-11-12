@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowUp, FileSearch, ListTree, Boxes, ShieldAlert, FlaskConical, Plus } from 'lucide-react'
 import { useProject } from '../state'
 import { P, KIND_LABEL, STAGE_COLOR, FORMS, MATRIX_PAIRS, stageColor, LIFECYCLE, PROCESS_STAGE } from '../api'
-import { Bar, IdLink } from '../components/common'
+import { Bar, IdLink, ProductVisual } from '../components/common'
 import { PatchCard } from '../components/Agent'
 import { ProjectLifecycle } from './Lifecycle'
 
@@ -34,6 +34,7 @@ export function Overview() {
       <div className="prompt"><div className="wrap"><textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }} placeholder="Ask anything about this product or describe what you'd like to do…" /><button className="btn primary go" onClick={submit} style={{ padding: 8 }}><ArrowUp size={16} /></button></div>
         <div className="foot">{project.meta.name} · {total} elements · scorecard {sc ? `${sc.grade} · ${sc.overall}` : '…'} · {gaps.length ? `${gaps.length} open gaps` : 'trace clean'}{staged.length ? ` · ${staged.length} patches to review` : ''}</div></div>
     </div>
+    <ProductCard />
     <h3 style={{ margin: '0 0 10px' }}>Project overview</h3>
     <ProjectLifecycle />
     <h3 style={{ margin: '28px 0 10px' }}>Suggestions</h3>
@@ -50,4 +51,15 @@ export function Overview() {
     </div>
     {staged.length > 0 && <div style={{ marginTop: 24 }}><h3 style={{ marginBottom: 8 }}>Waiting for your review</h3>{staged.slice(0, 2).map(p => <PatchCard key={p.id} p={p} compact />)}</div>}
   </div>
+}
+
+
+function ProductCard() {
+  const { pid, project, toast, refresh } = useProject()
+  const m: any = project?.meta || {}; const b = m.business || {}
+  const upload = async (f: File) => { try { await P(pid).upload('/image', f); toast('Product visual set'); refresh() } catch (e: any) { toast(e.message) } }
+  return <div className="prodcard"><ProductVisual pid={pid} image={m.image} size={160} inline={(project as any)?.image_svg} />
+    <div style={{ flex: 1, minWidth: 0 }}><div className="row between"><div className="t">{m.name}</div><label className="btn ghost sm" style={{ cursor: 'pointer' }}>{m.image ? 'Replace visual' : 'Add product visual'}<input type="file" accept=".svg,.png,.jpg,.jpeg,.webp" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && upload(e.target.files[0])} /></label></div>
+      <div className="d">{m.description}</div>
+      <div className="row" style={{ gap: 6, marginTop: 8, flexWrap: 'wrap' }}><span className="pill">{m.system || '—'}</span><span className="pill">{m.method || 'OOSEM'}</span>{m.stage && <span className="pill">{m.stage}</span>}{b.price && <span className="pill">price {b.price} {b.currency || ''}</span>}{b.target_cost && <span className="pill">target cost {b.target_cost}</span>}{b.launch_date && <span className="pill">launch {b.launch_date}</span>}{b.annual_volume && <span className="pill">{Number(b.annual_volume).toLocaleString()} / yr</span>}</div></div></div>
 }

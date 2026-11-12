@@ -31,3 +31,13 @@ export function Cell({ v, col }: { v: any; col?: string }) {
 }
 export function Bar({ v }: { v: number }) { const c = v >= 90 ? 'var(--good)' : v >= 65 ? 'var(--warn)' : 'var(--bad)'; return <div className="bar"><i style={{ width: `${v}%`, background: c }} /></div> }
 export function Spinner() { return <span className="spinner" /> }
+
+
+// The product visual: meta.image (files/product/*.svg|png) served by the project; in the static review build the snapshot inlines it.
+export function ProductVisual({ pid, image, size = 120, inline }: { pid: string; image?: string | null; size?: number; inline?: string | null }) {
+  const base = (import.meta as any).env?.VITE_REVIEW ? null : ''
+  if (inline) return <div className="pv" style={{ width: size, height: size * 0.75 }} dangerouslySetInnerHTML={{ __html: inline }} />
+  if (!image) return <div className="pv pv-empty" style={{ width: size, height: size * 0.75 }}><span className="muted small">no visual</span></div>
+  const src = image.startsWith('data:') ? image : `${base ?? ''}/p/${pid}/${image}`
+  return <div className="pv" style={{ width: size, height: size * 0.75 }}><img src={src} alt="" style={{ maxWidth: '100%', maxHeight: '100%' }} /></div>
+}

@@ -10,9 +10,19 @@ def get(p):
 from sethread import schema
 from sethread.web.server import STAGE_OF
 D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates')}
+# product visuals: inline the svg so the static review needs no file route
+def _img(pid, image):
+    if not image or not image.endswith('.svg'): return None
+    try: return op.open(base + f'/p/{pid}/{image}').read().decode()
+    except Exception: return None
+for p_ in D["list"]:
+    if p_.get("image"): p_["image_svg"] = _img(p_["id"], p_["image"])
 for pid in pids:
     P = {}; g = lambda p: get(f'/api/p/{pid}{p}')
-    for k in ['/project', '/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/departments', '/indicators', '/analytics', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
+    _pj = g('/project')
+    if _pj and (_pj.get('meta') or {}).get('image'): _pj['image_svg'] = _img(pid, _pj['meta']['image'])
+    P['/project'] = _pj
+    for k in ['/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/departments', '/indicators', '/analytics', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
         v = g(k);  P[k] = v if v is not None else {}
     for kind in list(schema.KINDS) + ['fmea', 'screened', 'unassessed', 'gaps', 'verification_matrix', 'certification_plan']: P['/collection/' + kind] = g('/collection/' + kind) or []
     for f in ['dfmea', 'dvpr', 'vcrm', 'reqspec', 'hazards', 'n2', 'n2l', 'icd', 'pugh', 'fta', 'drbfm', 'pfmea', 'control_plan', 'avl', 'risks', 'fracas', 'work_items', 'findings', 'handoffs', 'claims', 'cost', 'markets', 'staffing', 'procurement', 'ppm', 'capa', 'tooling', 'eco', 'work_orders', 'purchase_orders', 'trl', 'cda']: P['/form/' + f] = g('/form/' + f)

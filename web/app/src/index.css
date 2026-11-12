@@ -159,3 +159,7 @@ pre.diff{font:11.5px/1.35 var(--mono);background:#0f172a;color:#e2e8f0;padding:8
 .dgcard.big{position:fixed;inset:60px 24px 24px;z-index:50;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 :root[data-theme="dark"] .diagram svg text, :root:not([data-theme="light"]) .diagram svg text{fill:var(--ink)}
 .viewer{border:1px solid var(--line);border-radius:10px;background:var(--surface-2);overflow:hidden;cursor:grab} .viewer canvas{display:block}
+
+/* product visual — line illustration in currentColor so it follows the theme */
+.pv{display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);overflow:hidden;flex:none} .pv svg{width:100%;height:100%} .pv-empty{border-style:dashed}
+.prodcard{display:flex;gap:18px;align-items:center;border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px;background:var(--surface)} .prodcard .t{font-size:18px;font-weight:600;letter-spacing:-.2px} .prodcard .d{color:var(--ink-3);font-size:13px;margin-top:2px;max-width:70ch}

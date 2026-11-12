@@ -311,7 +311,7 @@ class Workspace:
         updated = os.path.getmtime(st.model_path) if getattr(st, "model_path", None) and os.path.exists(st.model_path) else None
         if updated is None and hasattr(st, "list_patches"):
             ap = [p.created for p in st.list_patches("applied")]; updated = max(ap) if ap else None
-        return {"id": pid, "name": m["meta"].get("name", pid), "description": m["meta"].get("description", ""), "created_by": m["meta"].get("created_by", ""), "rev": m["meta"].get("rev"),
+        return {"id": pid, "name": m["meta"].get("name", pid), "description": m["meta"].get("description", ""), "created_by": m["meta"].get("created_by", ""), "rev": m["meta"].get("rev"), "image": m["meta"].get("image"),
                 "counts": {k: len(m[k]) for k in ("requirements", "parts", "tests")}, "clean": rep["clean"], "staged": len(st.list_patches("staged")),
                 "busy": pid in self.sessions and self.sessions[pid].busy, "updated": updated}
 
@@ -616,7 +616,8 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
             meta = yaml.safe_load(open(ep)) or {}
             try: cnt = {k: len(v) for k, v in yaml.safe_load(open(os.path.join(d, eid, "model.yaml"))).items() if isinstance(v, dict) and k in schema.KINDS}
             except Exception: cnt = {}
-            out.append({"id": eid, **meta, "counts": cnt, "project": eid if eid in existing else None, "docs": sorted(os.listdir(os.path.join(d, eid, "docs"))) if os.path.isdir(os.path.join(d, eid, "docs")) else []})
+            vis = os.path.join(d, eid, "docs", "product.svg")
+            out.append({"id": eid, **meta, "counts": cnt, "project": eid if eid in existing else None, "image_svg": open(vis).read() if os.path.isfile(vis) else None, "docs": sorted(os.listdir(os.path.join(d, eid, "docs"))) if os.path.isdir(os.path.join(d, eid, "docs")) else []})
         return out
     @app.post("/api/examples/{eid}")
     def create_example(eid: str, user: str = U):
@@ -631,7 +632,11 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
             shutil.copy(os.path.join(src, "model.yaml"), os.path.join(root, "model.yaml"))
         else:
             from ..dbstore import import_yaml_project; import_yaml_project(W.db, W.tenant, eid, src)
-        st = W._store(eid, root); m = st.load(); m["meta"]["created_by"] = user; st.save(m)
+        st = W._store(eid, root); m = st.load(); m["meta"]["created_by"] = user
+        vis = os.path.join(src, "docs", "product.svg")
+        if os.path.isfile(vis):   # the example's product visual becomes the project's
+            os.makedirs(os.path.join(root, "files", "product"), exist_ok=True); shutil.copy(vis, os.path.join(root, "files", "product", "product.svg")); m["meta"]["image"] = "files/product/product.svg"
+        st.save(m)
         # a shipped example carries its own product development process (example.yaml: process: <template>, process_start, spacing_days);
         # it is applied to the example project only — the organization's default process is untouched
         ex = yaml.safe_load(open(os.path.join(src, "example.yaml"))) or {}
@@ -657,6 +662,21 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
                 for t in ("elements", "patches", "baselines", "projects"): W.db.exec(c, f"DELETE FROM {t} WHERE tenant=? AND " + ("id=?" if t == "projects" else "project=?"), (W.tenant, pid))
         shutil.rmtree(W.path(pid), ignore_errors=True)
         return {"ok": True, "deleted": pid}
+
+    @app.get("/p/{pid}/files/{path:path}")
+    def project_file(pid: str, path: str, user: str = U):
+        S = W.get(pid); p = os.path.abspath(os.path.join(S.root, "files", path))
+        if not p.startswith(os.path.join(S.root, "files")) or not os.path.isfile(p): raise HTTPException(404)
+        return FileResponse(p)
+    @app.post("/api/p/{pid}/image")
+    async def product_image(pid: str, file: UploadFile = File(...), user: str = U):
+        """the product visual (svg/png/jpg/webp) shown on the project home, the project list and the Examples table"""
+        S = W.get(pid); name = os.path.basename(file.filename or "product"); ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if ext not in ("svg", "png", "jpg", "jpeg", "webp"): raise HTTPException(400, "svg, png, jpg or webp")
+        d = os.path.join(S.root, "files", "product"); os.makedirs(d, exist_ok=True); dest = os.path.join(d, "product." + ext)
+        with open(dest, "wb") as fh: shutil.copyfileobj(file.file, fh)
+        m = S.store.load(); m["meta"]["image"] = f"files/product/product.{ext}"; S.store.save(m)
+        return {"image": m["meta"]["image"]}
 
     @app.get("/p/{pid}/out/{path:path}")
     def out_file(pid: str, path: str, user: str = U):
