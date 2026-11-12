@@ -43,7 +43,9 @@ def default(tenant: str) -> dict:
     return {"name": tenant, "created": time.time(), "process": {"template": "stage_gate", "name": t.get("name", ""), "phases": t["phases"], "gates": t["gates"], "deliverables": t["deliverables"], "spacing_days": 45},
             "teams": [{"id": "TM-SE", "name": "Systems engineering", "kind": "functional", "focus": "systems"}, {"id": "TM-REL", "name": "Reliability", "kind": "functional", "focus": "reliability"},
                       {"id": "TM-QA", "name": "Quality & compliance", "kind": "functional", "focus": "quality"}, {"id": "TM-TEST", "name": "Test", "kind": "functional", "focus": "test"},
-                      {"id": "TM-MFG", "name": "Manufacturing", "kind": "functional", "focus": "manufacturing"}, {"id": "TM-SC", "name": "Supply chain", "kind": "functional", "focus": "sourcing"}, {"id": "TM-PM", "name": "Program", "kind": "functional", "focus": "program"}],
+                      {"id": "TM-MFG", "name": "Manufacturing", "kind": "functional", "focus": "manufacturing"}, {"id": "TM-SC", "name": "Supply chain", "kind": "functional", "focus": "sourcing"}, {"id": "TM-PM", "name": "Program", "kind": "functional", "focus": "program"},
+                      {"id": "TM-SVC", "name": "Service", "kind": "functional", "focus": "service"}, {"id": "TM-MKT", "name": "Marketing", "kind": "functional", "focus": "marketing"}, {"id": "TM-SALES", "name": "Sales", "kind": "functional", "focus": "sales"},
+                      {"id": "TM-FIN", "name": "Finance", "kind": "functional", "focus": "finance"}, {"id": "TM-HR", "name": "People", "kind": "functional", "focus": "hr"}, {"id": "TM-FAC", "name": "Facilities", "kind": "functional", "focus": "facilities"}, {"id": "TM-LEGAL", "name": "Legal", "kind": "functional", "focus": "legal"}],
             "members": [], "tools": [{"id": x["id"], "enabled": x["default"], "config": x.get("config", {})} for x in TOOLS],
             "policy": {"auto_apply_kinds": ["fm_assessments", "work_items", "notes", "tables"], "require_review_kinds": ["requirements", "interfaces", "gates", "parts"]}, "focus_options": TEAM_FOCUS}
 

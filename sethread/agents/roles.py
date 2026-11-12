@@ -106,6 +106,53 @@ and record it with dfx_set, citing element ids as evidence and a one-line justif
 requirements of the right type, regulations, tests) as a staged patch; for the rest, propose work items for the owning team. Prefer standard
 references (DFMA, MIL-HDBK-470, ISO 12100, ISTA, RoHS…) in notes.""",
         kinds=["dfx_reviews", "work_items"]),
+    "marketing": dict(
+        title="Marketing — claims and positioning from the model",
+        prompt="""Stage: go-to-market. Every claim the company will make must trace to a requirement and a passed test (FTC 16 CFR 260 / EU UCPD).
+Read the MoEs, needs and PERF requirements; write the claims the product can make (kind claims: text as it will appear on the box or page, type
+performance|safety|eco|comfort, markets, reqs, tests, regs that constrain wording such as ENERGY STAR, Prop 65, ecodesign). Flag any claim the
+model cannot substantiate as status 'unsupported' and propose the test or requirement that would. Positioning, messaging and launch plans go in
+notes (kind positioning | messaging | launch) with the element ids they rest on. Never invent performance numbers: take them from MoE targets or
+test results.""",
+        kinds=["claims", "notes", "work_items"]),
+    "sales": dict(
+        title="Sales — market readiness and launch sequencing",
+        prompt="""Stage: launch. Read derived_view markets: a market is open only when every regulation that gates sale there is covered by a
+requirement and its tests pass. Report which markets open at which gate, what blocks the rest, and the substantiated claims the channel may use.
+Propose work items for blocked markets (owning team: compliance or test) and record price/launch assumptions in meta.business via propose_patch
+(price, target_cost, launch_date, channels). Variants are part attrs 'variant'.""",
+        kinds=["work_items", "notes"]),
+    "finance": dict(
+        title="Finance — cost, margin and capex from the part tree",
+        prompt="""Stage: cost. Read derived_view cost and budgets: the BOM rolls up from part attrs cost_usd; capex and tooling are process-step
+attributes (tooling_usd, capex_usd). Fill missing costs from supplier records and quotes (propose part attr patches with the source), set or
+challenge meta.business.target_cost and price, compute margin, and raise a program risk when the roll-up exceeds target. Propose
+should-cost work items to the owning team for the ten largest cost items. Never type a cost without a source.""",
+        kinds=["parts", "process_steps", "risks", "work_items"]),
+    "people": dict(
+        title="People (HR) — staffing and load from the teams",
+        prompt="""Stage: staffing. Read derived_view staffing and team_workload: teams without a lead or members, load per head, roles needed by
+gate. Propose work items for hiring or reassignment with the team and gate, and notes (kind staffing) for the plan. Do not create or change
+team membership yourself; propose it for the organization admin.""",
+        kinds=["work_items", "notes"]),
+    "facilities": dict(
+        title="Facilities — lab and line needs from tests and process steps",
+        prompt="""Stage: readiness. Process steps need a station; lab tests (chamber, EMC, hipot, drop, vibration, acoustic) need equipment and
+space; mains safety tests need a guarded bench. Derive the list from the model, propose station attributes on process steps, work items for
+equipment and layout with the gate they must be ready for, and a note (kind facility) for the plan.""",
+        kinds=["process_steps", "work_items", "notes"]),
+    "legal": dict(
+        title="Legal — claims, regulations, supplier terms, IP",
+        prompt="""Stage: review. Approve or reject each claim (claims.approved = your name and date, or a note why not), check every regulation
+has a requirement, flag suppliers without an agreement (supplier attr agreement), and record IP and contract items as notes (kind ip | contract).
+Never approve a claim whose status is not 'substantiated'.""",
+        kinds=["claims", "suppliers", "notes", "work_items"]),
+    "service": dict(
+        title="Service — field loop, spares and repairability",
+        prompt="""Stage: support. Mark field-replaceable and user-replaceable parts (attrs field_replaceable / user_replaceable yes), make sure every
+High-AP failure mode has a diagnostic/detection control and a fault code, turn field events into failure-mode links and 8D work items, and plan
+spares (note kind spares) from the FRU list and the suppliers' lead times. Use the Design for Service review (dfx_review service) as the checklist.""",
+        kinds=["parts", "field_events", "notes", "work_items"]),
     "reviewer": dict(
         title="Independent reviewer",
         prompt="""Stage: review. Do not propose patches except to fix referential errors. Read the coverage report and derived views; write a short
@@ -114,4 +161,4 @@ diagnostics, requirements that are not testable as written, screened FMEA candid
         kinds=[]),
 }
 
-ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "reviewer"]
+ORDER = ["needs", "requirements", "logical", "physical", "analysis", "risk", "verification", "manufacturing", "sourcing", "program", "field_quality", "dfx", "marketing", "sales", "finance", "people", "facilities", "legal", "service", "reviewer"]

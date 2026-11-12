@@ -181,6 +181,8 @@ FOCUS_VIEWS = {   # what a functional team's cross-cutting view is made of
     "sourcing": lambda m, rep: {"suppliers": list(m.get("suppliers", {}).keys()), "buy_parts_without_supplier": rep["buy_parts_without_supplier"]},
     "program": lambda m, rep: {"gates": list(m["gates"].keys()), "pending_handoffs": rep["pending_handoffs"], "risks": list(m.get("risks", {}).keys())},
 }
+from . import business as _B
+FOCUS_VIEWS.update(_B.FOCUS_VIEWS)   # marketing, sales, finance, hr/people, facilities, legal, service
 
 def team_workspace(m, tid: str, store=None, threads: list | None = None) -> dict:
     """System-of-record view for one team: KPIs, every record they own by kind, what waits on them, what they wait for,

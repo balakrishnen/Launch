@@ -74,9 +74,12 @@ KINDS: dict[str, dict[str, Any]] = {
     "dfx_reviews": dict(req=["x"], opt={"items": {}, "date": "", "by": "", "notes": ""}, refs={}),
     # Native CAD: a part's geometry as build123d code, built into STEP/STL + measurements, checked against the thread
     "cad_models": dict(req=["part", "code"], opt={"name": "", "status": "draft", "built": "", "by": "", "volume_mm3": None, "mass_g": None, "bbox_mm": [], "files": {}, "checks": [], "features": [], "notes": "", "error": ""}, refs={"part": "parts"}),
+    "claims": dict(req=["text"], opt={"type": "performance", "markets": [], "reqs": [], "tests": [], "regs": [], "owner": "", "approved": "", "status": "draft", "notes": ""}, refs={"reqs": "requirements", "tests": "tests", "regs": "regulations"}),
     "notes": dict(req=["title", "body"], opt={"kind": "note", "date": "", "author": "", "elements": [], "owner_team": None, "status": "draft"}, refs={"owner_team": "teams"}),
 }
-TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field"]
+TEAM_FOCUS = ["systems", "reliability", "quality", "safety", "compliance", "test", "manufacturing", "sourcing", "program", "software", "firmware", "mechanical", "electrical", "industrial design", "service", "field",
+              # business functions — the rest of the company on the same graph
+              "marketing", "sales", "finance", "hr", "facilities", "legal"]
 GUIDE_WORDS_PROC = ["omitted", "wrong part", "wrong orientation", "insufficient", "excessive", "contamination", "damage"]
 # INCOSE SE Handbook / ISO/IEC/IEEE 15288 generic life-cycle stages
 LIFECYCLE = ["Concept", "Development", "Production", "Utilization", "Support", "Retirement"]
@@ -88,7 +91,7 @@ PROCESSES = [
     ("System requirements definition", "Development", ["regulations", "requirements", "constraints"]),
     ("System architecture definition", "Development", ["functions", "logical_components", "logical_interfaces", "nodes", "interfaces", "states", "transitions", "arch_decisions"]),
     ("Design definition", "Development", ["parts", "cad_models", "attachments"]),
-    ("System analysis", "Development", ["trades", "fm_assessments", "simulations", "dfx_reviews"]),
+    ("System analysis", "Development", ["trades", "fm_assessments", "simulations", "dfx_reviews", "claims"]),
     ("Implementation", "Development", ["suppliers"]),
     ("Integration", "Development", []),
     ("Verification", "Development", ["tests", "test_runs"]),

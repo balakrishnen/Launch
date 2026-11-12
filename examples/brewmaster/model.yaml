@@ -6,6 +6,15 @@ meta:
     platform (fictional)
   system: P-BM1
   stage: Development
+  business:
+    price: 179
+    target_cost: 58
+    launch_date: '2027-09-01'
+    channels:
+    - Amazon
+    - Target
+    - D2C
+    currency: USD
 stakeholders:
   STK-CONSUMER:
     name: Household consumer
@@ -675,7 +684,8 @@ parts:
     name: Housing (PP) with stainless trim
     type: Housing
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 6.4
     discipline: mechanical
     context: false
     make_buy: make
@@ -687,6 +697,7 @@ parts:
     attrs:
       material: Tritan (food contact)
       mass_budget_g: 320
+      cost_usd: 2.1
     discipline: mechanical
     context: false
     make_buy: make
@@ -695,7 +706,8 @@ parts:
     name: Capacitive level sensor
     type: Capacitive level sensor
     parent: P-RES
-    attrs: {}
+    attrs:
+      cost_usd: 0.9
     discipline: electrical
     context: false
     make_buy: buy
@@ -704,7 +716,9 @@ parts:
     name: Low-pressure water pump
     type: Low-pressure water pump
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 3.2
+      field_replaceable: 'yes'
     discipline: electrical
     context: false
     make_buy: buy
@@ -713,7 +727,8 @@ parts:
     name: Hall flow meter
     type: Hall flow meter
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 1.1
     discipline: electrical
     context: false
     make_buy: buy
@@ -728,6 +743,8 @@ parts:
       envelope_mm: 120x60x45
       material: aluminium + stainless tube
       food_contact: stainless 304
+      cost_usd: 9.8
+      field_replaceable: 'yes'
     discipline: electrical
     context: false
     make_buy: buy
@@ -737,7 +754,8 @@ parts:
     name: NTC thermistor (thermoblock)
     type: NTC thermistor
     parent: P-TB
-    attrs: {}
+    attrs:
+      cost_usd: 0.2
     discipline: electrical
     context: false
     make_buy: buy
@@ -750,6 +768,7 @@ parts:
     attrs:
       mpn: SF192E
       package: axial
+      cost_usd: 0.3
     discipline: electrical
     context: false
     make_buy: buy
@@ -758,7 +777,8 @@ parts:
     name: Shower head
     type: Shower head
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 0.8
     discipline: mechanical
     context: false
     make_buy: make
@@ -767,7 +787,9 @@ parts:
     name: Brew basket with drip-stop valve
     type: Brew basket with drip-stop valve
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 1.6
+      user_replaceable: 'yes'
     discipline: mechanical
     context: false
     make_buy: make
@@ -778,6 +800,8 @@ parts:
     parent: P-BM1
     attrs:
       material: borosilicate glass
+      cost_usd: 6.1
+      user_replaceable: 'yes'
     discipline: mechanical
     context: false
     make_buy: buy
@@ -786,7 +810,8 @@ parts:
     name: Keep-warm plate 60 W
     type: Keep-warm plate 60 W
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 2.4
     discipline: electrical
     context: false
     make_buy: buy
@@ -799,6 +824,8 @@ parts:
       test_points: 'yes: 3V3, 5V, GND, NTC, TRIAC_GATE, UART'
       mpn: BM1-MAIN-A
       package: PCBA 90x60
+      cost_usd: 11.5
+      field_replaceable: 'yes'
     discipline: electrical
     context: false
     make_buy: make
@@ -810,6 +837,7 @@ parts:
     attrs:
       mpn: STM32G071
       package: LQFP48
+      cost_usd: 1.9
     discipline: electrical
     context: false
     make_buy: buy
@@ -821,6 +849,7 @@ parts:
     attrs:
       mpn: HLK-PM01
       package: module
+      cost_usd: 1.4
     discipline: electrical
     context: false
     make_buy: buy
@@ -830,7 +859,8 @@ parts:
     name: Triac + driver for heater
     type: Triac + driver for heater
     parent: P-MAIN
-    attrs: {}
+    attrs:
+      cost_usd: 0.6
     discipline: electrical
     context: false
     make_buy: buy
@@ -843,6 +873,7 @@ parts:
       mpn: ESP32-C3-MINI-1
       package: module
       lifecycle: active
+      cost_usd: 2.1
     discipline: electrical
     context: false
     make_buy: buy
@@ -852,7 +883,9 @@ parts:
     name: 'HMI board: 2.4" display + dial'
     type: HMI board
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 7.3
+      field_replaceable: 'yes'
     discipline: electrical
     context: false
     make_buy: make
@@ -879,7 +912,10 @@ parts:
     name: Mains cord set (NEMA 5-15 / Schuko)
     type: Mains cord set
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 1.9
+      user_replaceable: 'yes'
+      variant: NEMA 5-15 / Schuko
     discipline: electrical
     context: false
     make_buy: buy
@@ -888,7 +924,8 @@ parts:
     name: Carafe-present switch
     type: Carafe-present switch
     parent: P-BM1
-    attrs: {}
+    attrs:
+      cost_usd: 0.3
     discipline: electrical
     context: false
     make_buy: buy
@@ -1704,6 +1741,42 @@ teams:
     focus: safety
     lead: ''
     members: []
+  TM-MKT:
+    name: Marketing
+    kind: functional
+    focus: marketing
+    lead: ''
+    members: []
+  TM-SALES:
+    name: Sales
+    kind: functional
+    focus: sales
+    lead: ''
+    members: []
+  TM-FIN:
+    name: Finance
+    kind: functional
+    focus: finance
+    lead: ''
+    members: []
+  TM-HR:
+    name: People
+    kind: functional
+    focus: hr
+    lead: ''
+    members: []
+  TM-FAC:
+    name: Facilities
+    kind: functional
+    focus: facilities
+    lead: ''
+    members: []
+  TM-LEGAL:
+    name: Legal
+    kind: functional
+    focus: legal
+    lead: ''
+    members: []
 process_steps:
   PS-01:
     name: Mold and trim housing
@@ -1712,6 +1785,7 @@ process_steps:
     parts:
     - P-ENCL
     team: TM-MFG
+    tooling_usd: 185000
   PS-02:
     name: PCBA main + HMI
     order: 2
@@ -1730,6 +1804,7 @@ process_steps:
     - P-TB
     - P-SHOWER
     team: TM-MFG
+    capex_usd: 28000
   PS-04:
     name: Final assembly & cord
     order: 4
@@ -1746,6 +1821,7 @@ process_steps:
     parts:
     - P-BM1
     team: TM-MFG
+    capex_usd: 42000
 suppliers:
   SUP-01:
     name: ThermoTech (thermoblock)
@@ -1755,6 +1831,7 @@ suppliers:
     status: approved
     risk: single source
     owner: TM-SC
+    agreement: MSA-2026-014
   SUP-02:
     name: Espressif (radio module)
     parts:
@@ -1762,6 +1839,7 @@ suppliers:
     status: approved
     risk: low
     owner: TM-SC
+    agreement: distributor terms
   SUP-03:
     name: Hi-Link (PSU)
     parts:
@@ -1784,3 +1862,71 @@ cad_models: {}
 notes: {}
 program:
   stage: Development
+claims:
+  CL-01:
+    text: 'Golden Cup brewing: 92–96 °C at the coffee bed, every brew'
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-01
+    owner: TM-MKT
+  CL-02:
+    text: 10 cups in under 6 minutes
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-02
+    owner: TM-MKT
+  CL-03:
+    text: Keeps coffee hot for 2 hours without burning it
+    type: performance
+    markets:
+    - US
+    reqs:
+    - R-14
+    owner: TM-MKT
+  CL-04:
+    text: 'Schedule from your phone — or without it: everything works offline'
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-06
+    - R-15
+    owner: TM-MKT
+  CL-05:
+    text: Less than 0.5 W in standby
+    type: eco
+    markets:
+    - EU
+    reqs:
+    - R-08
+    regs:
+    - REG-STANDBY
+    owner: TM-MKT
+  CL-06:
+    text: BPA-free, food-safe water path
+    type: safety
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-09
+    regs:
+    - REG-FOOD
+    - REG-PROP65
+    owner: TM-MKT
+  CL-07:
+    text: Tells you when to descale
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs: []
+    owner: TM-MKT
+    notes: no requirement yet for the descale prompt UX

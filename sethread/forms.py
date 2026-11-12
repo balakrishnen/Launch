@@ -356,3 +356,6 @@ FORMS.update({
     "findings": ("Findings", "Review, audit, test and field findings with closure", findings_log),
     "handoffs": ("Handoffs", "Cross-functional evidence handoffs between teams, pending until accepted", handoffs_board),
 })
+
+from . import business as _B
+FORMS.update(_B.FORMS)   # claims, cost, markets, staffing

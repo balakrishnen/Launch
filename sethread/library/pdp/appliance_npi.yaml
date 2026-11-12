@@ -206,3 +206,73 @@ deliverables:
   check:
     type: trades
     n: 1
+- id: D-MKT-CLAIMS
+  name: Product claims written and substantiated by requirements and tests
+  gate: DVT
+  focus: marketing
+  check:
+    type: claims
+- id: D-MKT-POS
+  name: Positioning and launch messaging (final)
+  gate: PVT
+  focus: marketing
+  check:
+    type: note
+    kind: positioning
+    status: final
+- id: D-LEGAL-CLAIMS
+  name: Claims approved by legal
+  gate: PVT
+  focus: legal
+  check:
+    type: claims
+    approved: true
+- id: D-SALES-MKT
+  name: 'Target markets open: gating regulations certified'
+  gate: MP
+  focus: sales
+  check:
+    type: markets
+- id: D-FIN-COST
+  name: BOM cost roll-up within target cost (≥90 % of parts costed)
+  gate: DVT
+  focus: finance
+  check:
+    type: cost
+    coverage: 0.9
+- id: D-FIN-TARGET
+  name: Target cost and price set
+  gate: G1
+  focus: finance
+  check:
+    type: cost
+    coverage: 0.0
+- id: D-HR-STAFF
+  name: Every team staffed with a lead
+  gate: G1
+  focus: hr
+  check:
+    type: staffing
+- id: D-FAC-LINE
+  name: Line stations and lab equipment planned
+  gate: EVT
+  focus: facilities
+  check:
+    type: note
+    kind: facility
+    status: final
+- id: D-SVC-FRU
+  name: Field-replaceable parts defined and Design for Service reviewed
+  gate: DVT
+  focus: service
+  check:
+    type: fru
+    n: 2
+- id: D-SVC-SPARES
+  name: Spares and warranty plan (final)
+  gate: PVT
+  focus: service
+  check:
+    type: note
+    kind: spares
+    status: final
