@@ -1,0 +1,25 @@
+title: Hearth companion speaker
+company: Reconstructed — OpenAI consumer devices (fictional product name)
+url: https://openai.com/careers/search/
+process: evt_dvt_pvt
+spacing_days: 42
+category: Consumer electronics · screenless AI companion speaker
+summary: Portable screenless speaker with a 4-mic array, context camera behind a hardware shutter, "alive" motion, Wi-Fi/BLE/Thread with Matter, 20 Wh pack, on-device transformer for wake/intent and cloud conversation. $249, 2M units/yr, CM in Vietnam/China.
+why: >
+  Reverse-engineered from OpenAI's consumer-device postings (camera software, connectivity, RTOS firmware, on-device transformers,
+  system power and performance, release engineering, Singapore hardware exploratory and product manufacturing, device safety & risk
+  operations) and press reports of the io device (MacRumors 2026-07-28 relaying Bloomberg and Ming-Chi Kuo). Nothing is confirmed by
+  the company; it is a plausible systems model. The interesting tensions are real: privacy as a hardware property, an expressive
+  mechanism that costs noise and reliability, always-on audio inside a 2.5 W idle budget, and battery/RF certification in two markets.
+seeded: 6 stakeholders, 10 needs with MoEs, 9 regulations, 14 requirements, 12 functions, 8 logical components, 22 parts, 13 interfaces, 7-state machine, 14 tests, 19 teams, 4 suppliers, 5 process steps, 1 open trade study, 3 claims, 5 critical design attributes with bench runs
+assess:
+  - Open Analytics — idle power and mechanism noise are already over limit on the bench; TRL on the actuator and shutter is declared above evidence.
+  - Decide the expression-mechanism trade study (TD-01): the gearmotor wins on liveliness but violates the 25 dBA limit.
+  - Run the risk agent on Power and Security & privacy — battery charge window, shutter enforcement, OTA rollback should land High AP with tests.
+  - Ask the compliance agent for the certification plan across FCC, RED/EN 18031, IEC 62368-1, IEC 62133-2, UN 38.3 and Matter.
+  - Ask the dfx agent for Design for Testability and Manufacturing — the 180 s EoL target (R-10) is the anchor.
+prompts:
+  - Assess every failure-mode candidate of Power and Security & privacy; tie High AP items to tests
+  - Decide TD-01 with a rationale after evaluating the sensitivity, and create the arch_decisions record
+  - Plan the certification program and the sample builds each lab needs
+  - Model the camera shutter in CAD: 12 mm aperture, 0.4 mm steel blade, detent, sense switch, mates IF-04

@@ -1,0 +1,25 @@
+title: Kiln accelerator rack
+company: Reconstructed — Anthropic data-center hardware (fictional product name)
+url: https://www.anthropic.com/careers/jobs
+process: evt_dvt_pvt
+spacing_days: 56
+category: Data-center hardware · liquid-cooled AI accelerator rack
+summary: 42U rack with 8 accelerator trays (64 partner accelerators), host and scale-up switch trays, 48 V busbar from N+1 power shelves at ≤ 120 kW, direct-to-chip liquid cooling with per-tray leak isolation, 800G scale-out optics, BMC secure boot and attestation. Built at two CM sites.
+why: >
+  Reverse-engineered from Anthropic's Hardware Systems Architect (package → board → chassis → rack → interconnect → power → cooling →
+  datacenter interface; 48V/HVDC; direct liquid cooling; BMC, secure boot, attestation; fleet RAS) and Manufacturing Engineer, Data
+  Center Hardware (racks and accelerator systems at CM/ODM; cold plates, manifolds, CDUs, leak and fill test; PFMEA, SPC, pilot builds,
+  second-site qualification) postings. Nothing is confirmed by the company. It exercises the parts of Launch an appliance does not:
+  a $2M BOM dominated by one buy part, a 180-day silicon lead time, fluid safety, and industrialization at two sites.
+seeded: 6 stakeholders, 8 needs with MoEs, 7 regulations, 12 requirements, 10 functions, 6 logical components, 19 parts, 10 interfaces, 6-state machine, 12 tests, 17 teams, 5 suppliers (two CM sites), 5 process steps, 1 decided trade study (cooling), 4 critical design attributes with thermal-test-vehicle runs
+assess:
+  - Analytics: Tj is trending up toward the 85 °C limit as manifold ΔP exceeds the model; leak isolation measured 2.8 s against a 2 s limit.
+  - Procurement: the accelerator lead time (180 d) against the EVT build date — is it already late to order?
+  - Industrialization: second CM site unqualified; ask the industrialization agent for the site-qualification plan and PPAP scope.
+  - Risk agent on Liquid cooling and Power distribution: leak into a 48 V busbar is the scenario to find.
+  - Compliance: UL/IEC 62368-1 with HVDC-ready shelves, FCC 15A, EMC, GR-63 seismic — certification plan and sample racks.
+prompts:
+  - Assess failure modes of the liquid cooling and power distribution components; derive causes from the interfaces
+  - Build the procurement plan and RFQ packages; raise risks for anything late to order for EVT
+  - Plan qualification of the second CM site with the deliverables per gate
+  - Model the rack coolant manifold in CAD with 8 QD positions at 1U pitch, mates IF-03 and IF-04

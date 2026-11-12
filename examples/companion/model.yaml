@@ -1,0 +1,1605 @@
+meta:
+  name: Hearth companion speaker
+  version: '0.1'
+  method: OOSEM
+  description: Screenless portable AI companion speaker — reconstructed from OpenAI
+    consumer-device postings and press (fictional name)
+  system: P-HRT
+  stage: Development
+  business:
+    price: 249
+    target_cost: 95
+    launch_date: '2027-03-01'
+    channels:
+    - D2C
+    - Retail
+    currency: USD
+    builds:
+      EVT: 50
+      DVT: 300
+      PVT: 2000
+    annual_volume: 2000000
+    ppm_target: 300
+stakeholders:
+  STK-USER:
+    name: Household user
+    description: Talks to it; moves it between rooms; expects privacy
+    concerns: latency, voice quality, privacy, battery
+  STK-SAFETY:
+    name: Safety & regulatory bodies
+    description: FCC, RED, IEC 62368-1, battery transport
+    concerns: RF, battery, cybersecurity
+  STK-TRUST:
+    name: Device safety & risk operations
+    description: Abuse, child interaction, data handling policies
+    concerns: camera/mic indicators, parental controls
+  STK-CM:
+    name: Contract manufacturer
+    description: Builds and tests at volume
+    concerns: yield, test time, cosmetic defects
+  STK-CLOUD:
+    name: Model & cloud platform team
+    description: Serves the conversation model; owns OTA
+    concerns: on-device fallback, telemetry
+  STK-ID:
+    name: Industrial design studio
+    description: Form, materials, the 'alive' motion
+    concerns: craft, surfaces, sound of mechanisms
+moes:
+  MOE-01:
+    name: Voice-to-first-audio latency
+    target: <= 700 ms p50, <= 1.2 s p95 on Wi-Fi
+  MOE-02:
+    name: Wake-word recall at 5 m with 65 dBA music
+    target: '>= 95 %'
+  MOE-03:
+    name: Battery life, mixed use
+    target: '>= 8 h active, >= 24 h standby'
+  MOE-04:
+    name: Indicator-to-mute latency
+    target: <= 100 ms; hardware shutter
+  MOE-05:
+    name: Matter device control success
+    target: '>= 99 % within 2 s'
+  MOE-06:
+    name: Mechanism noise
+    target: <= 25 dBA at 0.5 m
+  MOE-07:
+    name: Certifications
+    target: FCC, RED, IEC 62368-1, IEC 62133-2, UN 38.3 before PVT
+  MOE-08:
+    name: Privacy design review
+    target: passed; camera/mic indicators non-defeatable
+  MOE-09:
+    name: End-of-line test time
+    target: <= 180 s
+  MOE-10:
+    name: Offline core functions
+    target: wake, timers, local Matter control, 100 %
+needs:
+  N-01:
+    stk: STK-USER
+    text: 'Conversation feels immediate: reply starts within a beat of finishing speaking'
+    moe: MOE-01
+  N-02:
+    stk: STK-USER
+    text: Hears me across the room over music and household noise
+    moe: MOE-02
+  N-03:
+    stk: STK-USER
+    text: Lasts a day between charges when carried around
+    moe: MOE-03
+  N-04:
+    stk: STK-USER
+    text: I can see when it is listening or looking, and stop it instantly
+    moe: MOE-04
+  N-05:
+    stk: STK-USER
+    text: Controls my lights and thermostat without a hub
+    moe: MOE-05
+  N-06:
+    stk: STK-ID
+    text: Feels alive — subtle motion and light, silent mechanisms
+    moe: MOE-06
+  N-07:
+    stk: STK-SAFETY
+    text: Safe battery and RF in every market we ship to
+    moe: MOE-07
+  N-08:
+    stk: STK-TRUST
+    text: Children and bystanders are protected; data handling is auditable
+    moe: MOE-08
+  N-09:
+    stk: STK-CM
+    text: Every unit tested for audio, camera, RF and battery in under 3 minutes
+    moe: MOE-09
+  N-10:
+    stk: STK-CLOUD
+    text: Works usefully offline and updates itself safely
+    moe: MOE-10
+actors: {}
+use_cases: {}
+scenarios: {}
+regulations:
+  REG-FCC:
+    name: FCC Part 15 B/C
+    market: US
+    trigger: digital device + Wi-Fi/BLE/Thread radios
+    standard: 47 CFR 15
+  REG-RED:
+    name: Radio Equipment Directive incl. EN 18031 cybersecurity
+    market: EU
+    trigger: connected radio device
+    standard: EN 300 328; EN 18031
+  REG-62368:
+    name: IEC/UL 62368-1 audio/video & ICT safety
+    market: US/EU
+    trigger: mains-chargeable AV device
+    standard: IEC 62368-1
+  REG-62133:
+    name: IEC 62133-2 lithium cells & batteries
+    market: EU
+    trigger: Li-ion pack
+    standard: IEC 62133-2
+  REG-UN38:
+    name: UN 38.3 battery transport
+    market: global
+    trigger: shipping Li-ion
+    standard: UN 38.3
+  REG-MATTER:
+    name: Matter / Thread certification
+    market: global
+    trigger: smart-home control
+    standard: CSA Matter 1.x
+  REG-ROHS:
+    name: RoHS / REACH / WEEE
+    market: EU
+    trigger: electronics in EU
+    standard: 2011/65/EU
+  REG-PROP65:
+    name: California Prop 65
+    market: US-CA
+    trigger: consumer product in CA
+    standard: Cal. HSC §25249
+  REG-COPPA:
+    name: COPPA / child privacy
+    market: US
+    trigger: voice data from children
+    standard: 16 CFR 312
+requirements:
+  R-01:
+    type: PERF
+    text: Voice-to-first-audio latency shall be ≤ 700 ms p50 and ≤ 1.2 s p95 over
+      Wi-Fi; on-device fallback shall answer wake, timers and local control with no
+      network.
+    verify: test
+    tests:
+    - TST-01
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: latency_ms <= 700
+  R-02:
+    type: PERF
+    text: Wake-word recall shall be ≥ 95 % at 5 m with 65 dBA music playing from the
+      device itself (AEC).
+    verify: test
+    tests:
+    - TST-02
+    from_:
+    - N-02
+    regs: []
+    uc: []
+    attr: wake_recall_pct >= 95
+  R-03:
+    type: PERF
+    text: Battery shall deliver ≥ 8 h mixed active use and ≥ 24 h standby from a 20
+      Wh pack at 25 °C.
+    verify: test
+    tests:
+    - TST-03
+    from_:
+    - N-03
+    regs:
+    - REG-62133
+    uc: []
+    attr: battery_h >= 8
+  R-04:
+    type: SAFE
+    text: A hardware privacy shutter shall block the camera; mic mute shall be a hardware
+      cut with an LED that cannot be overridden by software.
+    verify: demonstration
+    tests:
+    - TST-04
+    from_:
+    - N-04
+    regs:
+    - REG-COPPA
+    uc: []
+    attr: mute_latency_ms <= 100
+  R-05:
+    type: FUNC
+    text: The device shall act as a Matter controller over Thread and Wi-Fi with ≥
+      99 % command success within 2 s.
+    verify: test
+    tests:
+    - TST-05
+    from_:
+    - N-05
+    regs:
+    - REG-MATTER
+    uc: []
+    attr: matter_success_pct >= 99
+  R-06:
+    type: PERF
+    text: The expressive mechanism shall produce ≤ 25 dBA at 0.5 m and survive 500,000
+      cycles.
+    verify: test
+    tests:
+    - TST-06
+    from_:
+    - N-06
+    regs: []
+    uc: []
+    attr: mech_noise_dba <= 25
+  R-07:
+    type: REGU
+    text: The product shall obtain FCC 15B/15C, RED (incl. EN 18031), IEC 62368-1,
+      IEC 62133-2 and UN 38.3 before PVT.
+    verify: inspection
+    tests:
+    - TST-07
+    from_:
+    - N-07
+    regs:
+    - REG-FCC
+    - REG-RED
+    - REG-62368
+    - REG-62133
+    - REG-UN38
+    uc: []
+    attr: certification = granted
+  R-08:
+    type: SAFE
+    text: Pack shall include cell-level protection, charge temperature window 0–45
+      °C, and thermal runaway containment per IEC 62133-2.
+    verify: test
+    tests:
+    - TST-08
+    from_:
+    - N-07
+    regs:
+    - REG-62133
+    uc: []
+    attr: charge_temp_window = 0-45C
+  R-09:
+    type: SEC
+    text: Audio and image data shall be processed on device for wake/intent; uploads
+      require explicit indicator state; firmware shall be signed with rollback protection.
+    verify: inspection
+    tests:
+    - TST-09
+    from_:
+    - N-08
+    regs:
+    - REG-RED
+    - REG-COPPA
+    uc: []
+    attr: security = EN18031
+  R-10:
+    type: MFG
+    text: End-of-line test shall cover audio chamber, camera MTF, RF, battery charge/discharge
+      and provisioning in ≤ 180 s.
+    verify: test
+    tests:
+    - TST-10
+    from_:
+    - N-09
+    regs: []
+    uc: []
+    attr: eol_s <= 180
+  R-11:
+    type: FUNC
+    text: OTA updates shall be A/B with automatic rollback; a failed update shall
+      not brick the device.
+    verify: test
+    tests:
+    - TST-11
+    from_:
+    - N-10
+    regs: []
+    uc: []
+    attr: ota_rollback = true
+  R-12:
+    type: PERF
+    text: System power shall stay ≤ 2.5 W average in always-listening idle with the
+      application SoC asleep (RTOS co-processor owns wake).
+    verify: test
+    tests:
+    - TST-12
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: idle_w <= 2.5
+  R-13:
+    type: PERF
+    text: Full-range driver + passive radiator shall deliver 85 dB SPL at 1 m with
+      ≤ 3 % THD at 1 kHz.
+    verify: test
+    tests:
+    - TST-13
+    from_:
+    - N-06
+    regs: []
+    uc: []
+    attr: spl_db >= 85
+  R-14:
+    type: REGU
+    text: RF exposure (SAR/MPE) shall comply for a device carried in hand and placed
+      on a table.
+    verify: test
+    tests:
+    - TST-14
+    from_:
+    - N-07
+    regs:
+    - REG-FCC
+    - REG-RED
+    uc: []
+    attr: rf_exposure = compliant
+functions:
+  F-01:
+    name: Capture speech and suppress echo
+    alloc:
+    - P-MICS
+    - P-DRV
+    - P-RAD
+    - P-AMP
+    reqs:
+    - R-02
+    perf: ''
+    safety_decision: ''
+  F-02:
+    name: Detect wake word and intent on device
+    alloc:
+    - P-MAIN
+    - P-SOC
+    - P-IMU
+    reqs:
+    - R-01
+    - R-12
+    perf: ''
+    safety_decision: ''
+  F-03:
+    name: Converse via cloud model
+    alloc:
+    - P-MAIN
+    - P-SOC
+    - P-IMU
+    reqs:
+    - R-01
+    perf: ''
+    safety_decision: ''
+  F-04:
+    name: Render speech and music
+    alloc:
+    - P-MICS
+    - P-DRV
+    - P-RAD
+    - P-AMP
+    reqs:
+    - R-13
+    perf: ''
+    safety_decision: ''
+  F-05:
+    name: Sense scene with camera
+    alloc:
+    - P-CAM
+    - P-ALS
+    reqs:
+    - R-04
+    - R-09
+    perf: ''
+    safety_decision: ''
+  F-06:
+    name: Express state with motion and light
+    alloc:
+    - P-ACT
+    - P-RING
+    reqs:
+    - R-06
+    perf: ''
+    safety_decision: ''
+  F-07:
+    name: Control smart-home devices
+    alloc:
+    - P-RADIO
+    - P-OTA
+    reqs:
+    - R-05
+    perf: ''
+    safety_decision: ''
+  F-08:
+    name: Manage power and charging
+    alloc:
+    - P-MCU
+    - P-BATT
+    - P-USBC
+    reqs:
+    - R-03
+    - R-08
+    - R-12
+    perf: ''
+    safety_decision: safety/privacy-critical
+  F-09:
+    name: Enforce privacy controls
+    alloc:
+    - P-SHUT
+    - P-MUTE
+    - P-FW
+    - P-SE
+    reqs:
+    - R-04
+    - R-09
+    perf: ''
+    safety_decision: safety/privacy-critical
+  F-10:
+    name: Update and attest firmware
+    alloc:
+    - P-SHUT
+    - P-MUTE
+    - P-FW
+    - P-SE
+    reqs:
+    - R-09
+    - R-11
+    perf: ''
+    safety_decision: ''
+  F-11:
+    name: Self-test at end of line
+    alloc: []
+    reqs:
+    - R-10
+    perf: ''
+    safety_decision: ''
+  F-12:
+    name: Connect over Wi-Fi, BLE and Thread
+    alloc:
+    - P-RADIO
+    - P-OTA
+    reqs:
+    - R-05
+    - R-14
+    perf: ''
+    safety_decision: ''
+logical_components:
+  LC-AUDIO:
+    name: Audio front end & playback
+    role: Audio front end & playback
+    funcs:
+    - F-01
+    - F-04
+    quality: []
+    parts:
+    - P-MICS
+    - P-DRV
+    - P-RAD
+    - P-AMP
+  LC-AI:
+    name: On-device AI
+    role: On-device AI
+    funcs:
+    - F-02
+    - F-03
+    quality: []
+    parts:
+    - P-MAIN
+    - P-SOC
+    - P-IMU
+  LC-VISION:
+    name: Vision
+    role: Vision
+    funcs:
+    - F-05
+    quality: []
+    parts:
+    - P-CAM
+    - P-ALS
+  LC-EXPR:
+    name: Expression
+    role: Expression
+    funcs:
+    - F-06
+    quality: []
+    parts:
+    - P-ACT
+    - P-RING
+  LC-CONN:
+    name: Connectivity & smart home
+    role: Connectivity & smart home
+    funcs:
+    - F-07
+    - F-12
+    quality: []
+    parts:
+    - P-RADIO
+    - P-OTA
+  LC-PWR:
+    name: Power
+    role: Power
+    funcs:
+    - F-08
+    quality: []
+    parts:
+    - P-MCU
+    - P-BATT
+    - P-USBC
+  LC-SEC:
+    name: Security & privacy
+    role: Security & privacy
+    funcs:
+    - F-09
+    - F-10
+    quality: []
+    parts:
+    - P-SHUT
+    - P-MUTE
+    - P-FW
+    - P-SE
+  LC-TEST:
+    name: Self-test
+    role: Self-test
+    funcs:
+    - F-11
+    quality: []
+    parts: []
+logical_interfaces:
+  LI-01:
+    a: LC-AUDIO
+    b: LC-AI
+    flow: 16 kHz beamformed audio
+  LI-02:
+    a: LC-AI
+    b: LC-CONN
+    flow: conversation stream, TLS
+  LI-03:
+    a: LC-VISION
+    b: LC-AI
+    flow: scene embeddings, shutter state
+  LI-04:
+    a: LC-SEC
+    b: LC-VISION
+    flow: indicator/shutter enforcement
+  LI-05:
+    a: LC-PWR
+    b: LC-AI
+    flow: power states, wake
+  LI-06:
+    a: LC-AI
+    b: LC-EXPR
+    flow: expression commands
+parts:
+  P-HRT:
+    name: Hearth speaker
+    type: Hearth speaker
+    parent: null
+    attrs: {}
+    discipline: system
+    context: false
+    make_buy: make
+    owner_team: null
+  P-ENCL:
+    name: Enclosure (aluminium + fabric)
+    type: Enclosure
+    parent: P-HRT
+    attrs:
+      cost_usd: 12.5
+      material: 6063 Al + knit fabric
+      visible: 'yes'
+      cmf: warm grey anodise, oat fabric
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-EXPR
+  P-MICS:
+    name: 4-mic MEMS array
+    type: 4-mic MEMS array
+    parent: P-HRT
+    attrs:
+      cost_usd: 2.4
+      trl: 8
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AUDIO
+  P-DRV:
+    name: Full-range driver 2.5"
+    type: Full-range driver 2.5"
+    parent: P-HRT
+    attrs:
+      cost_usd: 4.1
+      trl: 8
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AUDIO
+  P-RAD:
+    name: Passive radiator
+    type: Passive radiator
+    parent: P-HRT
+    attrs:
+      cost_usd: 1.2
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-AUDIO
+  P-AMP:
+    name: Class-D amplifier
+    type: Class-D amplifier
+    parent: P-MAIN
+    attrs:
+      cost_usd: 1.4
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AUDIO
+  P-MAIN:
+    name: Main board (SoC, NPU, memory, PMIC, radios)
+    type: Main board
+    parent: P-HRT
+    attrs:
+      cost_usd: 31
+      test_points: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-AI
+  P-SOC:
+    name: Application SoC with NPU
+    type: Application SoC with NPU
+    parent: P-MAIN
+    attrs:
+      mpn: TBD (NPU ≥ 4 TOPS)
+      cost_usd: 18
+      trl: 7
+      new_technology: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AI
+  P-MCU:
+    name: RTOS co-processor (always-on audio, power)
+    type: RTOS co-processor
+    parent: P-MAIN
+    attrs:
+      cost_usd: 2.2
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AI
+  P-RADIO:
+    name: Wi-Fi 6 / BLE / Thread module
+    type: Wi-Fi 6 / BLE / Thread module
+    parent: P-MAIN
+    attrs:
+      cost_usd: 3.9
+      trl: 9
+      mpn: pre-certified module
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-CONN
+  P-CAM:
+    name: Wide-angle camera module
+    type: Wide-angle camera module
+    parent: P-HRT
+    attrs:
+      cost_usd: 6.8
+      trl: 7
+      mpn: Sunny 8MP wide
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-VIS
+    supplier: SUP-01
+  P-SHUT:
+    name: Camera privacy shutter (mechanical)
+    type: Camera privacy shutter
+    parent: P-HRT
+    attrs:
+      cost_usd: 0.9
+      trl: 5
+      new_technology: 'yes'
+      material: PC + stainless
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-VIS
+  P-MUTE:
+    name: Hardware mic-mute switch + LED
+    type: Hardware mic-mute switch + LED
+    parent: P-HRT
+    attrs:
+      cost_usd: 0.6
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: null
+  P-ACT:
+    name: Expression actuators (2× micro-gearmotor)
+    type: Expression actuators
+    parent: P-HRT
+    attrs:
+      cost_usd: 3.2
+      trl: 4
+      new_technology: 'yes'
+      cycles: 500000
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-EXPR
+    supplier: SUP-04
+  P-RING:
+    name: Light ring (24 LEDs)
+    type: Light ring
+    parent: P-HRT
+    attrs:
+      cost_usd: 1.8
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-EXPR
+  P-BATT:
+    name: Li-ion pack 20 Wh with BMS
+    type: Li-ion pack 20 Wh with BMS
+    parent: P-HRT
+    attrs:
+      capacity_Wh: 20
+      mass_budget_g: 180
+      cost_usd: 9.5
+      trl: 8
+      mass_g: 176
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-PWR
+    supplier: SUP-03
+  P-USBC:
+    name: USB-C PD port & controller
+    type: USB-C PD port & controller
+    parent: P-MAIN
+    attrs:
+      cost_usd: 1.1
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-PWR
+  P-IMU:
+    name: IMU
+    type: IMU
+    parent: P-MAIN
+    attrs:
+      cost_usd: 0.7
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: null
+  P-ALS:
+    name: Ambient light sensor
+    type: Ambient light sensor
+    parent: P-MAIN
+    attrs:
+      cost_usd: 0.3
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-VIS
+  P-FW:
+    name: Firmware (RTOS + Linux)
+    type: Firmware
+    parent: P-MAIN
+    attrs: {}
+    discipline: firmware
+    context: false
+    make_buy: make
+    owner_team: TM-AI
+  P-OTA:
+    name: Cloud & OTA service
+    type: Cloud & OTA service
+    parent: P-HRT
+    attrs: {}
+    discipline: software
+    context: true
+    make_buy: make
+    owner_team: TM-CONN
+  P-SE:
+    name: Secure element
+    type: Secure element
+    parent: P-MAIN
+    attrs:
+      cost_usd: 0.9
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-AI
+nodes: {}
+interfaces:
+  IF-01:
+    name: Mics → main board
+    a: P-MICS
+    b: P-MAIN
+    items:
+    - PDM_CLK
+    - PDM_D0
+    - PDM_D1
+    - 3V3
+    - GND
+    kind: electrical PDM
+    funcs:
+    - F-01
+  IF-02:
+    name: Amp → driver
+    a: P-AMP
+    b: P-DRV
+    items:
+    - SPK+
+    - SPK-
+    kind: electrical
+    funcs:
+    - F-04
+  IF-03:
+    name: Camera → SoC
+    a: P-CAM
+    b: P-MAIN
+    items:
+    - CSI_D0
+    - CSI_D1
+    - CSI_CLK
+    - 1V8
+    - GND
+    - SHUTTER_SENSE
+    kind: electrical MIPI CSI-2
+    funcs:
+    - F-05
+  IF-04:
+    name: Shutter ↔ camera (mechanical)
+    a: P-SHUT
+    b: P-CAM
+    items:
+    - Blade
+    - Detent
+    kind: mechanical
+    funcs:
+    - F-09
+  IF-05:
+    name: Mute switch → MCU & mic power
+    a: P-MUTE
+    b: P-MAIN
+    items:
+    - MUTE_N
+    - MIC_PWR_EN
+    - LED_MUTE
+    kind: electrical
+    funcs:
+    - F-09
+  IF-06:
+    name: Actuators ← driver
+    a: P-MAIN
+    b: P-ACT
+    items:
+    - M1+
+    - M1-
+    - M2+
+    - M2-
+    - ENC
+    kind: electrical H-bridge
+    funcs:
+    - F-06
+  IF-07:
+    name: Battery → PMIC
+    a: P-BATT
+    b: P-MAIN
+    items:
+    - VBAT
+    - GND
+    - SMBus_SCL
+    - SMBus_SDA
+    - NTC
+    kind: electrical
+    funcs:
+    - F-08
+  IF-08:
+    name: USB-C → PD controller
+    a: P-USBC
+    b: P-BATT
+    items:
+    - VBUS
+    - CC1
+    - CC2
+    - GND
+    kind: electrical PD
+    funcs:
+    - F-08
+  IF-09:
+    name: SoC ↔ MCU
+    a: P-SOC
+    b: P-MCU
+    items:
+    - UART_TX
+    - UART_RX
+    - I2S
+    - WAKE
+    kind: electrical UART/I2S
+    funcs:
+    - F-02
+    - F-08
+  IF-10:
+    name: Radio ↔ cloud/OTA
+    a: P-RADIO
+    b: P-OTA
+    items:
+    - Conversation
+    - OTA
+    - Telemetry
+    kind: wireless TLS
+    funcs:
+    - F-03
+    - F-10
+  IF-11:
+    name: Radio ↔ smart-home devices
+    a: P-RADIO
+    b: P-OTA
+    items:
+    - Matter commands
+    kind: Thread/Matter
+    funcs:
+    - F-07
+  IF-12:
+    name: Enclosure ↔ driver/radiator (acoustic seal)
+    a: P-ENCL
+    b: P-DRV
+    items:
+    - Gasket
+    - Volume
+    kind: mechanical/acoustic
+    funcs:
+    - F-04
+  IF-13:
+    name: Secure element ↔ SoC
+    a: P-SE
+    b: P-SOC
+    items:
+    - I2C
+    - RST
+    kind: electrical I2C
+    funcs:
+    - F-10
+states:
+  S-OFF:
+    name: 'Off'
+  S-IDLE:
+    name: Idle, listening for wake
+  S-CONV:
+    name: Conversation
+  S-MUTED:
+    name: Muted / shuttered
+  S-CHARGE:
+    name: Charging
+  S-OTA:
+    name: Updating
+  S-FAULT:
+    name: Fault / safe
+transitions:
+  T-01:
+    frm: S-IDLE
+    to: S-CONV
+    trigger: wake word
+    guard: not muted
+    sensor: P-MICS
+    func: F-02
+  T-02:
+    frm: S-CONV
+    to: S-IDLE
+    trigger: end of turn + 8 s silence
+    guard: ''
+    sensor: null
+    func: F-03
+  T-03:
+    frm: S-IDLE
+    to: S-MUTED
+    trigger: mute switch or shutter closed
+    guard: ''
+    sensor: P-MUTE
+    func: F-09
+  T-04:
+    frm: S-MUTED
+    to: S-IDLE
+    trigger: mute switch open and shutter open
+    guard: ''
+    sensor: P-MUTE
+    func: F-09
+  T-05:
+    frm: S-IDLE
+    to: S-CHARGE
+    trigger: USB-C PD attached
+    guard: pack temp 0–45 °C
+    sensor: P-BATT
+    func: F-08
+  T-06:
+    frm: S-IDLE
+    to: S-OTA
+    trigger: signed update staged
+    guard: battery > 30 % or charging
+    sensor: null
+    func: F-10
+  T-07:
+    frm: S-CHARGE
+    to: S-FAULT
+    trigger: pack over-temperature
+    guard: ''
+    sensor: P-BATT
+    func: F-08
+constraints: {}
+trades:
+  TD-01:
+    name: 'Expression mechanism: gearmotor vs voice-coil vs none'
+    question: Does 'alive' motion earn its cost, noise and reliability risk?
+    options:
+    - 2× micro-gearmotor
+    - Voice-coil tilt
+    - Light & haptic only
+    criteria:
+    - Mechanism noise
+    - Perceived liveliness
+    - Reliability over 500k cycles
+    - BOM cost
+    - Mass
+    weights:
+    - 4
+    - 5
+    - 4
+    - 3
+    - 1
+    criteria_meta:
+      Mechanism noise:
+        direction: min
+        unit: dBA
+        moe: MOE-06
+        limit: 25
+      Perceived liveliness:
+        direction: max
+        unit: 1-5
+        basis: ID studio panel
+      Reliability over 500k cycles:
+        direction: max
+        unit: 1-5
+        req: R-06
+      BOM cost:
+        direction: min
+        unit: USD
+      Mass:
+        direction: min
+        unit: g
+    raw:
+      2× micro-gearmotor:
+        Mechanism noise: 27
+        BOM cost: 3.2
+        Mass: 38
+      Voice-coil tilt:
+        Mechanism noise: 19
+        BOM cost: 5.6
+        Mass: 52
+      Light & haptic only:
+        Mechanism noise: 0
+        BOM cost: 1.1
+        Mass: 6
+    scores:
+      2× micro-gearmotor:
+        Perceived liveliness: 5
+        Reliability over 500k cycles: 2
+      Voice-coil tilt:
+        Perceived liveliness: 4
+        Reliability over 500k cycles: 4
+      Light & haptic only:
+        Perceived liveliness: 2
+        Reliability over 500k cycles: 5
+    evidence:
+      2× micro-gearmotor:
+        Mechanism noise:
+        - TST-06
+    affects:
+    - R-06
+    elements:
+    - P-ACT
+    - LC-EXPR
+    status: open
+    owner_team: TM-EXPR
+arch_decisions: {}
+tests:
+  TST-01:
+    name: Voice latency p50/p95
+    method: Automated 500-utterance run over Wi-Fi; timestamps
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-02:
+    name: Wake-word recall with self-playback
+    method: Anechoic + living room, 5 m, 65 dBA music
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-03:
+    name: Battery life mixed use
+    method: Scripted 8 h profile at 25 °C, 5 units
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-04:
+    name: Shutter & mute enforcement
+    method: Attempt capture with shutter closed / mute on; LED latency
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-05:
+    name: Matter control success
+    method: 200 commands to 10 devices, Thread + Wi-Fi
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-06:
+    name: Mechanism noise & life
+    method: dBA at 0.5 m; 500k cycles
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-07:
+    name: Certification program
+    method: NRTL / notified body
+    gate: PVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-08:
+    name: Pack abuse (IEC 62133-2)
+    method: Overcharge, short, crush, thermal
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-09:
+    name: Security review EN 18031
+    method: Signed FW, rollback, pen test, data-flow review
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-10:
+    name: End-of-line test time
+    method: Production fixture, 100 units
+    gate: PVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-11:
+    name: OTA A/B rollback
+    method: Corrupt image; power loss during update
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-12:
+    name: Idle system power
+    method: Power analyser, 1 h idle
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-13:
+    name: Acoustic SPL/THD
+    method: Chamber, 1 m
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-14:
+    name: RF exposure SAR/MPE
+    method: Accredited lab
+    gate: PVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+gates: {}
+phases: {}
+deliverables: {}
+fm_assessments: {}
+teams:
+  TM-SE:
+    name: Systems engineering
+    kind: functional
+    focus: systems
+    lead: ''
+    members: []
+  TM-AUDIO:
+    name: Audio
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-MICS
+    - P-DRV
+    - P-RAD
+    - P-AMP
+    lcs:
+    - LC-AUDIO
+    moes:
+    - MOE-02
+  TM-AI:
+    name: On-device AI & system software
+    kind: subsystem
+    discipline: software
+    lead: ''
+    members: []
+    parts:
+    - P-MAIN
+    - P-SOC
+    - P-MCU
+    - P-FW
+    - P-SE
+    lcs:
+    - LC-AI
+    - LC-SEC
+    moes:
+    - MOE-01
+    - MOE-10
+  TM-VIS:
+    name: Camera & vision
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-CAM
+    - P-SHUT
+    - P-ALS
+    lcs:
+    - LC-VISION
+    moes:
+    - MOE-04
+    - MOE-08
+  TM-EXPR:
+    name: Expression mechanism
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-ACT
+    - P-RING
+    - P-ENCL
+    lcs:
+    - LC-EXPR
+    moes:
+    - MOE-06
+  TM-PWR:
+    name: Power & battery
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-BATT
+    - P-USBC
+    lcs:
+    - LC-PWR
+    moes:
+    - MOE-03
+  TM-CONN:
+    name: Connectivity & smart home
+    kind: subsystem
+    discipline: firmware
+    lead: ''
+    members: []
+    parts:
+    - P-RADIO
+    - P-OTA
+    lcs:
+    - LC-CONN
+    moes:
+    - MOE-05
+  TM-ID:
+    name: Design studio
+    kind: functional
+    focus: industrial design
+    lead: ''
+    members: []
+  TM-COMP:
+    name: Regulatory compliance
+    kind: functional
+    focus: compliance
+    lead: ''
+    members: []
+  TM-TEST:
+    name: Test
+    kind: functional
+    focus: test
+    lead: ''
+    members: []
+  TM-REL:
+    name: Reliability
+    kind: functional
+    focus: reliability
+    lead: ''
+    members: []
+  TM-QA:
+    name: Quality
+    kind: functional
+    focus: quality
+    lead: ''
+    members: []
+  TM-MFG:
+    name: Manufacturing (Singapore)
+    kind: functional
+    focus: manufacturing
+    lead: ''
+    members: []
+  TM-SC:
+    name: Supply chain
+    kind: functional
+    focus: sourcing
+    lead: ''
+    members: []
+  TM-PROC:
+    name: Procurement
+    kind: functional
+    focus: procurement
+    lead: ''
+    members: []
+  TM-PM:
+    name: Program
+    kind: functional
+    focus: program
+    lead: ''
+    members: []
+  TM-TRUST:
+    name: Device safety & risk
+    kind: functional
+    focus: safety
+    lead: ''
+    members: []
+  TM-LEGAL:
+    name: Legal & privacy
+    kind: functional
+    focus: legal
+    lead: ''
+    members: []
+  TM-MKT:
+    name: Marketing
+    kind: functional
+    focus: marketing
+    lead: ''
+    members: []
+  TM-FIN:
+    name: Finance
+    kind: functional
+    focus: finance
+    lead: ''
+    members: []
+process_steps:
+  PS-01:
+    name: PCBA main board (SMT) + ICT
+    order: 1
+    station: EMS
+    parts:
+    - P-MAIN
+    team: TM-MFG
+  PS-02:
+    name: 'Acoustic sub-assembly: driver, radiator, gasket'
+    order: 2
+    station: Line A
+    parts:
+    - P-DRV
+    - P-RAD
+    - P-ENCL
+    team: TM-MFG
+  PS-03:
+    name: Mechanism + camera + shutter assembly
+    order: 3
+    station: Line A
+    parts:
+    - P-ACT
+    - P-CAM
+    - P-SHUT
+    team: TM-MFG
+  PS-04:
+    name: Pack install, final assembly, fabric
+    order: 4
+    station: Line A
+    parts:
+    - P-BATT
+    - P-ENCL
+    team: TM-MFG
+  PS-05:
+    name: 'EoL: audio chamber, camera MTF, RF, charge/discharge, provisioning'
+    order: 5
+    station: EoL
+    parts:
+    - P-HRT
+    team: TM-MFG
+suppliers:
+  SUP-01:
+    name: Sunny Optical (camera module)
+    parts:
+    - P-CAM
+    status: approved
+    risk: single source
+    owner: TM-SC
+    lead_time_d: 70
+  SUP-02:
+    name: Luxshare (CM, final assembly)
+    parts: []
+    status: approved
+    risk: capacity shared with sibling device
+    owner: TM-SC
+  SUP-03:
+    name: Pack maker (cells + BMS)
+    parts:
+    - P-BATT
+    status: candidate
+    risk: IEC 62133-2 report pending
+    owner: TM-SC
+    lead_time_d: 56
+  SUP-04:
+    name: Micro-gearmotor vendor
+    parts:
+    - P-ACT
+    status: candidate
+    risk: 500k-cycle life unproven
+    owner: TM-SC
+    lead_time_d: 45
+work_items: {}
+findings: {}
+handoffs: {}
+field_events: {}
+risks: {}
+reviews: {}
+tables: {}
+test_runs:
+  RUN-01:
+    test: TST-12
+    date: '2026-11-04'
+    result: fail
+    unit: bench-1
+    metrics:
+      idle_w: 3.1
+    notes: SoC not entering deep sleep; MCU wake path incomplete
+  RUN-02:
+    test: TST-06
+    date: '2026-11-06'
+    result: fail
+    unit: bench-2
+    metrics:
+      mech_noise_dba: 27.4
+  RUN-03:
+    test: TST-02
+    date: '2026-11-09'
+    result: pass
+    unit: bench-1
+    metrics:
+      wake_recall_pct: 96.2
+simulations: {}
+attachments: {}
+dfx_reviews: {}
+cad_models: {}
+quotes: {}
+tooling: {}
+inspections: {}
+capa: {}
+change_orders: {}
+work_orders: {}
+units: {}
+purchase_orders: {}
+cdas:
+  CDA-01:
+    name: Voice-to-first-audio p95
+    unit: ms
+    target: 1000
+    limit: 1200
+    direction: min
+    moe: MOE-01
+    req: R-01
+    owner_team: TM-AI
+    source:
+      kind: test_run
+      test: TST-01
+      key: latency_p95_ms
+  CDA-02:
+    name: Wake-word recall @5 m / 65 dBA
+    unit: '%'
+    target: 96
+    limit: 95
+    direction: max
+    moe: MOE-02
+    req: R-02
+    owner_team: TM-AUDIO
+    source:
+      kind: test_run
+      test: TST-02
+      key: wake_recall_pct
+  CDA-03:
+    name: Idle system power
+    unit: W
+    target: 2.0
+    limit: 2.5
+    direction: min
+    req: R-12
+    owner_team: TM-AI
+    source:
+      kind: test_run
+      test: TST-12
+      key: idle_w
+  CDA-04:
+    name: Mechanism noise
+    unit: dBA
+    target: 22
+    limit: 25
+    direction: min
+    moe: MOE-06
+    req: R-06
+    owner_team: TM-EXPR
+    source:
+      kind: test_run
+      test: TST-06
+      key: mech_noise_dba
+  CDA-05:
+    name: Pack mass
+    unit: g
+    target: 170
+    limit: 180
+    direction: min
+    owner_team: TM-PWR
+    source:
+      kind: part_attr
+      part: P-BATT
+      key: mass_g
+claims:
+  CL-01:
+    text: Hears you across the room, even over music
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-02
+    owner: TM-MKT
+  CL-02:
+    text: All-day battery
+    type: performance
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-03
+    owner: TM-MKT
+  CL-03:
+    text: Camera and mic can be physically switched off
+    type: safety
+    markets:
+    - US
+    - EU
+    reqs:
+    - R-04
+    regs:
+    - REG-COPPA
+    owner: TM-MKT
+notes: {}
+program:
+  stage: Development

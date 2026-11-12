@@ -1,0 +1,1358 @@
+meta:
+  name: Kiln accelerator rack
+  version: '0.1'
+  method: OOSEM
+  description: Liquid-cooled AI accelerator rack — reconstructed from Anthropic data-center
+    hardware postings (fictional name)
+  system: P-RACK
+  stage: Development
+  business:
+    target_cost: 1950000
+    currency: USD
+    builds:
+      EVT: 2
+      DVT: 10
+      PVT: 40
+    annual_volume: 2000
+    ppm_target: 200
+stakeholders:
+  STK-ML:
+    name: ML performance & training teams
+    description: Need tokens/s per rack and a fabric that scales
+    concerns: interconnect bandwidth, failure budget
+  STK-DC:
+    name: Datacenter design & operations
+    description: Power, cooling, floor loading, serviceability
+    concerns: kW/rack, CDU interface, leak response
+  STK-FLEET:
+    name: Fleet hardware health
+    description: Telemetry, RAS, derating policy
+    concerns: failure budget per 1,000 nodes, attestation
+  STK-CM:
+    name: CM / ODM partners
+    description: Build racks at two sites
+    concerns: yield, takt, leak/fill test time
+  STK-SEC:
+    name: Security
+    description: Secure boot, root of trust, supply-chain integrity
+    concerns: attestation, firmware provenance
+  STK-SAFETY:
+    name: Safety & compliance
+    description: UL/IEC 62368-1, FCC 15A, CE EMC, seismic, fluid safety
+    concerns: HVDC, coolant
+moes:
+  MOE-01:
+    name: Accelerators per rack at ≤ 120 kW
+    target: '64'
+  MOE-02:
+    name: Scale-out bandwidth per accelerator
+    target: '>= 800 Gb/s, link BER <= 1e-12'
+  MOE-03:
+    name: Rack power at full load
+    target: <= 120 kW; inlet coolant 30 °C, ΔT <= 10 K
+  MOE-04:
+    name: Tray swap time / annual failure rate
+    target: <= 15 min; <= 2 % AFR per tray
+  MOE-05:
+    name: Attestation coverage
+    target: 100 % of trays, secure boot enforced
+  MOE-06:
+    name: First-pass yield at rack integration
+    target: '>= 95 % at both sites'
+  MOE-07:
+    name: Leak detection to shutdown
+    target: <= 2 s, isolated to tray
+  MOE-08:
+    name: Telemetry coverage
+    target: 100 % of power rails and cold plates
+needs:
+  N-01:
+    stk: STK-ML
+    text: Maximise accelerators per rack within the datacenter power and cooling envelope
+    moe: MOE-01
+  N-02:
+    stk: STK-ML
+    text: Scale-up fabric within the rack and scale-out to the pod with predictable
+      bandwidth
+    moe: MOE-02
+  N-03:
+    stk: STK-DC
+    text: Stay within 120 kW per rack and the facility CDU interface
+    moe: MOE-03
+  N-04:
+    stk: STK-FLEET
+    text: Meet the failure budget and swap any tray in under 15 minutes
+    moe: MOE-04
+  N-05:
+    stk: STK-SEC
+    text: Every tray boots only signed firmware and attests to the fleet
+    moe: MOE-05
+  N-06:
+    stk: STK-CM
+    text: Build and test a rack at two sites with the same yield
+    moe: MOE-06
+  N-07:
+    stk: STK-SAFETY
+    text: Safe under leak, HVDC fault, seismic event
+    moe: MOE-07
+  N-08:
+    stk: STK-DC
+    text: Telemetry for every power and thermal domain
+    moe: MOE-08
+actors: {}
+use_cases: {}
+scenarios: {}
+regulations:
+  REG-62368:
+    name: UL/IEC 62368-1 ICT safety
+    market: US/EU
+    trigger: ITE rack & power shelves
+    standard: IEC 62368-1
+  REG-FCC15A:
+    name: FCC Part 15 Class A
+    market: US
+    trigger: digital device, industrial
+    standard: 47 CFR 15A
+  REG-CEEMC:
+    name: EN 55032 / EN 55035 EMC
+    market: EU
+    trigger: ITE in EU
+    standard: EN 55032
+  REG-HVDC:
+    name: IEC 62477-1 / UL 62368-1 HVDC power
+    market: US/EU
+    trigger: 48 V busbar, HVDC-ready shelves
+    standard: IEC 62477-1
+  REG-OCP:
+    name: OCP liquid cooling & fluid safety guidelines
+    market: global
+    trigger: direct liquid cooling
+    standard: OCP ACS
+  REG-SEISMIC:
+    name: GR-63 / IEC 60068-3-3 seismic
+    market: US/EU
+    trigger: rack in seismic zones
+    standard: GR-63-CORE
+  REG-ROHS:
+    name: RoHS / REACH / WEEE
+    market: EU
+    trigger: electronics in EU
+    standard: 2011/65/EU
+requirements:
+  R-01:
+    type: PERF
+    text: The rack shall host 8 accelerator trays × 8 accelerators and 2 host trays
+      and 2 scale-up switch trays within 42U.
+    verify: inspection
+    tests:
+    - TST-12
+    from_:
+    - N-01
+    regs: []
+    uc: []
+    attr: accelerators = 64
+  R-02:
+    type: PERF
+    text: Rack power at full load shall be ≤ 120 kW from 48 V busbars fed by N+1 power
+      shelves; 12 V and 48 V rails derated per fleet policy.
+    verify: test
+    tests:
+    - TST-01
+    from_:
+    - N-03
+    regs:
+    - REG-HVDC
+    - REG-62368
+    uc: []
+    attr: rack_kw <= 120
+  R-03:
+    type: PERF
+    text: Direct-to-chip liquid cooling shall hold accelerator junction ≤ 85 °C at
+      30 °C inlet with ΔT ≤ 10 K and ≤ 1.2 L/min per cold plate.
+    verify: test
+    tests:
+    - TST-02
+    from_:
+    - N-03
+    regs:
+    - REG-OCP
+    uc: []
+    attr: tj_c <= 85
+  R-04:
+    type: PERF
+    text: Scale-out links shall deliver ≥ 800 Gb/s per accelerator with BER ≤ 1e-12
+      over the pod optics; scale-up copper within rack ≤ 1.5 m.
+    verify: test
+    tests:
+    - TST-03
+    from_:
+    - N-02
+    regs: []
+    uc: []
+    attr: ber <= 1e-12
+  R-05:
+    type: MAINT
+    text: Any tray shall be hot-swappable with quick-disconnect coolant couplings,
+      dripless, in ≤ 15 min with one technician.
+    verify: demonstration
+    tests:
+    - TST-04
+    from_:
+    - N-04
+    regs:
+    - REG-OCP
+    uc: []
+    attr: swap_min <= 15
+  R-06:
+    type: SAFE
+    text: Leak detection per tray shall isolate coolant and power to the tray within
+      2 s and alert the fleet.
+    verify: test
+    tests:
+    - TST-05
+    from_:
+    - N-07
+    regs:
+    - REG-OCP
+    - REG-62368
+    uc: []
+    attr: leak_cutoff_s <= 2
+  R-07:
+    type: SEC
+    text: Every tray BMC shall enforce secure boot with a hardware root of trust and
+      attest firmware measurements to the fleet before joining.
+    verify: inspection
+    tests:
+    - TST-06
+    from_:
+    - N-05
+    regs: []
+    uc: []
+    attr: attestation = 100%
+  R-08:
+    type: FUNC
+    text: Telemetry shall cover every power rail, cold-plate inlet/outlet temperature
+      and flow, and fabric link health at ≥ 1 Hz.
+    verify: test
+    tests:
+    - TST-07
+    from_:
+    - N-08
+    regs: []
+    uc: []
+    attr: telemetry_coverage = 100%
+  R-09:
+    type: MFG
+    text: Rack integration shall achieve ≥ 95 % first-pass yield at both CM sites
+      with leak/fill, hipot, burn-in and fabric BER in the EoL sequence ≤ 6 h.
+    verify: test
+    tests:
+    - TST-08
+    from_:
+    - N-06
+    regs: []
+    uc: []
+    attr: fpy_pct >= 95
+  R-10:
+    type: REGU
+    text: The rack shall obtain UL/IEC 62368-1, FCC 15A and CE EMC, and pass GR-63
+      seismic zone 4 before fleet deployment.
+    verify: inspection
+    tests:
+    - TST-09
+    from_:
+    - N-07
+    regs:
+    - REG-62368
+    - REG-FCC15A
+    - REG-CEEMC
+    - REG-SEISMIC
+    uc: []
+    attr: certification = granted
+  R-11:
+    type: PERF
+    text: Annual failure rate per accelerator tray shall be ≤ 2 % with field-replaceable
+      fans/pumps excluded.
+    verify: analysis
+    tests:
+    - TST-10
+    from_:
+    - N-04
+    regs: []
+    uc: []
+    attr: afr_pct <= 2
+  R-12:
+    type: PERF
+    text: Rack mass ≤ 1,600 kg and floor loading within datacenter limits; wet weight
+      accounted.
+    verify: analysis
+    tests:
+    - TST-11
+    from_:
+    - N-03
+    regs:
+    - REG-SEISMIC
+    uc: []
+    attr: mass_kg <= 1600
+functions:
+  F-01:
+    name: Distribute 48 V power to trays
+    alloc:
+    - P-PSH
+    - P-BUS
+    reqs:
+    - R-02
+    perf: ''
+    safety_decision: safety-critical
+  F-02:
+    name: Remove heat with direct liquid cooling
+    alloc:
+    - P-CP
+    - P-MAN
+    - P-QD
+    - P-LEAK
+    - P-CDUI
+    reqs:
+    - R-03
+    perf: ''
+    safety_decision: ''
+  F-03:
+    name: Interconnect accelerators scale-up
+    alloc:
+    - P-ACCT
+    - P-ACC
+    - P-HOST
+    - P-NIC
+    - P-SW
+    - P-OPT
+    - P-CABLE
+    reqs:
+    - R-04
+    perf: ''
+    safety_decision: ''
+  F-04:
+    name: Connect to the pod scale-out
+    alloc:
+    - P-ACCT
+    - P-ACC
+    - P-HOST
+    - P-NIC
+    - P-SW
+    - P-OPT
+    - P-CABLE
+    reqs:
+    - R-04
+    perf: ''
+    safety_decision: ''
+  F-05:
+    name: Detect and isolate leaks
+    alloc:
+    - P-CP
+    - P-MAN
+    - P-QD
+    - P-LEAK
+    - P-CDUI
+    reqs:
+    - R-06
+    perf: ''
+    safety_decision: safety-critical
+  F-06:
+    name: Boot securely and attest
+    alloc:
+    - P-BMC
+    - P-RMC
+    - P-FW
+    reqs:
+    - R-07
+    perf: ''
+    safety_decision: ''
+  F-07:
+    name: Report telemetry
+    alloc:
+    - P-BMC
+    - P-RMC
+    - P-FW
+    reqs:
+    - R-08
+    perf: ''
+    safety_decision: ''
+  F-08:
+    name: Service trays hot
+    alloc:
+    - P-FRAME
+    reqs:
+    - R-05
+    - R-11
+    perf: ''
+    safety_decision: ''
+  F-09:
+    name: Integrate and test at the CM
+    alloc: []
+    reqs:
+    - R-09
+    perf: ''
+    safety_decision: ''
+  F-10:
+    name: Hold the structure and mass
+    alloc:
+    - P-FRAME
+    reqs:
+    - R-01
+    - R-12
+    perf: ''
+    safety_decision: ''
+logical_components:
+  LC-PWR:
+    name: Power distribution
+    role: Power distribution
+    funcs:
+    - F-01
+    quality: []
+    parts:
+    - P-PSH
+    - P-BUS
+  LC-COOL:
+    name: Liquid cooling
+    role: Liquid cooling
+    funcs:
+    - F-02
+    - F-05
+    quality: []
+    parts:
+    - P-CP
+    - P-MAN
+    - P-QD
+    - P-LEAK
+    - P-CDUI
+  LC-FAB:
+    name: Fabric
+    role: Fabric
+    funcs:
+    - F-03
+    - F-04
+    quality: []
+    parts:
+    - P-ACCT
+    - P-ACC
+    - P-HOST
+    - P-NIC
+    - P-SW
+    - P-OPT
+    - P-CABLE
+  LC-MGMT:
+    name: Management & security
+    role: Management & security
+    funcs:
+    - F-06
+    - F-07
+    quality: []
+    parts:
+    - P-BMC
+    - P-RMC
+    - P-FW
+  LC-MECH:
+    name: Rack structure & serviceability
+    role: Rack structure & serviceability
+    funcs:
+    - F-08
+    - F-10
+    quality: []
+    parts:
+    - P-FRAME
+  LC-TEST:
+    name: Integration & test
+    role: Integration & test
+    funcs:
+    - F-09
+    quality: []
+    parts: []
+logical_interfaces:
+  LI-01:
+    a: LC-PWR
+    b: LC-MGMT
+    flow: rail telemetry, enable
+  LI-02:
+    a: LC-COOL
+    b: LC-MGMT
+    flow: flow, temperature, leak
+  LI-03:
+    a: LC-FAB
+    b: LC-MGMT
+    flow: link health
+  LI-04:
+    a: LC-MECH
+    b: LC-COOL
+    flow: manifold routing, QD positions
+parts:
+  P-RACK:
+    name: Kiln rack
+    type: Kiln rack
+    parent: null
+    attrs: {}
+    discipline: system
+    context: false
+    make_buy: make
+    owner_team: null
+  P-FRAME:
+    name: 42U frame, seismic-rated
+    type: 42U frame, seismic-rated
+    parent: P-RACK
+    attrs:
+      cost_usd: 2600
+      mass_budget_g: 180000
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-MECH
+  P-ACCT:
+    name: Accelerator tray (8× accelerator, cold plates)
+    type: Accelerator tray
+    parent: P-RACK
+    attrs:
+      cost_usd: 2100
+      field_replaceable: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-FAB
+  P-ACC:
+    name: Accelerator package (partner silicon)
+    type: Accelerator package
+    parent: P-ACCT
+    attrs:
+      cost_usd: 24000
+      trl: 7
+      new_technology: 'yes'
+      power_W: 1400
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-FAB
+    supplier: SUP-01
+  P-CP:
+    name: Cold plate assembly
+    type: Cold plate assembly
+    parent: P-ACCT
+    attrs:
+      cost_usd: 380
+      trl: 6
+      new_technology: 'yes'
+      flow_lpm: 1.2
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-COOL
+    supplier: SUP-02
+  P-HOST:
+    name: Host tray (CPU, NICs)
+    type: Host tray
+    parent: P-RACK
+    attrs:
+      cost_usd: 1600
+      field_replaceable: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-FAB
+  P-NIC:
+    name: 800G NIC
+    type: 800G NIC
+    parent: P-HOST
+    attrs:
+      cost_usd: 1800
+      trl: 8
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-FAB
+  P-SW:
+    name: Scale-up switch tray
+    type: Scale-up switch tray
+    parent: P-RACK
+    attrs:
+      cost_usd: 2400
+      field_replaceable: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-FAB
+  P-OPT:
+    name: 800G optical transceivers
+    type: 800G optical transceivers
+    parent: P-SW
+    attrs:
+      cost_usd: 900
+      trl: 7
+      new_technology: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-FAB
+    supplier: SUP-03
+  P-PSH:
+    name: Power shelf 48 V, N+1
+    type: Power shelf 48 V, N+1
+    parent: P-RACK
+    attrs:
+      cost_usd: 4200
+      trl: 8
+      power_W: 33000
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-PWR
+  P-BUS:
+    name: 48 V busbar
+    type: 48 V busbar
+    parent: P-RACK
+    attrs:
+      cost_usd: 700
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-PWR
+  P-MAN:
+    name: Rack coolant manifold with QDs
+    type: Rack coolant manifold with QDs
+    parent: P-RACK
+    attrs:
+      cost_usd: 1900
+      trl: 6
+      new_technology: 'yes'
+    discipline: mechanical
+    context: false
+    make_buy: make
+    owner_team: TM-COOL
+    supplier: SUP-02
+  P-QD:
+    name: Quick-disconnect couplings (dripless)
+    type: Quick-disconnect couplings
+    parent: P-MAN
+    attrs:
+      cost_usd: 95
+      trl: 8
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-COOL
+  P-LEAK:
+    name: Leak sensor + isolation valve per tray
+    type: Leak sensor + isolation valve per tray
+    parent: P-ACCT
+    attrs:
+      cost_usd: 60
+      trl: 5
+      new_technology: 'yes'
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-COOL
+  P-BMC:
+    name: Tray BMC with root of trust
+    type: Tray BMC with root of trust
+    parent: P-ACCT
+    attrs:
+      cost_usd: 140
+      trl: 8
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-MGMT
+  P-RMC:
+    name: Rack management controller
+    type: Rack management controller
+    parent: P-RACK
+    attrs:
+      cost_usd: 450
+    discipline: electrical
+    context: false
+    make_buy: make
+    owner_team: TM-MGMT
+  P-FW:
+    name: Platform firmware (BMC, secure boot)
+    type: Platform firmware
+    parent: P-BMC
+    attrs: {}
+    discipline: firmware
+    context: false
+    make_buy: make
+    owner_team: TM-MGMT
+  P-CDUI:
+    name: Facility CDU interface (supply/return)
+    type: Facility CDU interface
+    parent: P-RACK
+    attrs:
+      cost_usd: 800
+    discipline: mechanical
+    context: false
+    make_buy: buy
+    owner_team: TM-COOL
+  P-CABLE:
+    name: Scale-up copper cable set
+    type: Scale-up copper cable set
+    parent: P-RACK
+    attrs:
+      cost_usd: 3200
+    discipline: electrical
+    context: false
+    make_buy: buy
+    owner_team: TM-FAB
+nodes: {}
+interfaces:
+  IF-01:
+    name: Power shelf → busbar
+    a: P-PSH
+    b: P-BUS
+    items:
+    - 48V
+    - RTN
+    - PMBus
+    kind: electrical 48 V
+    funcs:
+    - F-01
+  IF-02:
+    name: Busbar → accelerator tray
+    a: P-BUS
+    b: P-ACCT
+    items:
+    - 48V
+    - RTN
+    - PRESENT
+    kind: electrical 48 V blind-mate
+    funcs:
+    - F-01
+  IF-03:
+    name: Manifold → tray cold plates
+    a: P-MAN
+    b: P-ACCT
+    items:
+    - Supply
+    - Return
+    kind: fluid QD
+    funcs:
+    - F-02
+  IF-04:
+    name: Facility CDU → manifold
+    a: P-CDUI
+    b: P-MAN
+    items:
+    - Supply 30 °C
+    - Return
+    kind: fluid
+    funcs:
+    - F-02
+  IF-05:
+    name: Leak sensor → BMC → valve
+    a: P-LEAK
+    b: P-BMC
+    items:
+    - LEAK
+    - VALVE_EN
+    - GND
+    kind: electrical
+    funcs:
+    - F-05
+  IF-06:
+    name: Accelerator tray ↔ switch tray (scale-up)
+    a: P-ACCT
+    b: P-SW
+    items:
+    - SU_LANES[0:15]
+    kind: electrical copper
+    funcs:
+    - F-03
+  IF-07:
+    name: Switch tray → pod optics (scale-out)
+    a: P-SW
+    b: P-OPT
+    items:
+    - TX
+    - RX
+    kind: optical 800G
+    funcs:
+    - F-04
+  IF-08:
+    name: Host ↔ accelerator tray
+    a: P-HOST
+    b: P-ACCT
+    items:
+    - PCIe_x16
+    - SMBus
+    kind: PCIe/CXL
+    funcs:
+    - F-03
+  IF-09:
+    name: BMC ↔ rack manager
+    a: P-BMC
+    b: P-RMC
+    items:
+    - MGMT_ETH
+    - ATTEST
+    kind: electrical Ethernet
+    funcs:
+    - F-06
+    - F-07
+  IF-10:
+    name: Tray ↔ frame (rails, blind-mate)
+    a: P-ACCT
+    b: P-FRAME
+    items:
+    - Rails
+    - Guide pins
+    - Latch
+    kind: mechanical
+    funcs:
+    - F-08
+    - F-10
+states:
+  S-OFF:
+    name: De-energised
+  S-FILL:
+    name: Filled & leak-checked
+  S-BOOT:
+    name: Booting & attesting
+  S-RUN:
+    name: In fleet
+  S-DEGRADED:
+    name: Degraded (tray isolated)
+  S-SERVICE:
+    name: Tray service
+transitions:
+  T-01:
+    frm: S-OFF
+    to: S-FILL
+    trigger: coolant filled, pressure hold passed
+    guard: ''
+    sensor: P-LEAK
+    func: F-05
+  T-02:
+    frm: S-FILL
+    to: S-BOOT
+    trigger: 48 V enabled
+    guard: no leak
+    sensor: P-LEAK
+    func: F-01
+  T-03:
+    frm: S-BOOT
+    to: S-RUN
+    trigger: all trays attested
+    guard: ''
+    sensor: P-BMC
+    func: F-06
+  T-04:
+    frm: S-RUN
+    to: S-DEGRADED
+    trigger: leak or tray fault
+    guard: ''
+    sensor: P-LEAK
+    func: F-05
+  T-05:
+    frm: S-DEGRADED
+    to: S-SERVICE
+    trigger: technician dispatched
+    guard: tray isolated
+    sensor: null
+    func: F-08
+  T-06:
+    frm: S-SERVICE
+    to: S-BOOT
+    trigger: tray replaced
+    guard: QD dripless check
+    sensor: P-LEAK
+    func: F-08
+constraints: {}
+trades:
+  TD-01:
+    name: 'Cooling: direct-to-chip vs immersion vs rear-door'
+    question: Which cooling architecture meets Tj ≤ 85 °C at 120 kW with serviceable
+      trays?
+    options:
+    - Direct-to-chip cold plates
+    - Single-phase immersion
+    - Rear-door heat exchanger + air
+    criteria:
+    - Tj at 120 kW
+    - Tray swap time
+    - Leak risk
+    - Cost per rack
+    - Facility change
+    weights:
+    - 5
+    - 4
+    - 4
+    - 3
+    - 3
+    criteria_meta:
+      Tj at 120 kW:
+        direction: min
+        unit: °C
+        req: R-03
+        limit: 85
+      Tray swap time:
+        direction: min
+        unit: min
+        req: R-05
+        limit: 15
+      Leak risk:
+        direction: max
+        unit: 1-5
+      Cost per rack:
+        direction: min
+        unit: USD
+      Facility change:
+        direction: max
+        unit: 1-5
+        basis: datacenter team
+    raw:
+      Direct-to-chip cold plates:
+        Tj at 120 kW: 78
+        Tray swap time: 12
+        Cost per rack: 42000
+      Single-phase immersion:
+        Tj at 120 kW: 72
+        Tray swap time: 45
+        Cost per rack: 68000
+      Rear-door heat exchanger + air:
+        Tj at 120 kW: 96
+        Tray swap time: 8
+        Cost per rack: 21000
+    scores:
+      Direct-to-chip cold plates:
+        Leak risk: 3
+        Facility change: 4
+      Single-phase immersion:
+        Leak risk: 4
+        Facility change: 1
+      Rear-door heat exchanger + air:
+        Leak risk: 5
+        Facility change: 5
+    affects:
+    - R-03
+    - R-05
+    - R-06
+    elements:
+    - LC-COOL
+    - P-CP
+    - P-MAN
+    decision: Direct-to-chip cold plates
+    rationale: Rear-door is knocked out on Tj; immersion fails the 15-min swap. Direct-to-chip
+      with per-tray leak isolation (R-06) carries the leak risk.
+    status: decided
+    decided_by: systems
+    date: '2026-10-20'
+    owner_team: TM-COOL
+arch_decisions: {}
+tests:
+  TST-01:
+    name: Rack power at full load
+    method: Load test, PMBus telemetry
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-02:
+    name: 'Thermal: Tj at 30 °C inlet'
+    method: Thermal test vehicle, flow sweep
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-03:
+    name: Fabric BER
+    method: BERT, 72 h
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-04:
+    name: Tray swap time
+    method: 3 technicians, timed, dripless check
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-05:
+    name: Leak to isolation
+    method: Injected leak, timed
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-06:
+    name: Secure boot & attestation
+    method: Tampered image rejected; attestation log
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-07:
+    name: Telemetry coverage
+    method: Rail/cold-plate map audit
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-08:
+    name: CM first-pass yield
+    method: Pilot build, 10 racks per site
+    gate: PVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-09:
+    name: 'Certification: 62368-1, FCC 15A, EMC, seismic'
+    method: NRTL + shake table
+    gate: PVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-10:
+    name: AFR reliability analysis
+    method: Weibull from burn-in & fleet data
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-11:
+    name: Rack mass & floor loading
+    method: Weigh wet
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+  TST-12:
+    name: Accelerator count & fit
+    method: Mechanical fit check
+    gate: DVT
+    passfail: meets requirement attribute
+    status: planned
+    owner_team: TM-TEST
+gates: {}
+phases: {}
+deliverables: {}
+fm_assessments: {}
+teams:
+  TM-SE:
+    name: Systems architecture
+    kind: functional
+    focus: systems
+    lead: ''
+    members: []
+  TM-PWR:
+    name: Power
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-PSH
+    - P-BUS
+    lcs:
+    - LC-PWR
+    moes:
+    - MOE-03
+  TM-COOL:
+    name: Liquid cooling
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-MAN
+    - P-QD
+    - P-CP
+    - P-LEAK
+    - P-CDUI
+    lcs:
+    - LC-COOL
+    moes:
+    - MOE-03
+    - MOE-07
+  TM-FAB:
+    name: Interconnect & fabric
+    kind: subsystem
+    discipline: electrical
+    lead: ''
+    members: []
+    parts:
+    - P-SW
+    - P-OPT
+    - P-NIC
+    - P-CABLE
+    - P-ACCT
+    - P-ACC
+    - P-HOST
+    lcs:
+    - LC-FAB
+    moes:
+    - MOE-01
+    - MOE-02
+  TM-MGMT:
+    name: Platform firmware & security
+    kind: subsystem
+    discipline: firmware
+    lead: ''
+    members: []
+    parts:
+    - P-BMC
+    - P-RMC
+    - P-FW
+    lcs:
+    - LC-MGMT
+    moes:
+    - MOE-05
+    - MOE-08
+  TM-MECH:
+    name: Rack mechanical
+    kind: subsystem
+    discipline: mechanical
+    lead: ''
+    members: []
+    parts:
+    - P-FRAME
+    lcs:
+    - LC-MECH
+    moes:
+    - MOE-04
+  TM-TEST:
+    name: Validation & bring-up
+    kind: functional
+    focus: test
+    lead: ''
+    members: []
+  TM-REL:
+    name: Fleet reliability (RAS)
+    kind: functional
+    focus: reliability
+    lead: ''
+    members: []
+  TM-MFG:
+    name: Manufacturing (CM/ODM)
+    kind: functional
+    focus: manufacturing
+    lead: ''
+    members: []
+  TM-IND:
+    name: Industrialization
+    kind: functional
+    focus: industrialization
+    lead: ''
+    members: []
+  TM-SC:
+    name: Supply chain
+    kind: functional
+    focus: sourcing
+    lead: ''
+    members: []
+  TM-PROC:
+    name: Procurement
+    kind: functional
+    focus: procurement
+    lead: ''
+    members: []
+  TM-COMP:
+    name: Compliance & safety
+    kind: functional
+    focus: compliance
+    lead: ''
+    members: []
+  TM-QA:
+    name: Quality
+    kind: functional
+    focus: quality
+    lead: ''
+    members: []
+  TM-PM:
+    name: Program
+    kind: functional
+    focus: program
+    lead: ''
+    members: []
+  TM-FAC:
+    name: Datacenter facilities
+    kind: functional
+    focus: facilities
+    lead: ''
+    members: []
+  TM-FIN:
+    name: Finance
+    kind: functional
+    focus: finance
+    lead: ''
+    members: []
+process_steps:
+  PS-01:
+    name: Tray box build + ICT/FCT
+    order: 1
+    station: CM tray line
+    parts:
+    - P-ACCT
+    - P-HOST
+    - P-SW
+    team: TM-MFG
+  PS-02:
+    name: Frame, busbar, manifold integration
+    order: 2
+    station: Rack cell
+    parts:
+    - P-FRAME
+    - P-BUS
+    - P-MAN
+    team: TM-MFG
+  PS-03:
+    name: Tray insertion, QD mate, cabling
+    order: 3
+    station: Rack cell
+    parts:
+    - P-ACCT
+    - P-CABLE
+    team: TM-MFG
+  PS-04:
+    name: Fill, pressure hold, leak test
+    order: 4
+    station: Fill station
+    parts:
+    - P-MAN
+    team: TM-MFG
+  PS-05:
+    name: Hipot/ground bond, burn-in, fabric BER, attestation
+    order: 5
+    station: EoL
+    parts:
+    - P-RACK
+    team: TM-MFG
+suppliers:
+  SUP-01:
+    name: Accelerator silicon partner
+    parts:
+    - P-ACC
+    status: approved
+    risk: allocation
+    owner: TM-SC
+    lead_time_d: 180
+  SUP-02:
+    name: Cold-plate & manifold vendor
+    parts:
+    - P-CP
+    - P-MAN
+    status: candidate
+    risk: fluid compatibility report pending
+    owner: TM-SC
+    lead_time_d: 90
+  SUP-03:
+    name: Optics vendor
+    parts:
+    - P-OPT
+    status: approved
+    risk: 800G yield
+    owner: TM-SC
+    lead_time_d: 120
+  SUP-04:
+    name: CM site A (rack integration)
+    parts: []
+    status: approved
+    risk: ''
+    owner: TM-IND
+  SUP-05:
+    name: CM site B (second source)
+    parts: []
+    status: candidate
+    risk: not yet qualified
+    owner: TM-IND
+work_items: {}
+findings: {}
+handoffs: {}
+field_events: {}
+risks: {}
+reviews: {}
+tables: {}
+test_runs:
+  RUN-01:
+    test: TST-02
+    date: '2026-11-02'
+    result: pass
+    unit: TTV-1
+    metrics:
+      tj_c: 81.5
+  RUN-02:
+    test: TST-02
+    date: '2026-11-08'
+    result: pass
+    unit: TTV-1
+    metrics:
+      tj_c: 83.2
+    notes: flow 1.05 L/min; manifold ΔP higher than model
+  RUN-03:
+    test: TST-05
+    date: '2026-11-09'
+    result: fail
+    unit: tray-proto-2
+    metrics:
+      leak_cutoff_s: 2.8
+simulations: {}
+attachments: {}
+dfx_reviews: {}
+cad_models: {}
+quotes: {}
+tooling: {}
+inspections: {}
+capa: {}
+change_orders: {}
+work_orders: {}
+units: {}
+purchase_orders: {}
+cdas:
+  CDA-01:
+    name: Accelerator Tj at 30 °C inlet, full load
+    unit: °C
+    target: 80
+    limit: 85
+    direction: min
+    req: R-03
+    owner_team: TM-COOL
+    source:
+      kind: test_run
+      test: TST-02
+      key: tj_c
+  CDA-02:
+    name: Rack power at full load
+    unit: kW
+    target: 115
+    limit: 120
+    direction: min
+    moe: MOE-03
+    req: R-02
+    owner_team: TM-PWR
+    source:
+      kind: test_run
+      test: TST-01
+      key: rack_kw
+  CDA-03:
+    name: Scale-out link BER
+    unit: 1e-12
+    target: 0.5
+    limit: 1.0
+    direction: min
+    req: R-04
+    owner_team: TM-FAB
+    source:
+      kind: test_run
+      test: TST-03
+      key: ber_e12
+  CDA-04:
+    name: Leak detection to isolation
+    unit: s
+    target: 1.0
+    limit: 2.0
+    direction: min
+    moe: MOE-07
+    req: R-06
+    owner_team: TM-COOL
+    source:
+      kind: test_run
+      test: TST-05
+      key: leak_cutoff_s
+claims: {}
+notes: {}
+program:
+  stage: Development
