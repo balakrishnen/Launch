@@ -1,23 +1,124 @@
 name: NPI — EVT / DVT / PVT / MP
-description: Hardware NPI as practised by consumer-electronics and robotics companies; builds close each phase.
+description: Hardware NPI as practised by consumer-electronics and robotics companies;
+  builds close each phase.
 phases:
-  - {id: PH-PROTO, name: Prototype, order: 1, stage: Concept, gate: EVT}
-  - {id: PH-EVT, name: Engineering validation, order: 2, stage: Development, gate: DVT}
-  - {id: PH-DVT, name: Design validation, order: 3, stage: Development, gate: PVT}
-  - {id: PH-PVT, name: Production validation, order: 4, stage: Production, gate: MP}
+- id: PH-PROTO
+  name: Prototype
+  order: 1
+  stage: Concept
+  gate: EVT
+- id: PH-EVT
+  name: Engineering validation
+  order: 2
+  stage: Development
+  gate: DVT
+- id: PH-DVT
+  name: Design validation
+  order: 3
+  stage: Development
+  gate: PVT
+- id: PH-PVT
+  name: Production validation
+  order: 4
+  stage: Production
+  gate: MP
 gates:
-  - {id: EVT, name: EVT build, exit: "Architecture frozen; FMEA complete; verification plan baselined"}
-  - {id: DVT, name: DVT build, exit: "Verification matrix run; all High-AP modes verified; certification started"}
-  - {id: PVT, name: PVT build, exit: "Certifications granted; PFMEA/control plan at CM; EoL test proven"}
-  - {id: MP, name: Mass production, exit: "Yield and field loop targets met"}
+- id: EVT
+  name: EVT build
+  exit: Architecture frozen; FMEA complete; verification plan baselined
+- id: DVT
+  name: DVT build
+  exit: Verification matrix run; all High-AP modes verified; certification started
+- id: PVT
+  name: PVT build
+  exit: Certifications granted; PFMEA/control plan at CM; EoL test proven
+- id: MP
+  name: Mass production
+  exit: Yield and field loop targets met
 deliverables:
-  - {id: D-SYS-REQ, name: Requirements baseline, gate: EVT, focus: systems, check: {type: coverage, key: requirements_without_tests, max: 0}}
-  - {id: D-SUB-ARCH, name: Subsystem boundary ICD, gate: EVT, team_kind: subsystem, check: {type: scope, key: boundary_items}}
-  - {id: D-SUB-DFMEA, name: Subsystem DFMEA, gate: EVT, team_kind: subsystem, check: {type: scope, key: fmea_complete}}
-  - {id: D-REL-HIGHAP, name: High-AP modes have tests, gate: DVT, focus: reliability, check: {type: coverage, key: high_ap_fm_without_tests, max: 0}}
-  - {id: D-SUB-DV, name: Subsystem DVT tests passed, gate: PVT, team_kind: subsystem, check: {type: scope, key: tests_passed}}
-  - {id: D-COMP-CERT, name: Certification tests passed, gate: PVT, focus: compliance, check: {type: tests_passed_share, min: 1.0}}
-  - {id: D-MFG-PFMEA, name: PFMEA & control plan at CM, gate: PVT, focus: manufacturing, check: {type: coverage, key: process_steps_without_pfmea, max: 0, min_count: {kind: process_steps, n: 1}}}
-  - {id: D-SRC-AVL, name: AVL complete, gate: PVT, focus: sourcing, check: {type: coverage, key: buy_parts_without_supplier, max: 0}}
-  - {id: D-QA-FIND, name: No open critical findings, gate: MP, focus: quality, check: {type: coverage, key: open_findings_critical, max: 0}}
-  - {id: D-FIELD-LOOP, name: FRACAS live, gate: MP, focus: reliability, check: {type: coverage, key: field_events_without_fm, max: 0}}
+- id: D-SYS-REQ
+  name: Requirements baseline
+  gate: EVT
+  focus: systems
+  check:
+    type: coverage
+    key: requirements_without_tests
+    max: 0
+- id: D-SUB-ARCH
+  name: Subsystem boundary ICD
+  gate: EVT
+  team_kind: subsystem
+  check:
+    type: scope
+    key: boundary_items
+- id: D-SUB-DFMEA
+  name: Subsystem DFMEA
+  gate: EVT
+  team_kind: subsystem
+  check:
+    type: scope
+    key: fmea_complete
+- id: D-REL-HIGHAP
+  name: High-AP modes have tests
+  gate: DVT
+  focus: reliability
+  check:
+    type: coverage
+    key: high_ap_fm_without_tests
+    max: 0
+- id: D-SUB-DV
+  name: Subsystem DVT tests passed
+  gate: PVT
+  team_kind: subsystem
+  check:
+    type: scope
+    key: tests_passed
+- id: D-COMP-CERT
+  name: Certification tests passed
+  gate: PVT
+  focus: compliance
+  check:
+    type: tests_passed_share
+    min: 1.0
+- id: D-MFG-PFMEA
+  name: PFMEA & control plan at CM
+  gate: PVT
+  focus: manufacturing
+  check:
+    type: coverage
+    key: process_steps_without_pfmea
+    max: 0
+    min_count:
+      kind: process_steps
+      n: 1
+- id: D-SRC-AVL
+  name: AVL complete
+  gate: PVT
+  focus: sourcing
+  check:
+    type: coverage
+    key: buy_parts_without_supplier
+    max: 0
+- id: D-QA-FIND
+  name: No open critical findings
+  gate: MP
+  focus: quality
+  check:
+    type: coverage
+    key: open_findings_critical
+    max: 0
+- id: D-FIELD-LOOP
+  name: FRACAS live
+  gate: MP
+  focus: reliability
+  check:
+    type: coverage
+    key: field_events_without_fm
+    max: 0
+- id: D-SYS-TRADES
+  name: Architecture trade studies decided and justified
+  gate: EVT
+  focus: systems
+  check:
+    type: trades
+    n: 1

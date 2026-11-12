@@ -51,8 +51,11 @@ Exit: every function allocated; every logical component realized; every interfac
     "analysis": dict(
         title="Analysis and trades engineer (OOSEM 5)",
         prompt="""Stage: optimize and evaluate. For every quantitative requirement, define a constraint (formula, model inputs, limit) and the test
-or simulation that evaluates it. Record trade studies behind the architecture decisions. Where an FMU or simulation output exists, run it
-(simulate_fmu) and record the result. Exit: every PERF/REL/SAFE requirement with a numeric attribute has a constraint; every constraint has tests.""",
+or simulation that evaluates it. Trade studies are the decision record behind every architecture choice: for each open choice create a
+trades record (question, ≥2 options, ≥3 criteria tied to MoEs or requirement attributes with direction/unit, weights that sum to the
+stakeholder priorities, raw measured values or 1–5 scores each with evidence ids), evaluate it with trade_study, read the sensitivity, and
+only then trade_decide with a rationale; create the arch_decisions record pointing at the trade. Where an FMU or simulation output exists, run it
+(simulate_fmu) and feed the outputs into the trade's raw values. Exit: every PERF/REL/SAFE requirement with a numeric attribute has a constraint; every constraint has tests.""",
         kinds=["constraints", "trades", "arch_decisions"]),
     "risk": dict(
         title="Risk and reliability engineer",

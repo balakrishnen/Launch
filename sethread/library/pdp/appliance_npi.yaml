@@ -1,5 +1,7 @@
 name: Consumer appliance NPI (concept → EVT → DVT → PVT → MP with safety certification)
-description: 'Stage-gate for household appliances: safety-certification path (UL/IEC 60335), food-contact and energy compliance, DfM/DfA for high volume, service and field loop.'
+description: 'Stage-gate for household appliances: safety-certification path (UL/IEC
+  60335), food-contact and energy compliance, DfM/DfA for high volume, service and
+  field loop.'
 phases:
 - id: PH-CONCEPT
   name: Concept & business case
@@ -37,16 +39,20 @@ gates:
   exit: Target consumer, use cases, MoEs, price point and regulatory path agreed
 - id: G1
   name: Architecture freeze
-  exit: Subsystems and interfaces defined; safety-critical functions identified; key suppliers shortlisted
+  exit: Subsystems and interfaces defined; safety-critical functions identified; key
+    suppliers shortlisted
 - id: EVT
   name: EVT build
-  exit: Works-like prototypes meet performance MoEs; DFMEA complete; pre-compliance EMC and safety screening done
+  exit: Works-like prototypes meet performance MoEs; DFMEA complete; pre-compliance
+    EMC and safety screening done
 - id: DVT
   name: DVT build
-  exit: Looks-like/works-like units pass DV; UL/IEC certification submitted; food-contact declarations; packaging tests
+  exit: Looks-like/works-like units pass DV; UL/IEC certification submitted; food-contact
+    declarations; packaging tests
 - id: PVT
   name: PVT build
-  exit: Production tooling; PFMEA & control plan; EoL test; yield target; certification granted
+  exit: Production tooling; PFMEA & control plan; EoL test; yield target; certification
+    granted
 - id: MP
   name: Mass production / launch
   exit: Ramp, service and spares in place, field loop live
@@ -73,6 +79,14 @@ deliverables:
     min_count:
       kind: regulations
       n: 3
+- id: D-SYS-TRADES
+  name: Architecture trade studies decided and justified (heater, water path, carafe,
+    radio, HMI)
+  gate: G1
+  focus: systems
+  check:
+    type: trades
+    n: 3
 - id: D-SUB-ARCH
   name: Subsystem architecture & boundary ICD
   gate: G1
@@ -185,3 +199,10 @@ deliverables:
     type: coverage
     key: field_events_without_fm
     max: 0
+- id: D-SUB-TRADES
+  name: Subsystem trade studies decided with evidence
+  gate: EVT
+  team_kind: subsystem
+  check:
+    type: trades
+    n: 1

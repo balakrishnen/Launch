@@ -1135,8 +1135,312 @@ transitions:
     sensor: null
     func: F-12
 constraints: {}
-trades: {}
-arch_decisions: {}
+trades:
+  TD-01:
+    name: 'Heater: thermoblock vs tank boiler'
+    question: Which heating architecture meets 92–96 °C at the shower head within
+      360 s for 10 cups at the lowest cost and risk?
+    options:
+    - Thermoblock 1400 W
+    - Tank boiler 1200 W
+    - Thermoblock 1800 W (EU only)
+    criteria:
+    - Mains load (US 15 A circuit)
+    - Time to first cup
+    - Brew temperature stability
+    - BOM cost
+    - Dry-boil risk
+    - Descale sensitivity
+    - Mass
+    weights:
+    - 1
+    - 4
+    - 5
+    - 3
+    - 4
+    - 2
+    - 1
+    criteria_meta:
+      Time to first cup:
+        direction: min
+        unit: s
+        moe: MOE-02
+        basis: bench, 1.5 L at 120 V
+      Brew temperature stability:
+        direction: max
+        unit: 1-5
+        moe: MOE-01
+        basis: ±°C over brew; simulated
+      BOM cost:
+        direction: min
+        unit: USD
+        basis: supplier quotes
+      Dry-boil risk:
+        direction: max
+        unit: 1-5
+        req: R-03
+        basis: DFMEA AP
+      Descale sensitivity:
+        direction: max
+        unit: 1-5
+        req: R-07
+      Mass:
+        direction: min
+        unit: g
+      Mains load (US 15 A circuit):
+        direction: min
+        unit: W
+        limit: 1440
+        req: R-02
+        basis: 'NEC 210.23: 80 % of 15 A × 120 V = 1440 W continuous'
+    raw:
+      Thermoblock 1400 W:
+        Time to first cup: 55
+        BOM cost: 9.8
+        Mass: 450
+        Mains load (US 15 A circuit): 1400
+      Tank boiler 1200 W:
+        Time to first cup: 210
+        BOM cost: 7.2
+        Mass: 820
+        Mains load (US 15 A circuit): 1200
+      Thermoblock 1800 W (EU only):
+        Time to first cup: 42
+        BOM cost: 11.4
+        Mass: 470
+        Mains load (US 15 A circuit): 1800
+    scores:
+      Thermoblock 1400 W:
+        Brew temperature stability: 4
+        Dry-boil risk: 4
+        Descale sensitivity: 2
+      Tank boiler 1200 W:
+        Brew temperature stability: 3
+        Dry-boil risk: 3
+        Descale sensitivity: 4
+      Thermoblock 1800 W (EU only):
+        Brew temperature stability: 5
+        Dry-boil risk: 4
+        Descale sensitivity: 2
+    evidence:
+      Thermoblock 1400 W:
+        Time to first cup:
+        - TST-02
+        Brew temperature stability:
+        - TST-01
+        Dry-boil risk:
+        - TST-03
+        - TST-04
+        BOM cost:
+        - SUP-01
+      Tank boiler 1200 W:
+        Time to first cup:
+        - TST-02
+    datum: Tank boiler 1200 W
+    affects:
+    - R-01
+    - R-02
+    - R-03
+    - R-07
+    elements:
+    - P-TB
+    - LC-THERMAL
+    - F-01
+    decision: Thermoblock 1400 W
+    rationale: 1800 W exceeds the 15 A NEMA 5-15 circuit for the US variant (1800
+      W × 1.25 continuous); the 1400 W block meets MOE-02 with margin and keeps one
+      heater across both markets. Descale sensitivity is handled by R-07 estimator.
+    status: decided
+    decided_by: bala@twinmo.ai
+    date: '2026-11-12'
+    owner_team: TM-THERM
+  TD-02:
+    name: 'Carafe: glass vs thermal (vacuum stainless)'
+    question: Which carafe meets keep-warm and cost targets for the base SKU?
+    options:
+    - Glass 1.5 L + warm plate
+    - Thermal stainless 1.2 L
+    - Thermal stainless 1.5 L
+    criteria:
+    - Keep-warm at 120 min
+    - Coffee taste after 60 min
+    - BOM cost
+    - Standby energy
+    - Drop robustness
+    - Capacity
+    weights:
+    - 4
+    - 3
+    - 4
+    - 2
+    - 3
+    - 2
+    criteria_meta:
+      Keep-warm at 120 min:
+        direction: max
+        unit: °C
+        moe: MOE-11
+        basis: TST-15
+      Coffee taste after 60 min:
+        direction: max
+        unit: 1-5
+        basis: sensory panel n=12
+      BOM cost:
+        direction: min
+        unit: USD
+      Standby energy:
+        direction: min
+        unit: W
+        moe: MOE-10
+      Drop robustness:
+        direction: max
+        unit: 1-5
+        basis: IEC 60335-1 cl. 21
+      Capacity:
+        direction: max
+        unit: ml
+    raw:
+      Glass 1.5 L + warm plate:
+        Keep-warm at 120 min: 82
+        BOM cost: 6.1
+        Standby energy: 60
+        Capacity: 1500
+      Thermal stainless 1.2 L:
+        Keep-warm at 120 min: 78
+        BOM cost: 11.9
+        Standby energy: 0
+        Capacity: 1200
+      Thermal stainless 1.5 L:
+        Keep-warm at 120 min: 80
+        BOM cost: 13.6
+        Standby energy: 0
+        Capacity: 1500
+    scores:
+      Glass 1.5 L + warm plate:
+        Coffee taste after 60 min: 2
+        Drop robustness: 2
+      Thermal stainless 1.2 L:
+        Coffee taste after 60 min: 4
+        Drop robustness: 5
+      Thermal stainless 1.5 L:
+        Coffee taste after 60 min: 4
+        Drop robustness: 5
+    evidence:
+      Glass 1.5 L + warm plate:
+        Keep-warm at 120 min:
+        - TST-15
+        Standby energy:
+        - TST-09
+    datum: Glass 1.5 L + warm plate
+    affects:
+    - R-14
+    - R-08
+    elements:
+    - P-CARAFE
+    - P-PLATE
+    - LC-BREW
+    status: open
+    owner_team: TM-BREW
+  TD-03:
+    name: 'Radio: pre-certified module vs custom RF'
+    question: Module (modular grant, host SDoC) or custom radio with full FCC 15C
+      / RED testing?
+    options:
+    - ESP32-C3 module
+    - Custom RF on main board
+    criteria:
+    - Certification schedule
+    - Unit cost at 100k
+    - RF range in kitchen
+    - Platform reuse (kettle, grinder)
+    - Supply risk
+    weights:
+    - 5
+    - 3
+    - 2
+    - 4
+    - 3
+    criteria_meta:
+      Certification schedule:
+        direction: min
+        unit: weeks
+        req: R-10
+      Unit cost at 100k:
+        direction: min
+        unit: USD
+      RF range in kitchen:
+        direction: max
+        unit: 1-5
+        basis: site survey
+      Platform reuse (kettle, grinder):
+        direction: max
+        unit: 1-5
+        moe: MOE-09
+      Supply risk:
+        direction: max
+        unit: 1-5
+        basis: AVL
+    raw:
+      ESP32-C3 module:
+        Certification schedule: 3
+        Unit cost at 100k: 2.1
+      Custom RF on main board:
+        Certification schedule: 14
+        Unit cost at 100k: 1.3
+    scores:
+      ESP32-C3 module:
+        RF range in kitchen: 3
+        Platform reuse (kettle, grinder): 5
+        Supply risk: 4
+      Custom RF on main board:
+        RF range in kitchen: 4
+        Platform reuse (kettle, grinder): 3
+        Supply risk: 2
+    evidence:
+      ESP32-C3 module:
+        Supply risk:
+        - SUP-02
+        Platform reuse (kettle, grinder):
+        - R-13
+    affects:
+    - R-10
+    - R-13
+    - R-16
+    elements:
+    - P-RADIO
+    - LC-CONN
+    decision: ESP32-C3 module
+    rationale: Schedule to PVT and platform reuse dominate; $0.80 delta at 100k is
+      below the certification cost of a custom radio.
+    status: decided
+    decided_by: bala@twinmo.ai
+    date: '2026-11-12'
+    owner_team: TM-CTRL
+arch_decisions:
+  AD-01:
+    title: Thermoblock heater, 1400 W, shared US/EU
+    decision: Thermoblock 1400 W with triac control and TCO
+    rationale: 'TD-01: meets MOE-02 with margin on both mains; one heater SKU'
+    reqs:
+    - R-01
+    - R-02
+    - R-03
+    trade: TD-01
+    consequences:
+    - descale estimator required (R-07)
+    - class-B software for heater control
+  AD-02:
+    title: Pre-certified Wi-Fi/BLE module on the platform ICD
+    decision: ESP32-C3-MINI-1 module via UART ICD
+    rationale: 'TD-03: certification schedule and platform reuse'
+    reqs:
+    - R-10
+    - R-13
+    - R-16
+    trade: TD-03
+    consequences:
+    - host SDoC only
+    - module EOL risk tracked with SUP-02
 tests:
   TST-01:
     name: Brew temperature profile

@@ -13,7 +13,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'System requirements definition': [['form/reqspec', 'Requirements specification'], ['matrix/regulations/requirements', 'Regulations × requirements'], ['collection/certification_plan', 'Certification plan']],
   'System architecture definition': [['form/n2l', 'N² — logical'], ['form/n2', 'N² — physical'], ['form/icd', 'ICD index'], ['matrix/functions/logical_components', 'Functions × logical components'], ['diagrams', 'SysML v2 diagrams'], ['views', 'Rendered views']],
   'Design definition': [['eda', 'Electrical (native EDA)'], ['budgets', 'Cost & mass budgets'], ['matrix/logical_components/parts', 'Logical × parts'], ['matrix/functions/parts', 'Functions × parts']],
-  'System analysis': [['dfx', 'Design for X'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
+  'System analysis': [['dfx', 'Design for X'], ['trades', 'Trade studies'], ['form/dfmea', 'DFMEA', 'fmea'], ['collection/unassessed', 'Unassessed candidates', 'unassessed'], ['form/hazards', 'Hazard register'], ['form/fta', 'Fault trees'], ['form/drbfm', 'DRBFM'], ['form/pugh', 'Trade matrices']],
   'Implementation': [['form/avl', 'AVL / sourcing']],
   'Integration': [['form/icd', 'Interface control'], ['matrix/logical_components/parts', 'Integration map']],
   'Verification': [['runs', 'Test results', 'test_runs'], ['form/dvpr', 'DVP&R'], ['form/vcrm', 'VCRM / RTM'], ['matrix/requirements/tests', 'Requirements × tests']],
@@ -25,7 +25,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Project planning': [['pdp', 'Development process'], ['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
   'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
   // team workspaces are added dynamically from project.teams
-  'Decision management': [['collection/arch_decisions', 'Architecture decisions'], ['collection/trades', 'Trade studies']],
+  'Decision management': [['trades', 'Trade studies'], ['collection/arch_decisions', 'Architecture decisions']],
   'Risk management': [['form/risks', 'Risk register']],
   'Configuration management': [['history', 'History & baselines']],
   'Information management': [['tables', 'Tables (spreadsheets)', 'tables'], ['notes', 'Notes & specs', 'notes'], ['import', 'Import spreadsheet'], ['documents', 'Source documents'], ['docs', 'Design documentation'], ['sysml', 'SysML v2 text'], ['artifacts', 'Artifact library']],

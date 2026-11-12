@@ -5,7 +5,7 @@ import json, os, time
 from typing import Any
 from claude_agent_sdk import tool, create_sdk_mcp_server
 from ..store import Store, Patch, Op
-from .. import schema, derive, adapters, quality, library, lifecycle
+from .. import schema, derive, adapters, quality, library, lifecycle, trades as TRADES
 
 def _txt(obj) -> dict:
     return {"content": [{"type": "text", "text": obj if isinstance(obj, str) else json.dumps(obj, indent=1, ensure_ascii=False, default=str)}]}
@@ -110,6 +110,21 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         m = store.load(); x = (args or {}).get("x")
         return _txt(DFX.evaluate(m, x, getattr(store, "root", None)) if x else DFX.summary(m, getattr(store, "root", None)))
 
+    @tool("trade_study", "Evaluate a trade study from the model: weighted decision matrix (scores 1–5 or raw values normalized by direction), ranking, Pugh view vs the datum, and sensitivity (flip weight per criterion; ±25 % weight and −1 leader score perturbations; robust yes/no). Omit id for the list with hygiene checks. To create or change a study use propose_patch on kind trades: {name, question, options[], criteria[], weights[], criteria_meta{crit:{direction:max|min, unit, moe, req, basis}}, raw{option:{crit:value}} or scores{option:{crit:1-5}}, evidence{option:{crit:[ids]}}, datum, affects[], elements[]}. Tie criteria to MoEs/requirements and cite tests, simulations, suppliers or notes as evidence; never score from opinion alone.", {"id": str})
+    async def trade_study(args):
+        m = store.load(); tid = args.get("id")
+        if not tid: return _txt({"studies": TRADES.summary(m), "checks": TRADES.checks(m)})
+        e = TRADES.evaluate(m, tid); return _txt(e or {"error": "no such trade study"})
+
+    @tool("trade_decide", "Record the decision of a trade study (one of its options) with the rationale — mandatory when the decision differs from the scored leader. Applied immediately with your name; also create an arch_decisions record via propose_patch pointing at the trade.", {"id": str, "decision": str, "rationale": str})
+    async def trade_decide(args):
+        m = store.load(); t = m.get("trades", {}).get(args["id"])
+        if not t: return _txt({"error": "no such trade study"})
+        if args.get("decision") not in t["options"]: return _txt({"error": "decision must be one of " + ", ".join(t["options"])})
+        p = Patch(ops=[Op(op="update", kind="trades", id=args["id"], value={"decision": args["decision"], "rationale": args.get("rationale", ""), "status": "decided", "decided_by": author, "date": time.strftime("%Y-%m-%d")})], author=author, rationale=f"{args['id']} decided: {args['decision']} — {args.get('rationale', '')}"[:200], sources=[args["id"]])
+        pid = store.stage(p); store.approve(pid, approver=author)
+        return _txt({"ok": True, "patch": pid})
+
     @tool("dfx_set", "Record a reviewed status for a DfX guideline item (manual items, or to override an automatic one with justification). status: pass|partial|fail|n/a. evidence: element ids. Applied immediately as a dfx_reviews patch with your name.", {"x": str, "item": str, "status": str, "evidence": list, "note": str})
     async def dfx_set(args):
         from ..store import Patch, Op
@@ -192,7 +207,7 @@ def make_server(store: Store, docs_dir: str | None = None, author: str = "agent"
         res = adapters.FmuAdapter().evaluate(store.load(), fmu=args["fmu"], stop_time=args.get("stop_time") or 10.0, inputs=args.get("inputs") or {}, checks=args.get("checks") or {})
         return _txt(res)
 
-    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set]
+    tools = [model_schema, model_summary, impact, budgets, check_requirement, scorecard, library_tool, gate_readiness, team_workload, read_model, list_gaps, fmea_candidates, derived_view, propose_patch, withdraw_patch, list_patches, provenance, read_document, list_documents, tool_pull, tool_push, simulate_fmu, cad_brief, cad_build_tool, eda_board, dfx_review, dfx_set, trade_study, trade_decide]
     server = create_sdk_mcp_server(name="sethread", version="0.1.0", tools=tools)
     names = [f"mcp__sethread__{t.name}" for t in tools]
     return server, names

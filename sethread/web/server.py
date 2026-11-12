@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -421,6 +421,41 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         else: items[iid] = {"status": body["status"], "evidence": body.get("evidence", []), "note": body.get("note", ""), "by": user, "date": time.strftime("%Y-%m-%d")}
         value = {"x": x, "items": items, "date": time.strftime("%Y-%m-%d"), "by": user}
         return human_patch(pid, HumanPatch(ops=[{"op": "update" if rid in m.get("dfx_reviews", {}) else "add", "kind": "dfx_reviews", "id": rid, "value": value}], rationale=f"DfX {x}: {iid} → {body.get('status') or 'auto'}" + (f" — {body.get('note')}" if body.get("note") else ""), apply=True), user)
+
+    @app.get("/api/p/{pid}/trades")
+    def trades_list(pid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); return {"studies": TRADES.summary(m), "checks": TRADES.checks(m)}
+    @app.get("/api/p/{pid}/trades/{tid}")
+    def trade_one(pid: str, tid: str, user: str = U):
+        S = W.get(pid); m = S.store.load(); e = TRADES.evaluate(m, tid)
+        if not e: raise HTTPException(404, "no such trade study")
+        return e
+    @app.post("/api/p/{pid}/trades/{tid}/score")
+    def trade_score(pid: str, tid: str, body: dict, user: str = U):
+        """set one cell: option × criterion → score (1–5) or raw value, with evidence ids and a note; applied as a patch with provenance"""
+        S = W.get(pid); m = S.store.load(); t = m.get("trades", {}).get(tid)
+        if not t: raise HTTPException(404, "no such trade study")
+        o, c = body["option"], body["criterion"]
+        if o not in t["options"] or c not in t["criteria"]: raise HTTPException(400, "unknown option or criterion")
+        scores = {k: dict(v) for k, v in (t.get("scores") or {}).items()}; raw = {k: dict(v) for k, v in (t.get("raw") or {}).items()}; ev = {k: dict(v) for k, v in (t.get("evidence") or {}).items()}
+        if body.get("raw") not in (None, ""): raw.setdefault(o, {})[c] = body["raw"]; scores.setdefault(o, {}).pop(c, None)
+        elif body.get("score") not in (None, ""): scores.setdefault(o, {})[c] = float(body["score"]); raw.setdefault(o, {}).pop(c, None)
+        if body.get("evidence") is not None: ev.setdefault(o, {})[c] = body["evidence"]
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "trades", "id": tid, "value": {"scores": scores, "raw": raw, "evidence": ev}}], rationale=f"{tid}: {o} × {c} = {body.get('raw', body.get('score'))}" + (f" — {body['note']}" if body.get("note") else ""), apply=True), user)
+    @app.post("/api/p/{pid}/trades/{tid}/decide")
+    def trade_decide(pid: str, tid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); t = m.get("trades", {}).get(tid)
+        if not t: raise HTTPException(404, "no such trade study")
+        if body.get("decision") not in t["options"]: raise HTTPException(400, "decision must be one of the options")
+        value = {"decision": body["decision"], "rationale": body.get("rationale", ""), "status": "decided", "decided_by": user, "date": time.strftime("%Y-%m-%d")}
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "trades", "id": tid, "value": value}], rationale=f"{tid} decided: {body['decision']} — {body.get('rationale', '')}", apply=True), user)
+    @app.post("/api/p/{pid}/trades/{tid}/weights")
+    def trade_weights(pid: str, tid: str, body: dict, user: str = U):
+        S = W.get(pid); m = S.store.load(); t = m.get("trades", {}).get(tid)
+        if not t: raise HTTPException(404, "no such trade study")
+        w = [float(x) for x in body.get("weights", [])]
+        if len(w) != len(t["criteria"]): raise HTTPException(400, "one weight per criterion")
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "trades", "id": tid, "value": {"weights": w}}], rationale=f"{tid}: weights {w}" + (f" — {body['note']}" if body.get("note") else ""), apply=True), user)
 
     @app.get("/api/p/{pid}/pdp/tailoring")
     def pdp_tailoring(pid: str, user: str = U):

@@ -80,6 +80,15 @@ def evaluate(m: dict, d: dict, team_id: str | None, tv: dict | None, rep: dict) 
             e = DFX.evaluate(m, c["x"])
             if not e: return {"status": "missing", "measured": "no such DfX set", "link": "/dfx"}
             sc = e["score"] or 0; return {"status": "done" if sc >= c.get("min", 90) else ("partial" if sc > 0 else "missing"), "measured": f"{e['short']} {sc}% ({e['failed']} failed, {e['unknown']} unknown)", "link": f"/dfx/{c['x']}"}
+        if typ == "trades":
+            from . import trades as TR
+            st = TR.summary(m)  # a functional team (systems) owes the whole set; a subsystem team owes the studies on its elements
+            if team_id and tv is not None and tv.get("kind") == "subsystem":
+                scope = set(tv.get("parts") or []) | set(tv.get("lcs") or [])
+                st = [x for x in st if set(x["elements"]) & scope or m["trades"][x["id"]].get("owner_team") == team_id]
+            decided = [x for x in st if x["status"] == "decided"]; ok = [x for x in decided if x["complete"] and (x["robust"] or m["trades"][x["id"]].get("rationale"))]
+            if not st: return {"status": "missing" if c.get("n", 1) > 0 else "done", "measured": "no trade studies", "link": "/trades"}
+            return {"status": "done" if len(ok) == len(st) and len(st) >= c.get("n", 1) else ("partial" if decided else "missing"), "measured": f"{len(ok)} decided & justified / {len(st)}", "link": "/trades"}
         if typ == "tests_passed_share":
             tests = list(m["tests"].values()); passed = sum(1 for t in tests if t.get("status") == "passed"); share = passed / len(tests) if tests else 0
             return {"status": "done" if tests and share >= c.get("min", 1.0) else ("partial" if passed else "missing"), "measured": f"{passed}/{len(tests)}", "link": "/runs"}
