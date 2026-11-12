@@ -13,6 +13,7 @@ import { Org } from './pages/Org'
 import { DfxList, DfxPage } from './pages/Dfx'
 import { TradesList, TradePage } from './pages/Trades'
 import { Departments, DepartmentPage } from './pages/Department'
+import { Indicators } from './pages/Indicators'
 import { Eda } from './pages/Eda'
 import { Collection } from './pages/Collection'
 import { Artifacts, FormPage, MatrixPage, Views, LiveDiagrams, Docs, Sysml } from './pages/Artifacts'
@@ -36,7 +37,7 @@ export default function App() {
         <Route path="gaps" element={<Gaps />} /><Route path="scorecard" element={<Scorecard />} /><Route path="inbox" element={<Inbox />} />
         <Route path="integrations" element={<Integrations />} /><Route path="documents" element={<Documents />} /><Route path="history" element={<History />} /><Route path="budgets" element={<Budgets />} />
         <Route path="teams" element={<Teams />} /><Route path="notifications" element={<Notifications />} /><Route path="views" element={<Views />} /><Route path="diagrams" element={<LiveDiagrams />} /><Route path="docs" element={<Docs />} /><Route path="sysml" element={<Sysml />} /><Route path="search/:q" element={<SearchPage />} />
-        <Route path="tables" element={<Tables />} /><Route path="table/:tid" element={<TablePage />} /><Route path="notes" element={<Notes />} /><Route path="note/:nid" element={<NotePage />} /><Route path="import" element={<ImportSheet />} /><Route path="team/:tid" element={<TeamPage />} /><Route path="pdp" element={<Pdp />} /><Route path="eda" element={<Eda />} /><Route path="dfx" element={<DfxList />} /><Route path="trades" element={<TradesList />} /><Route path="departments" element={<Departments />} /><Route path="dept/:name" element={<DepartmentPage />} /><Route path="trades/:tid" element={<TradePage />} /><Route path="dfx/:x" element={<DfxPage />} /><Route path="board" element={<Board />} /><Route path="timeline" element={<Timeline />} /><Route path="trend" element={<Trend />} /><Route path="harness" element={<Harness />} /><Route path="chat" element={<ChatPage />} /><Route path="chat/:tid" element={<ChatPage />} /><Route path="runs" element={<Runs />} /><Route path="run/:rid" element={<RunPage />} />
+        <Route path="tables" element={<Tables />} /><Route path="table/:tid" element={<TablePage />} /><Route path="notes" element={<Notes />} /><Route path="note/:nid" element={<NotePage />} /><Route path="import" element={<ImportSheet />} /><Route path="team/:tid" element={<TeamPage />} /><Route path="pdp" element={<Pdp />} /><Route path="eda" element={<Eda />} /><Route path="dfx" element={<DfxList />} /><Route path="trades" element={<TradesList />} /><Route path="departments" element={<Departments />} /><Route path="indicators" element={<Indicators />} /><Route path="dept/:name" element={<DepartmentPage />} /><Route path="trades/:tid" element={<TradePage />} /><Route path="dfx/:x" element={<DfxPage />} /><Route path="board" element={<Board />} /><Route path="timeline" element={<Timeline />} /><Route path="trend" element={<Trend />} /><Route path="harness" element={<Harness />} /><Route path="chat" element={<ChatPage />} /><Route path="chat/:tid" element={<ChatPage />} /><Route path="runs" element={<Runs />} /><Route path="run/:rid" element={<RunPage />} />
         <Route path="*" element={<Navigate to="." />} />
       </Route>
     </Routes>

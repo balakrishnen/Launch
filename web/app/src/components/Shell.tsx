@@ -24,7 +24,7 @@ const EXTRA: Record<string, [string, string, string?][]> = {
   'Maintenance': [['form/fracas', 'FRACAS'], ['collection/field_events', 'Field events']],
   'Disposal': [['search?q=disposal', 'Disposal requirements']],
   'Project planning': [['pdp', 'Development process'], ['form/staffing', 'Staffing plan'], ['board', 'Board'], ['timeline', 'Timeline'], ['trend', 'Trend'], ['teams', 'Lifecycle & gates']],
-  'Project assessment and control': [['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
+  'Project assessment and control': [['indicators', 'Leading indicators'], ['teams', 'Teams & handoffs'], ['form/handoffs', 'Handoffs board']],
   // team workspaces are added dynamically from project.teams
   'Decision management': [['trades', 'Trade studies'], ['collection/arch_decisions', 'Architecture decisions']],
   'Risk management': [['form/risks', 'Risk register']],

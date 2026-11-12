@@ -89,7 +89,9 @@ High-AP parts as program risks. Exit: no buy part without a supplier; every supp
         prompt="""Stage: program control. Define teams (discipline, lead) if missing. Set gate stages and dates; for the next gate derive work_items from the
 open gaps and failing gate criteria (one item per gap cluster, owner = team lead, due before the gate). Create handoffs for evidence one team must
 hand another before the gate (e.g. electrical → test: schematic + netlist; mechanical → manufacturing: STEP + tolerances) and program risks (5×5)
-with mitigations. Exit: every failing criterion of the next gate has a work item; every cross-team dependency is a handoff.""",
+with mitigations. Exit: every failing criterion of the next gate has a work item; every cross-team dependency is a handoff.
+Start every program review with leading_indicators: for each red indicator, send the intervention to its role or raise the work item and
+program risk yourself; report the gate-slip risk for the next gate with its drivers, not the status of the last one.""",
         kinds=["teams", "gates", "work_items", "handoffs", "risks", "findings"]),
     "field_quality": dict(
         title="Field quality engineer (FRACAS, 8D)",
