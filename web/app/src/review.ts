@@ -11,6 +11,7 @@ export function installReviewShim(data: Record<string, any>) {
     if (url === '/api/projects') return json(data.list || [])
     if (url === '/api/examples') return json(data.examples || [])
     if (url === '/api/org') return json(data.org || {})
+    if (url === '/api/roadmap') return json(data.roadmap || { items: [], horizons: [], statuses: [], areas: [] })
     if (url === '/api/org/templates') return json(data.org_templates || { templates: [], detail: {} })
     if (url === '/api/token') return json(null, 404)
     if (url.startsWith('/api/oslc/consumers')) return json([])
