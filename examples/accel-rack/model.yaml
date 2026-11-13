@@ -2,8 +2,7 @@ meta:
   name: Kiln accelerator rack
   version: '0.1'
   method: OOSEM
-  description: Liquid-cooled AI accelerator rack — reconstructed from Anthropic data-center
-    hardware postings (fictional name)
+  description: Liquid-cooled AI accelerator rack — reconstructed from Anthropic data-center hardware postings (fictional name)
   system: P-RACK
   stage: Development
   business:
@@ -72,8 +71,7 @@ needs:
     moe: MOE-01
   N-02:
     stk: STK-ML
-    text: Scale-up fabric within the rack and scale-out to the pod with predictable
-      bandwidth
+    text: Scale-up fabric within the rack and scale-out to the pod with predictable bandwidth
     moe: MOE-02
   N-03:
     stk: STK-DC
@@ -99,9 +97,107 @@ needs:
     stk: STK-DC
     text: Telemetry for every power and thermal domain
     moe: MOE-08
-actors: {}
-use_cases: {}
-scenarios: {}
+actors:
+  AC-ML:
+    name: Training job scheduler
+  AC-DC:
+    name: Datacenter technician
+  AC-FLEET:
+    name: Fleet health service
+  AC-CM:
+    name: CM integration line
+  AC-FAC:
+    name: Facility CDU
+use_cases:
+  UC-01:
+    name: Commission a rack
+    actors:
+    - AC-DC
+    - AC-FAC
+    needs:
+    - N-03
+    - N-07
+  UC-02:
+    name: Run a training job across the pod
+    actors:
+    - AC-ML
+    needs:
+    - N-01
+    - N-02
+  UC-03:
+    name: Swap a failed tray hot
+    actors:
+    - AC-DC
+    - AC-FLEET
+    needs:
+    - N-04
+  UC-04:
+    name: Contain a coolant leak
+    actors:
+    - AC-FLEET
+    - AC-DC
+    needs:
+    - N-07
+  UC-05:
+    name: Update firmware fleet-wide
+    actors:
+    - AC-FLEET
+    needs:
+    - N-05
+  UC-06:
+    name: Build and test at the CM
+    actors:
+    - AC-CM
+    needs:
+    - N-06
+scenarios:
+  SC-01:
+    uc: UC-01
+    name: Fill, pressure hold, power, attest
+    steps:
+    - F-05
+    - F-01
+    - F-06
+    - F-07
+  SC-02:
+    uc: UC-02
+    name: Full-load training step
+    steps:
+    - F-01
+    - F-02
+    - F-03
+    - F-04
+    concurrent:
+    - F-07
+  SC-03:
+    uc: UC-03
+    name: Degraded → service → run
+    steps:
+    - F-07
+    - F-08
+    - F-06
+  SC-04:
+    uc: UC-04
+    name: Leak detected and isolated in 2 s
+    steps:
+    - F-05
+    - F-07
+    - F-08
+  SC-05:
+    uc: UC-05
+    name: Signed rollout with attestation
+    steps:
+    - F-06
+    - F-07
+  SC-06:
+    uc: UC-06
+    name: Tray build → integration → fill → burn-in
+    steps:
+    - F-09
+    - F-10
+    - F-05
+    - F-01
+    - F-06
 regulations:
   REG-62368:
     name: UL/IEC 62368-1 ICT safety
@@ -141,8 +237,7 @@ regulations:
 requirements:
   R-01:
     type: PERF
-    text: The rack shall host 8 accelerator trays × 8 accelerators and 2 host trays
-      and 2 scale-up switch trays within 42U.
+    text: The rack shall host 8 accelerator trays × 8 accelerators and 2 host trays and 2 scale-up switch trays within 42U.
     verify: inspection
     tests:
     - TST-12
@@ -153,8 +248,7 @@ requirements:
     attr: accelerators = 64
   R-02:
     type: PERF
-    text: Rack power at full load shall be ≤ 120 kW from 48 V busbars fed by N+1 power
-      shelves; 12 V and 48 V rails derated per fleet policy.
+    text: Rack power at full load shall be ≤ 120 kW from 48 V busbars fed by N+1 power shelves; 12 V and 48 V rails derated per fleet policy.
     verify: test
     tests:
     - TST-01
@@ -167,8 +261,7 @@ requirements:
     attr: rack_kw <= 120
   R-03:
     type: PERF
-    text: Direct-to-chip liquid cooling shall hold accelerator junction ≤ 85 °C at
-      30 °C inlet with ΔT ≤ 10 K and ≤ 1.2 L/min per cold plate.
+    text: Direct-to-chip liquid cooling shall hold accelerator junction ≤ 85 °C at 30 °C inlet with ΔT ≤ 10 K and ≤ 1.2 L/min per cold plate.
     verify: test
     tests:
     - TST-02
@@ -180,8 +273,7 @@ requirements:
     attr: tj_c <= 85
   R-04:
     type: PERF
-    text: Scale-out links shall deliver ≥ 800 Gb/s per accelerator with BER ≤ 1e-12
-      over the pod optics; scale-up copper within rack ≤ 1.5 m.
+    text: Scale-out links shall deliver ≥ 800 Gb/s per accelerator with BER ≤ 1e-12 over the pod optics; scale-up copper within rack ≤ 1.5 m.
     verify: test
     tests:
     - TST-03
@@ -192,8 +284,7 @@ requirements:
     attr: ber <= 1e-12
   R-05:
     type: MAINT
-    text: Any tray shall be hot-swappable with quick-disconnect coolant couplings,
-      dripless, in ≤ 15 min with one technician.
+    text: Any tray shall be hot-swappable with quick-disconnect coolant couplings, dripless, in ≤ 15 min with one technician.
     verify: demonstration
     tests:
     - TST-04
@@ -205,8 +296,7 @@ requirements:
     attr: swap_min <= 15
   R-06:
     type: SAFE
-    text: Leak detection per tray shall isolate coolant and power to the tray within
-      2 s and alert the fleet.
+    text: Leak detection per tray shall isolate coolant and power to the tray within 2 s and alert the fleet.
     verify: test
     tests:
     - TST-05
@@ -219,8 +309,7 @@ requirements:
     attr: leak_cutoff_s <= 2
   R-07:
     type: SEC
-    text: Every tray BMC shall enforce secure boot with a hardware root of trust and
-      attest firmware measurements to the fleet before joining.
+    text: Every tray BMC shall enforce secure boot with a hardware root of trust and attest firmware measurements to the fleet before joining.
     verify: inspection
     tests:
     - TST-06
@@ -231,8 +320,7 @@ requirements:
     attr: attestation = 100%
   R-08:
     type: FUNC
-    text: Telemetry shall cover every power rail, cold-plate inlet/outlet temperature
-      and flow, and fabric link health at ≥ 1 Hz.
+    text: Telemetry shall cover every power rail, cold-plate inlet/outlet temperature and flow, and fabric link health at ≥ 1 Hz.
     verify: test
     tests:
     - TST-07
@@ -243,8 +331,7 @@ requirements:
     attr: telemetry_coverage = 100%
   R-09:
     type: MFG
-    text: Rack integration shall achieve ≥ 95 % first-pass yield at both CM sites
-      with leak/fill, hipot, burn-in and fabric BER in the EoL sequence ≤ 6 h.
+    text: Rack integration shall achieve ≥ 95 % first-pass yield at both CM sites with leak/fill, hipot, burn-in and fabric BER in the EoL sequence ≤ 6 h.
     verify: test
     tests:
     - TST-08
@@ -255,8 +342,7 @@ requirements:
     attr: fpy_pct >= 95
   R-10:
     type: REGU
-    text: The rack shall obtain UL/IEC 62368-1, FCC 15A and CE EMC, and pass GR-63
-      seismic zone 4 before fleet deployment.
+    text: The rack shall obtain UL/IEC 62368-1, FCC 15A and CE EMC, and pass GR-63 seismic zone 4 before fleet deployment.
     verify: inspection
     tests:
     - TST-09
@@ -271,8 +357,7 @@ requirements:
     attr: certification = granted
   R-11:
     type: PERF
-    text: Annual failure rate per accelerator tray shall be ≤ 2 % with field-replaceable
-      fans/pumps excluded.
+    text: Annual failure rate per accelerator tray shall be ≤ 2 % with field-replaceable fans/pumps excluded.
     verify: analysis
     tests:
     - TST-10
@@ -283,8 +368,7 @@ requirements:
     attr: afr_pct <= 2
   R-12:
     type: PERF
-    text: Rack mass ≤ 1,600 kg and floor loading within datacenter limits; wet weight
-      accounted.
+    text: Rack mass ≤ 1,600 kg and floor loading within datacenter limits; wet weight accounted.
     verify: analysis
     tests:
     - TST-11
@@ -860,12 +944,80 @@ transitions:
     guard: QD dripless check
     sensor: P-LEAK
     func: F-08
-constraints: {}
+constraints:
+  C-01:
+    name: Rack power budget
+    formula: P_rack = 64 * P_acc + 2 * P_host + 2 * P_sw + P_aux <= 120000
+    inputs:
+      P_acc: 1400
+      P_host: 1600
+      P_sw: 2200
+      P_aux: 3000
+    reqs:
+    - R-02
+    tests:
+    - TST-01
+  C-02:
+    name: Cold-plate thermal resistance
+    formula: Tj = T_inlet + P_acc * (R_tim + R_cp) + dT_fluid/2 <= 85
+    inputs:
+      T_inlet: 30
+      P_acc: 1400
+      R_tim: 0.012
+      R_cp: 0.018
+      dT_fluid: 10
+    reqs:
+    - R-03
+    tests:
+    - TST-02
+  C-03:
+    name: Flow per rack
+    formula: Q_lpm = P_rack_W / (4186 * rho * dT) * 60 ; dT <= 10
+    inputs:
+      P_rack_W: 118000
+      dT: 10
+    reqs:
+    - R-03
+    tests:
+    - TST-02
+  C-04:
+    name: Wet mass
+    formula: m_wet = m_dry + V_coolant * rho <= 1600
+    inputs:
+      m_dry: 1480
+      V_coolant: 60
+      rho: 1.03
+    reqs:
+    - R-12
+    tests:
+    - TST-11
+  C-05:
+    name: Leak response
+    formula: t_detect + t_bmc + t_valve <= 2.0 s
+    inputs:
+      t_detect: 0.5
+      t_bmc: 0.3
+      t_valve: 0.8
+    reqs:
+    - R-06
+    tests:
+    - TST-05
+  C-06:
+    name: Tray failure budget
+    formula: AFR_tray = sum(FIT_i) * 8760 / 1e9 <= 0.02
+    inputs:
+      FIT_acc_x8: 1200
+      FIT_cp: 150
+      FIT_bmc: 80
+      FIT_leak: 120
+    reqs:
+    - R-11
+    tests:
+    - TST-10
 trades:
   TD-01:
     name: 'Cooling: direct-to-chip vs immersion vs rear-door'
-    question: Which cooling architecture meets Tj ≤ 85 °C at 120 kW with serviceable
-      trays?
+    question: Which cooling architecture meets Tj ≤ 85 °C at 120 kW with serviceable trays?
     options:
     - Direct-to-chip cold plates
     - Single-phase immersion
@@ -935,13 +1087,60 @@ trades:
     - P-CP
     - P-MAN
     decision: Direct-to-chip cold plates
-    rationale: Rear-door is knocked out on Tj; immersion fails the 15-min swap. Direct-to-chip
-      with per-tray leak isolation (R-06) carries the leak risk.
+    rationale: Rear-door is knocked out on Tj; immersion fails the 15-min swap. Direct-to-chip with per-tray leak isolation (R-06) carries the leak risk.
     status: decided
     decided_by: systems
     date: '2026-10-20'
     owner_team: TM-COOL
-arch_decisions: {}
+arch_decisions:
+  AD-01:
+    title: Direct-to-chip liquid cooling
+    decision: Cold plates on every accelerator, rack manifold with dripless QDs, facility CDU
+    rationale: 'TD-01: immersion blocks hot swap and CM yield; rear-door air cannot hold 1.4 kW/accelerator at 30 °C inlet'
+    reqs:
+    - R-03
+    - R-05
+    trade: TD-01
+    consequences:
+    - leak detection + isolation per tray (R-06)
+    - wet mass in the floor-loading budget
+  AD-02:
+    title: 48 V busbar, N+1 power shelves
+    decision: 48 V DC distribution with on-tray conversion
+    rationale: Efficiency and copper mass vs 12 V; shelf redundancy for the failure budget
+    reqs:
+    - R-02
+    - R-11
+    consequences:
+    - blind-mate 48 V connector qualification
+    - hot-joint survey in integration
+  AD-03:
+    title: Scale-up over copper within the rack, optics to the pod
+    decision: Copper cable set for tray↔switch; 800G optics for scale-out
+    rationale: Cost and power per bit at ≤ 2 m; optics only where reach demands
+    reqs:
+    - R-04
+    consequences:
+    - cable bend-radius control at PS-03
+    - BER qualification across cable lots
+  AD-04:
+    title: Hardware root of trust on every tray BMC
+    decision: BMC with RoT; secure boot and attestation gate the run state
+    rationale: N-05; fleet integrity
+    reqs:
+    - R-07
+    consequences:
+    - fuse provisioning at the CM
+    - golden-value release process
+  AD-05:
+    title: Two CM sites with common fixtures
+    decision: Identical test software and fixtures at sites A and B
+    rationale: N-06 and FPY parity
+    reqs:
+    - R-09
+    consequences:
+    - fixture duplication cost
+    - site qualification builds at DVT
 tests:
   TST-01:
     name: Rack power at full load
@@ -1030,7 +1229,1666 @@ tests:
 gates: {}
 phases: {}
 deliverables: {}
-fm_assessments: {}
+fm_assessments:
+  FA-F-01-loss:
+    element: F-01
+    guide: loss
+    mode: Busbar loses 48 V
+    effect: Rack down
+    cause: Power shelf N+1 exhausted; busbar joint overheats
+    S: 9
+    O: 2
+    D: 2
+    controls: Shelf telemetry; joint IR survey
+    tests:
+    - TST-01
+    - TST-07
+  FA-F-01-degraded:
+    element: F-01
+    guide: degraded
+    mode: Voltage droop at full load
+    effect: Accelerators throttle
+    cause: Busbar resistance; shelf sharing imbalance
+    S: 6
+    O: 4
+    D: 3
+    controls: Droop test at 120 kW
+    tests:
+    - TST-01
+  FA-F-01-intermittent:
+    element: F-01
+    guide: intermittent
+    mode: Brown-outs on load steps
+    effect: Tray resets; job loss
+    cause: Capacitance; shelf control loop
+    S: 7
+    O: 3
+    D: 4
+    controls: Load-step test; hold-up spec
+    tests:
+    - TST-01
+  FA-F-01-unintended:
+    element: F-01
+    guide: unintended
+    mode: Energises tray with QD unmated
+    effect: Dry tray overheats
+    cause: Interlock missing
+    S: 8
+    O: 2
+    D: 3
+    controls: QD-mated interlock to tray power
+    tests:
+    - TST-05
+  FA-F-01-wrong_timing:
+    element: F-01
+    guide: wrong timing
+    mode: 48 V before coolant flow
+    effect: Thermal excursion at boot
+    cause: Sequencing
+    S: 7
+    O: 3
+    D: 3
+    controls: Flow-before-power sequence (T-02)
+    tests:
+    - TST-02
+  FA-F-01-wrong_value:
+    element: F-01
+    guide: wrong value
+    mode: Wrong rail (54 V) to tray
+    effect: Tray damage
+    cause: Shelf config
+    S: 8
+    O: 1
+    D: 2
+    controls: Shelf firmware check
+    tests:
+    - TST-01
+  FA-F-02-loss:
+    element: F-02
+    guide: loss
+    mode: Coolant flow stops
+    effect: Tj > 85 °C within seconds; shutdown
+    cause: CDU failure; QD not mated; manifold blockage
+    S: 9
+    O: 3
+    D: 2
+    controls: Flow sensors per tray; thermal trip
+    tests:
+    - TST-02
+    - TST-07
+  FA-F-02-degraded:
+    element: F-02
+    guide: degraded
+    mode: ΔT above budget
+    effect: Throttling
+    cause: Cold-plate fouling; flow imbalance across trays
+    S: 6
+    O: 4
+    D: 4
+    controls: Flow balance at PS-04; CDA-01 trend
+    tests:
+    - TST-02
+  FA-F-02-intermittent:
+    element: F-02
+    guide: intermittent
+    mode: Air in loop
+    effect: Hot spots
+    cause: Fill procedure; QD ingress
+    S: 7
+    O: 4
+    D: 4
+    controls: Degas at fill; pressure hold
+    tests:
+    - TST-02
+  FA-F-02-unintended:
+    element: F-02
+    guide: unintended
+    mode: Coolant leak
+    effect: Electrical fault; corrosion
+    cause: QD seal; hose clamp
+    S: 9
+    O: 3
+    D: 2
+    controls: Leak sensor → isolation (F-05)
+    tests:
+    - TST-05
+  FA-F-02-wrong_timing:
+    element: F-02
+    guide: wrong timing
+    ncr: continuous function
+  FA-F-02-wrong_value:
+    element: F-02
+    guide: wrong value
+    mode: Wrong coolant chemistry
+    effect: Corrosion; growth
+    cause: Facility PG25 mix
+    S: 7
+    O: 2
+    D: 5
+    controls: Coolant spec; incoming test
+    tests: []
+  FA-F-03-loss:
+    element: F-03
+    guide: loss
+    mode: Scale-up link down
+    effect: Tray isolated; job fails
+    cause: Copper cable seating; retimer fault
+    S: 7
+    O: 3
+    D: 2
+    controls: Link training telemetry
+    tests:
+    - TST-03
+  FA-F-03-degraded:
+    element: F-03
+    guide: degraded
+    mode: BER above 1e-12
+    effect: Retries; throughput loss
+    cause: Cable length margin; crosstalk
+    S: 6
+    O: 4
+    D: 4
+    controls: BER sweep at DVT
+    tests:
+    - TST-03
+  FA-F-03-intermittent:
+    element: F-03
+    guide: intermittent
+    mode: Link flaps
+    effect: Job restarts
+    cause: Connector micro-motion under vibration
+    S: 7
+    O: 3
+    D: 4
+    controls: Vibration test; latching
+    tests:
+    - TST-03
+  FA-F-03-unintended:
+    element: F-03
+    guide: unintended
+    ncr: not credible
+  FA-F-03-wrong_timing:
+    element: F-03
+    guide: wrong timing
+    mode: Training takes minutes
+    effect: Slow boot
+    cause: Firmware
+    S: 3
+    O: 4
+    D: 3
+    controls: Boot-time spec
+    tests:
+    - TST-06
+  FA-F-03-wrong_value:
+    element: F-03
+    guide: wrong value
+    mode: Topology mis-cabled
+    effect: Wrong fabric
+    cause: PS-03 cabling
+    S: 6
+    O: 4
+    D: 2
+    controls: Cable map check at PS-05
+    tests:
+    - TST-03
+  FA-F-04-loss:
+    element: F-04
+    guide: loss
+    mode: Optics fail
+    effect: Pod isolated
+    cause: Transceiver DOA; dust
+    S: 7
+    O: 3
+    D: 2
+    controls: DOM telemetry; dust caps
+    tests:
+    - TST-03
+    - TST-07
+  FA-F-04-degraded:
+    element: F-04
+    guide: degraded
+    mode: Optical power low
+    effect: BER
+    cause: Fibre bend; contamination
+    S: 6
+    O: 4
+    D: 3
+    controls: End-face inspection
+    tests:
+    - TST-03
+  FA-F-04-intermittent:
+    element: F-04
+    guide: intermittent
+    mode: Flapping optics
+    effect: Job restarts
+    cause: Thermal cycling of transceiver
+    S: 6
+    O: 3
+    D: 4
+    controls: Thermal test with optics
+    tests:
+    - TST-02
+  FA-F-04-unintended:
+    element: F-04
+    guide: unintended
+    ncr: not credible
+  FA-F-04-wrong_timing:
+    element: F-04
+    guide: wrong timing
+    ncr: covered by F-03
+  FA-F-04-wrong_value:
+    element: F-04
+    guide: wrong value
+    mode: Wrong wavelength/reach SKU
+    effect: No link
+    cause: MPN mix
+    S: 5
+    O: 2
+    D: 2
+    controls: MPN scan at PS-03
+    tests: []
+  FA-F-05-loss:
+    element: F-05
+    guide: loss
+    mode: Leak not detected
+    effect: Coolant on busbar; fire risk
+    cause: Sensor rope placement; sensor open
+    S: 10
+    O: 2
+    D: 3
+    controls: Sensor self-test; drip test at DVT
+    tests:
+    - TST-05
+  FA-F-05-degraded:
+    element: F-05
+    guide: degraded
+    mode: Detection > 2 s
+    effect: Larger spill
+    cause: BMC polling
+    S: 8
+    O: 3
+    D: 3
+    controls: Latency test
+    tests:
+    - TST-05
+  FA-F-05-intermittent:
+    element: F-05
+    guide: intermittent
+    mode: Nuisance trips
+    effect: Trays taken offline
+    cause: Condensation; sensor sensitivity
+    S: 5
+    O: 4
+    D: 3
+    controls: Dew-point control; threshold
+    tests:
+    - TST-05
+  FA-F-05-unintended:
+    element: F-05
+    guide: unintended
+    mode: Valve closes without leak
+    effect: Tray overheats
+    cause: BMC firmware bug
+    S: 8
+    O: 2
+    D: 3
+    controls: Firmware test; valve state telemetry
+    tests:
+    - TST-05
+    - TST-06
+  FA-F-05-wrong_timing:
+    element: F-05
+    guide: wrong timing
+    mode: Isolation after power cut
+    effect: Spray continues
+    cause: Sequence valve-then-power
+    S: 8
+    O: 3
+    D: 3
+    controls: Sequence spec; test
+    tests:
+    - TST-05
+  FA-F-05-wrong_value:
+    element: F-05
+    guide: wrong value
+    mode: Isolates wrong tray
+    effect: Healthy tray down; leak continues
+    cause: Addressing
+    S: 9
+    O: 2
+    D: 3
+    controls: Address check at PS-05
+    tests:
+    - TST-05
+  FA-F-06-loss:
+    element: F-06
+    guide: loss
+    mode: Tray fails to boot
+    effect: Capacity loss
+    cause: Corrupt firmware; RoT fault
+    S: 6
+    O: 3
+    D: 2
+    controls: A/B firmware; BMC watchdog
+    tests:
+    - TST-06
+  FA-F-06-degraded:
+    element: F-06
+    guide: degraded
+    mode: Attestation slow
+    effect: Long boot
+    cause: Measurement chain
+    S: 3
+    O: 4
+    D: 3
+    controls: Boot-time spec
+    tests:
+    - TST-06
+  FA-F-06-intermittent:
+    element: F-06
+    guide: intermittent
+    mode: Random attestation failures
+    effect: Trays quarantined
+    cause: Clock skew; cert expiry
+    S: 6
+    O: 3
+    D: 4
+    controls: NTP; cert monitoring
+    tests:
+    - TST-06
+  FA-F-06-unintended:
+    element: F-06
+    guide: unintended
+    mode: Unsigned firmware runs
+    effect: Compromise
+    cause: Fuses unblown at CM
+    S: 10
+    O: 2
+    D: 3
+    controls: Fuse check at PS-05
+    tests:
+    - TST-06
+  FA-F-06-wrong_timing:
+    element: F-06
+    guide: wrong timing
+    ncr: covered by degraded
+  FA-F-06-wrong_value:
+    element: F-06
+    guide: wrong value
+    mode: Wrong measurement baseline
+    effect: All trays fail attest
+    cause: Golden values not updated with firmware
+    S: 7
+    O: 3
+    D: 2
+    controls: Release process gate
+    tests:
+    - TST-06
+  FA-F-07-loss:
+    element: F-07
+    guide: loss
+    mode: No telemetry
+    effect: Blind fleet
+    cause: RMC down; network
+    S: 6
+    O: 3
+    D: 2
+    controls: RMC watchdog
+    tests:
+    - TST-07
+  FA-F-07-degraded:
+    element: F-07
+    guide: degraded
+    mode: Missing sensors
+    effect: Undiagnosed faults
+    cause: Sensor map incomplete
+    S: 5
+    O: 4
+    D: 4
+    controls: Coverage test vs R-08
+    tests:
+    - TST-07
+  FA-F-07-intermittent:
+    element: F-07
+    guide: intermittent
+    mode: Gaps in stream
+    effect: Lost events
+    cause: Buffer overrun
+    S: 4
+    O: 4
+    D: 4
+    controls: Buffer spec
+    tests:
+    - TST-07
+  FA-F-07-unintended:
+    element: F-07
+    guide: unintended
+    ncr: not credible
+  FA-F-07-wrong_timing:
+    element: F-07
+    guide: wrong timing
+    mode: Stale readings
+    effect: Late reaction
+    cause: Polling interval
+    S: 6
+    O: 3
+    D: 4
+    controls: 1 s cadence on thermal
+    tests:
+    - TST-07
+  FA-F-07-wrong_value:
+    element: F-07
+    guide: wrong value
+    mode: Wrong sensor mapping
+    effect: Wrong tray blamed
+    cause: Harness swap
+    S: 7
+    O: 3
+    D: 4
+    controls: Mapping check at PS-05
+    tests:
+    - TST-07
+  FA-F-08-loss:
+    element: F-08
+    guide: loss
+    mode: Tray cannot be removed
+    effect: Extended outage
+    cause: QD stuck; rail bind
+    S: 6
+    O: 3
+    D: 2
+    controls: Swap test; rail spec
+    tests:
+    - TST-04
+  FA-F-08-degraded:
+    element: F-08
+    guide: degraded
+    mode: Swap > 15 min
+    effect: SLA miss
+    cause: Cable count; drain time
+    S: 5
+    O: 5
+    D: 3
+    controls: Swap time test
+    tests:
+    - TST-04
+  FA-F-08-intermittent:
+    element: F-08
+    guide: intermittent
+    mode: QD drips
+    effect: Puddle on floor
+    cause: Seal wear
+    S: 6
+    O: 4
+    D: 3
+    controls: QD cycle test
+    tests:
+    - TST-04
+    - TST-05
+  FA-F-08-unintended:
+    element: F-08
+    guide: unintended
+    mode: Tray removed while powered
+    effect: Arc; damage
+    cause: Interlock
+    S: 8
+    O: 2
+    D: 2
+    controls: Power interlock on latch
+    tests:
+    - TST-04
+  FA-F-08-wrong_timing:
+    element: F-08
+    guide: wrong timing
+    mode: Valve not closed before pull
+    effect: Spill
+    cause: Procedure
+    S: 7
+    O: 3
+    D: 3
+    controls: Procedure + interlock
+    tests:
+    - TST-04
+  FA-F-08-wrong_value:
+    element: F-08
+    guide: wrong value
+    mode: Wrong tray pulled
+    effect: Healthy tray down
+    cause: Labelling
+    S: 6
+    O: 3
+    D: 3
+    controls: LED locate
+    tests:
+    - TST-07
+  FA-F-09-loss:
+    element: F-09
+    guide: loss
+    mode: CM cannot build
+    effect: No racks
+    cause: Fixtures; training
+    S: 7
+    O: 2
+    D: 2
+    controls: Site readiness review
+    tests:
+    - TST-08
+  FA-F-09-degraded:
+    element: F-09
+    guide: degraded
+    mode: FPY < 95 %
+    effect: Rework cost
+    cause: Leak test fails; cabling errors
+    S: 6
+    O: 5
+    D: 3
+    controls: FPY tracking; PFMEA
+    tests:
+    - TST-08
+  FA-F-09-intermittent:
+    element: F-09
+    guide: intermittent
+    mode: Site-to-site variation
+    effect: Inconsistent quality
+    cause: Different fixtures
+    S: 5
+    O: 4
+    D: 4
+    controls: Common fixtures and test SW
+    tests:
+    - TST-08
+  FA-F-09-unintended:
+    element: F-09
+    guide: unintended
+    ncr: not credible
+  FA-F-09-wrong_timing:
+    element: F-09
+    guide: wrong timing
+    mode: Burn-in too short
+    effect: Infant mortality in field
+    cause: Throughput pressure
+    S: 7
+    O: 3
+    D: 4
+    controls: Burn-in spec
+    tests:
+    - TST-10
+  FA-F-09-wrong_value:
+    element: F-09
+    guide: wrong value
+    mode: Wrong firmware at ship
+    effect: Attestation fails at site
+    cause: Release mismatch
+    S: 6
+    O: 3
+    D: 2
+    controls: Version check at PS-05
+    tests:
+    - TST-06
+  FA-F-10-loss:
+    element: F-10
+    guide: loss
+    mode: Frame failure
+    effect: Rack collapse
+    cause: Weld; overload
+    S: 10
+    O: 1
+    D: 2
+    controls: Seismic test; FEA
+    tests:
+    - TST-09
+    - TST-11
+  FA-F-10-degraded:
+    element: F-10
+    guide: degraded
+    mode: Rails deflect
+    effect: Tray bind
+    cause: Mass above budget
+    S: 5
+    O: 4
+    D: 3
+    controls: Mass check; rail test
+    tests:
+    - TST-11
+    - TST-04
+  FA-F-10-intermittent:
+    element: F-10
+    guide: intermittent
+    ncr: structural
+  FA-F-10-unintended:
+    element: F-10
+    guide: unintended
+    ncr: structural
+  FA-F-10-wrong_timing:
+    element: F-10
+    guide: wrong timing
+    ncr: structural
+  FA-F-10-wrong_value:
+    element: F-10
+    guide: wrong value
+    mode: Mass > 1600 kg wet
+    effect: Floor loading exceeded
+    cause: Coolant volume not counted
+    S: 8
+    O: 3
+    D: 2
+    controls: Wet-weight calc; weigh at PS-05
+    tests:
+    - TST-11
+  FA-IF-01-open:
+    element: IF-01
+    guide: open
+    mode: Shelf output breaker trips
+    effect: N+1 margin lost
+    cause: Inrush
+    S: 7
+    O: 3
+    D: 2
+    controls: Soft-start
+    tests:
+    - TST-01
+  FA-IF-01-degraded:
+    element: IF-01
+    guide: degraded
+    mode: Hot joint
+    effect: Voltage drop; fire risk
+    cause: Torque
+    S: 8
+    O: 3
+    D: 4
+    controls: Torque + IR survey
+    tests:
+    - TST-01
+  FA-IF-01-leakage_crosstalk:
+    element: IF-01
+    guide: leakage/crosstalk
+    ncr: power
+  FA-IF-01-mismatch:
+    element: IF-01
+    guide: mismatch
+    mode: Shelf firmware mismatch
+    effect: Sharing imbalance
+    cause: Mixed revisions
+    S: 5
+    O: 3
+    D: 3
+    controls: Version check
+    tests:
+    - TST-01
+  FA-IF-02-open:
+    element: IF-02
+    guide: open
+    mode: Tray blind-mate open
+    effect: Tray dead
+    cause: Rail misalignment
+    S: 6
+    O: 3
+    D: 2
+    controls: Insertion gauge
+    tests:
+    - TST-04
+  FA-IF-02-degraded:
+    element: IF-02
+    guide: degraded
+    mode: Contact resistance up
+    effect: Heat at connector
+    cause: Plating wear over swaps
+    S: 7
+    O: 3
+    D: 4
+    controls: Swap cycle test; IR
+    tests:
+    - TST-04
+  FA-IF-02-leakage_crosstalk:
+    element: IF-02
+    guide: leakage/crosstalk
+    ncr: power
+  FA-IF-02-mismatch:
+    element: IF-02
+    guide: mismatch
+    mode: Pin-out revision mismatch
+    effect: Damage
+    cause: ECO effectivity
+    S: 8
+    O: 2
+    D: 2
+    controls: Keying
+    tests: []
+  FA-IF-03-open:
+    element: IF-03
+    guide: open
+    mode: QD not mated
+    effect: No flow to tray
+    cause: Operator
+    S: 9
+    O: 3
+    D: 2
+    controls: Mated sensor; flow telemetry
+    tests:
+    - TST-05
+  FA-IF-03-degraded:
+    element: IF-03
+    guide: degraded
+    mode: Partial flow
+    effect: ΔT high
+    cause: QD partially open
+    S: 7
+    O: 4
+    D: 3
+    controls: Flow per tray telemetry
+    tests:
+    - TST-02
+  FA-IF-03-leakage_crosstalk:
+    element: IF-03
+    guide: leakage/crosstalk
+    mode: Drip at QD
+    effect: Leak event
+    cause: Seal
+    S: 7
+    O: 4
+    D: 2
+    controls: Leak sensor
+    tests:
+    - TST-05
+  FA-IF-03-mismatch:
+    element: IF-03
+    guide: mismatch
+    mode: Wrong QD size
+    effect: Cannot mate
+    cause: Vendor change
+    S: 4
+    O: 2
+    D: 2
+    controls: MPN control
+    tests: []
+  FA-IF-04-open:
+    element: IF-04
+    guide: open
+    mode: CDU supply lost
+    effect: Rack thermal trip
+    cause: Facility
+    S: 9
+    O: 2
+    D: 2
+    controls: Facility alarm; trip
+    tests:
+    - TST-02
+  FA-IF-04-degraded:
+    element: IF-04
+    guide: degraded
+    mode: Inlet above 30 °C
+    effect: Tj margin lost
+    cause: CDU setpoint
+    S: 6
+    O: 4
+    D: 3
+    controls: Inlet telemetry; derate
+    tests:
+    - TST-02
+  FA-IF-04-leakage_crosstalk:
+    element: IF-04
+    guide: leakage/crosstalk
+    mode: Cross-contamination from facility loop
+    effect: Corrosion
+    cause: Heat exchanger
+    S: 6
+    O: 2
+    D: 5
+    controls: Coolant sampling
+    tests: []
+  FA-IF-04-mismatch:
+    element: IF-04
+    guide: mismatch
+    mode: Pressure mismatch
+    effect: Flow imbalance
+    cause: CDU pump curve
+    S: 6
+    O: 3
+    D: 3
+    controls: Commissioning test
+    tests:
+    - TST-02
+  FA-IF-05-open:
+    element: IF-05
+    guide: open
+    mode: Sensor open
+    effect: No detection
+    cause: Cable
+    S: 10
+    O: 2
+    D: 3
+    controls: Self-test (open detect)
+    tests:
+    - TST-05
+  FA-IF-05-degraded:
+    element: IF-05
+    guide: degraded
+    mode: Slow BMC path
+    effect: '> 2 s'
+    cause: Polling
+    S: 8
+    O: 3
+    D: 3
+    controls: Interrupt-driven
+    tests:
+    - TST-05
+  FA-IF-05-leakage_crosstalk:
+    element: IF-05
+    guide: leakage/crosstalk
+    mode: EMI false trigger
+    effect: Nuisance isolation
+    cause: Unshielded rope
+    S: 5
+    O: 3
+    D: 3
+    controls: Shielding
+    tests:
+    - TST-05
+  FA-IF-05-mismatch:
+    element: IF-05
+    guide: mismatch
+    mode: Valve wired to wrong tray
+    effect: Wrong isolation
+    cause: Harness
+    S: 9
+    O: 2
+    D: 3
+    controls: Address test
+    tests:
+    - TST-05
+  FA-IF-06-open:
+    element: IF-06
+    guide: open
+    mode: Cable unseated
+    effect: Link down
+    cause: Latch
+    S: 7
+    O: 3
+    D: 2
+    controls: Latch audit
+    tests:
+    - TST-03
+  FA-IF-06-degraded:
+    element: IF-06
+    guide: degraded
+    mode: Insertion loss high
+    effect: BER
+    cause: Cable length
+    S: 6
+    O: 4
+    D: 3
+    controls: BER test
+    tests:
+    - TST-03
+  FA-IF-06-leakage_crosstalk:
+    element: IF-06
+    guide: leakage/crosstalk
+    mode: Crosstalk
+    effect: BER
+    cause: Bundle routing
+    S: 5
+    O: 4
+    D: 4
+    controls: Routing spec
+    tests:
+    - TST-03
+  FA-IF-06-mismatch:
+    element: IF-06
+    guide: mismatch
+    mode: Wrong cable length SKU
+    effect: Strain or slack
+    cause: Kitting
+    S: 4
+    O: 3
+    D: 2
+    controls: Kit check
+    tests: []
+  FA-IF-07-open:
+    element: IF-07
+    guide: open
+    mode: Fibre break
+    effect: Pod link down
+    cause: Bend radius
+    S: 7
+    O: 3
+    D: 2
+    controls: DOM; routing
+    tests:
+    - TST-03
+  FA-IF-07-degraded:
+    element: IF-07
+    guide: degraded
+    mode: Dirty end-face
+    effect: BER
+    cause: Dust caps off
+    S: 6
+    O: 4
+    D: 3
+    controls: Inspect & clean
+    tests:
+    - TST-03
+  FA-IF-07-leakage_crosstalk:
+    element: IF-07
+    guide: leakage/crosstalk
+    ncr: optical
+  FA-IF-07-mismatch:
+    element: IF-07
+    guide: mismatch
+    mode: Polarity swap
+    effect: No link
+    cause: MPO polarity
+    S: 5
+    O: 3
+    D: 2
+    controls: Polarity check
+    tests:
+    - TST-03
+  FA-IF-08-open:
+    element: IF-08
+    guide: open
+    mode: PCIe link down
+    effect: Tray idle
+    cause: Retimer
+    S: 6
+    O: 3
+    D: 2
+    controls: Link telemetry
+    tests:
+    - TST-07
+  FA-IF-08-degraded:
+    element: IF-08
+    guide: degraded
+    mode: Reduced lanes
+    effect: Bandwidth loss
+    cause: Connector wear
+    S: 5
+    O: 3
+    D: 4
+    controls: Lane-width check
+    tests:
+    - TST-07
+  FA-IF-08-leakage_crosstalk:
+    element: IF-08
+    guide: leakage/crosstalk
+    ncr: digital
+  FA-IF-08-mismatch:
+    element: IF-08
+    guide: mismatch
+    mode: Firmware mismatch host/accelerator
+    effect: Driver fails
+    cause: Release
+    S: 6
+    O: 3
+    D: 2
+    controls: Version matrix
+    tests:
+    - TST-06
+  FA-IF-09-open:
+    element: IF-09
+    guide: open
+    mode: BMC unreachable
+    effect: No telemetry/control
+    cause: Management switch
+    S: 6
+    O: 3
+    D: 2
+    controls: Watchdog
+    tests:
+    - TST-07
+  FA-IF-09-degraded:
+    element: IF-09
+    guide: degraded
+    mode: Latency
+    effect: Late alarms
+    cause: Network load
+    S: 5
+    O: 3
+    D: 3
+    controls: 1 s cadence test
+    tests:
+    - TST-07
+  FA-IF-09-leakage_crosstalk:
+    element: IF-09
+    guide: leakage/crosstalk
+    mode: Management on production network
+    effect: Security
+    cause: VLAN config
+    S: 8
+    O: 2
+    D: 3
+    controls: Security review
+    tests:
+    - TST-06
+  FA-IF-09-mismatch:
+    element: IF-09
+    guide: mismatch
+    mode: Inventory mismatch
+    effect: Wrong tray identity
+    cause: FRU EEPROM
+    S: 6
+    O: 3
+    D: 3
+    controls: FRU check at PS-05
+    tests:
+    - TST-07
+  FA-IF-10-open:
+    element: IF-10
+    guide: open
+    mode: Rail disengages
+    effect: Tray drop
+    cause: Latch
+    S: 9
+    O: 2
+    D: 2
+    controls: Latch test
+    tests:
+    - TST-04
+  FA-IF-10-degraded:
+    element: IF-10
+    guide: degraded
+    mode: Rail wear
+    effect: Bind
+    cause: Swaps
+    S: 4
+    O: 4
+    D: 3
+    controls: Cycle test
+    tests:
+    - TST-04
+  FA-IF-10-leakage_crosstalk:
+    element: IF-10
+    guide: leakage/crosstalk
+    ncr: mechanical
+  FA-IF-10-mismatch:
+    element: IF-10
+    guide: mismatch
+    mode: Blind-mate misalignment
+    effect: Connector damage
+    cause: Tolerance stack
+    S: 7
+    O: 3
+    D: 3
+    controls: Tolerance analysis; gauge
+    tests:
+    - TST-04
+  FA-T-01-fails_to_fire:
+    element: T-01
+    guide: fails to fire
+    mode: Pressure hold passes with leak
+    effect: Leak at power-on
+    cause: Hold time short
+    S: 8
+    O: 3
+    D: 3
+    controls: 'Hold ≥ 30 min at 1.5× '
+    tests:
+    - TST-05
+  FA-T-01-fires_falsely:
+    element: T-01
+    guide: fires falsely
+    mode: Fill declared before degas
+    effect: Air pockets
+    cause: Procedure
+    S: 6
+    O: 4
+    D: 3
+    controls: Degas step
+    tests:
+    - TST-02
+  FA-T-01-fires_late:
+    element: T-01
+    guide: fires late
+    ncr: commissioning
+  FA-T-02-fails_to_fire:
+    element: T-02
+    guide: fails to fire
+    mode: 48 V never enabled
+    effect: Rack idle
+    cause: RMC
+    S: 5
+    O: 3
+    D: 2
+    controls: RMC watchdog
+    tests:
+    - TST-01
+  FA-T-02-fires_falsely:
+    element: T-02
+    guide: fires falsely
+    mode: 48 V before flow confirmed
+    effect: Thermal excursion
+    cause: Sequence bug
+    S: 8
+    O: 3
+    D: 3
+    controls: Flow-before-power interlock
+    tests:
+    - TST-02
+  FA-T-02-fires_late:
+    element: T-02
+    guide: fires late
+    mode: Slow enable
+    effect: Boot time
+    cause: Sequencer
+    S: 3
+    O: 4
+    D: 3
+    controls: ''
+    tests: []
+  FA-T-03-fails_to_fire:
+    element: T-03
+    guide: fails to fire
+    mode: Run never reached
+    effect: Capacity loss
+    cause: Attestation fails
+    S: 6
+    O: 3
+    D: 2
+    controls: Golden values process
+    tests:
+    - TST-06
+  FA-T-03-fires_falsely:
+    element: T-03
+    guide: fires falsely
+    mode: Run with unattested tray
+    effect: Security
+    cause: Logic bug
+    S: 10
+    O: 2
+    D: 3
+    controls: Attestation gate test
+    tests:
+    - TST-06
+  FA-T-03-fires_late:
+    element: T-03
+    guide: fires late
+    mode: Minutes to attest
+    effect: Boot time
+    cause: Chain length
+    S: 3
+    O: 4
+    D: 3
+    controls: Boot spec
+    tests:
+    - TST-06
+  FA-T-04-fails_to_fire:
+    element: T-04
+    guide: fails to fire
+    mode: Fault not detected
+    effect: Damage spreads
+    cause: Telemetry gap
+    S: 8
+    O: 3
+    D: 3
+    controls: Coverage test
+    tests:
+    - TST-07
+  FA-T-04-fires_falsely:
+    element: T-04
+    guide: fires falsely
+    mode: Degraded on nuisance
+    effect: Capacity loss
+    cause: Threshold
+    S: 5
+    O: 4
+    D: 3
+    controls: Threshold review
+    tests:
+    - TST-05
+  FA-T-04-fires_late:
+    element: T-04
+    guide: fires late
+    mode: Late detection
+    effect: Spill/overheat
+    cause: Cadence
+    S: 7
+    O: 3
+    D: 3
+    controls: 1 s cadence
+    tests:
+    - TST-05
+  FA-T-05-fails_to_fire:
+    element: T-05
+    guide: fails to fire
+    mode: No dispatch
+    effect: Tray down for days
+    cause: Ticketing
+    S: 5
+    O: 3
+    D: 3
+    controls: Alert routing
+    tests:
+    - TST-07
+  FA-T-05-fires_falsely:
+    element: T-05
+    guide: fires falsely
+    ncr: operational
+  FA-T-05-fires_late:
+    element: T-05
+    guide: fires late
+    mode: Dispatch after SLA
+    effect: SLA miss
+    cause: Queue
+    S: 4
+    O: 4
+    D: 3
+    controls: ''
+    tests: []
+  FA-T-06-fails_to_fire:
+    element: T-06
+    guide: fails to fire
+    mode: Replaced tray does not boot
+    effect: Still degraded
+    cause: Firmware mismatch
+    S: 6
+    O: 3
+    D: 2
+    controls: Pre-flashed spares
+    tests:
+    - TST-06
+  FA-T-06-fires_falsely:
+    element: T-06
+    guide: fires falsely
+    mode: Boot with QD unmated
+    effect: Dry tray
+    cause: Interlock
+    S: 8
+    O: 2
+    D: 2
+    controls: Interlock
+    tests:
+    - TST-05
+  FA-T-06-fires_late:
+    element: T-06
+    guide: fires late
+    mode: Slow return to run
+    effect: SLA
+    cause: Attestation
+    S: 3
+    O: 4
+    D: 3
+    controls: ''
+    tests: []
+  FA-PS-01-omitted:
+    element: PS-01
+    guide: omitted
+    mode: FCT skipped under schedule
+    effect: Bad tray to rack
+    cause: Pressure
+    S: 7
+    O: 2
+    D: 3
+    controls: Traveler
+    tests:
+    - TST-08
+  FA-PS-01-wrong_part:
+    element: PS-01
+    guide: wrong part
+    mode: Wrong accelerator SKU
+    effect: Fit/power mismatch
+    cause: Kitting
+    S: 8
+    O: 2
+    D: 2
+    controls: Scan
+    tests: []
+  FA-PS-01-wrong_orientation:
+    element: PS-01
+    guide: wrong orientation
+    mode: Cold plate rotated
+    effect: No flow path
+    cause: Symmetric
+    S: 8
+    O: 2
+    D: 2
+    controls: Keyed plate
+    tests:
+    - TST-02
+  FA-PS-01-insufficient:
+    element: PS-01
+    guide: insufficient
+    mode: TIM coverage low
+    effect: Tj high
+    cause: Dispense
+    S: 7
+    O: 4
+    D: 5
+    controls: TIM inspection sampling
+    tests:
+    - TST-02
+  FA-PS-01-excessive:
+    element: PS-01
+    guide: excessive
+    mode: Over-torque cold plate
+    effect: Die crack
+    cause: Driver
+    S: 9
+    O: 2
+    D: 4
+    controls: Torque monitor
+    tests: []
+  FA-PS-01-contamination:
+    element: PS-01
+    guide: contamination
+    mode: Debris in cold plate
+    effect: Blockage
+    cause: Open ports
+    S: 7
+    O: 3
+    D: 5
+    controls: Caps; flush
+    tests:
+    - TST-02
+  FA-PS-01-damage:
+    element: PS-01
+    guide: damage
+    mode: ESD to accelerator
+    effect: Latent fail
+    cause: Handling
+    S: 8
+    O: 2
+    D: 5
+    controls: ESD audit
+    tests:
+    - TST-10
+  FA-PS-02-omitted:
+    element: PS-02
+    guide: omitted
+    mode: Busbar bolt missing
+    effect: Hot joint
+    cause: Operator
+    S: 8
+    O: 2
+    D: 3
+    controls: Torque record per bolt
+    tests:
+    - TST-01
+  FA-PS-02-wrong_part:
+    element: PS-02
+    guide: wrong part
+    mode: Wrong manifold rev
+    effect: QD mismatch
+    cause: Stock
+    S: 5
+    O: 2
+    D: 2
+    controls: Rev control
+    tests: []
+  FA-PS-02-wrong_orientation:
+    element: PS-02
+    guide: wrong orientation
+    mode: Manifold supply/return swapped
+    effect: Reverse flow
+    cause: Symmetry
+    S: 7
+    O: 3
+    D: 2
+    controls: Colour + key
+    tests:
+    - TST-02
+  FA-PS-02-insufficient:
+    element: PS-02
+    guide: insufficient
+    mode: Bolt torque low
+    effect: Hot joint
+    cause: Driver
+    S: 8
+    O: 3
+    D: 4
+    controls: Torque monitor; IR at PS-05
+    tests:
+    - TST-01
+  FA-PS-02-excessive:
+    element: PS-02
+    guide: excessive
+    mode: Over-torque busbar
+    effect: Cracked insulator
+    cause: Driver
+    S: 6
+    O: 2
+    D: 4
+    controls: Torque monitor
+    tests: []
+  FA-PS-02-contamination:
+    element: PS-02
+    guide: contamination
+    mode: Swarf on busbar
+    effect: Short
+    cause: Drilling
+    S: 8
+    O: 2
+    D: 4
+    controls: Clean step
+    tests:
+    - TST-09
+  FA-PS-02-damage:
+    element: PS-02
+    guide: damage
+    mode: Manifold dented
+    effect: Leak
+    cause: Handling
+    S: 7
+    O: 2
+    D: 3
+    controls: Pressure hold
+    tests:
+    - TST-05
+  FA-PS-03-omitted:
+    element: PS-03
+    guide: omitted
+    mode: Leak sensor rope not routed
+    effect: No detection
+    cause: Operator
+    S: 10
+    O: 2
+    D: 3
+    controls: Sensor test at PS-05
+    tests:
+    - TST-05
+  FA-PS-03-wrong_part:
+    element: PS-03
+    guide: wrong part
+    mode: Wrong cable length
+    effect: Strain
+    cause: Kitting
+    S: 4
+    O: 3
+    D: 2
+    controls: Kit check
+    tests:
+    - TST-03
+  FA-PS-03-wrong_orientation:
+    element: PS-03
+    guide: wrong orientation
+    mode: Cable polarity swapped
+    effect: No link
+    cause: Labels
+    S: 5
+    O: 4
+    D: 2
+    controls: Cable map test
+    tests:
+    - TST-03
+  FA-PS-03-insufficient:
+    element: PS-03
+    guide: insufficient
+    mode: QD not fully mated
+    effect: No flow
+    cause: Force
+    S: 9
+    O: 3
+    D: 2
+    controls: Mated sensor
+    tests:
+    - TST-05
+  FA-PS-03-excessive:
+    element: PS-03
+    guide: excessive
+    mode: Cable over-bent
+    effect: BER
+    cause: Routing
+    S: 6
+    O: 4
+    D: 4
+    controls: Bend radius guides
+    tests:
+    - TST-03
+  FA-PS-03-contamination:
+    element: PS-03
+    guide: contamination
+    mode: Dust in optics
+    effect: BER
+    cause: Caps
+    S: 6
+    O: 4
+    D: 3
+    controls: Caps until test
+    tests:
+    - TST-03
+  FA-PS-03-damage:
+    element: PS-03
+    guide: damage
+    mode: Rail bent on insertion
+    effect: Bind
+    cause: Force
+    S: 5
+    O: 3
+    D: 3
+    controls: Insertion gauge
+    tests:
+    - TST-04
+  FA-PS-04-omitted:
+    element: PS-04
+    guide: omitted
+    mode: Pressure hold skipped
+    effect: Leak in field
+    cause: Pressure
+    S: 9
+    O: 2
+    D: 2
+    controls: Traveler
+    tests:
+    - TST-05
+  FA-PS-04-wrong_part:
+    element: PS-04
+    guide: wrong part
+    mode: Wrong coolant
+    effect: Corrosion
+    cause: Drum
+    S: 7
+    O: 2
+    D: 5
+    controls: Coolant lot record
+    tests: []
+  FA-PS-04-wrong_orientation:
+    element: PS-04
+    guide: wrong orientation
+    ncr: n/a
+  FA-PS-04-insufficient:
+    element: PS-04
+    guide: insufficient
+    mode: Under-filled
+    effect: Air; hot spots
+    cause: Gauge
+    S: 7
+    O: 3
+    D: 3
+    controls: Fill volume record
+    tests:
+    - TST-02
+  FA-PS-04-excessive:
+    element: PS-04
+    guide: excessive
+    mode: Over-pressure at test
+    effect: Seal damage
+    cause: Regulator
+    S: 7
+    O: 2
+    D: 3
+    controls: Regulator check
+    tests:
+    - TST-05
+  FA-PS-04-contamination:
+    element: PS-04
+    guide: contamination
+    mode: Contaminated fill rig
+    effect: Growth
+    cause: Rig hygiene
+    S: 6
+    O: 3
+    D: 5
+    controls: Rig sampling
+    tests: []
+  FA-PS-04-damage:
+    element: PS-04
+    guide: damage
+    mode: QD damaged by test cap
+    effect: Drip
+    cause: Cap
+    S: 6
+    O: 3
+    D: 3
+    controls: Cap design
+    tests:
+    - TST-05
+  FA-PS-05-omitted:
+    element: PS-05
+    guide: omitted
+    mode: Attestation step skipped
+    effect: Unsigned firmware ships
+    cause: Fixture
+    S: 10
+    O: 2
+    D: 2
+    controls: Traveler enforces
+    tests:
+    - TST-06
+  FA-PS-05-wrong_part:
+    element: PS-05
+    guide: wrong part
+    ncr: n/a
+  FA-PS-05-wrong_orientation:
+    element: PS-05
+    guide: wrong orientation
+    ncr: n/a
+  FA-PS-05-insufficient:
+    element: PS-05
+    guide: insufficient
+    mode: Burn-in short
+    effect: Infant mortality
+    cause: Throughput
+    S: 7
+    O: 3
+    D: 4
+    controls: Burn-in spec
+    tests:
+    - TST-10
+  FA-PS-05-excessive:
+    element: PS-05
+    guide: excessive
+    mode: Hipot too high
+    effect: Insulation damage
+    cause: Setting
+    S: 7
+    O: 2
+    D: 3
+    controls: Setting lock
+    tests:
+    - TST-09
+  FA-PS-05-contamination:
+    element: PS-05
+    guide: contamination
+    ncr: n/a
+  FA-PS-05-damage:
+    element: PS-05
+    guide: damage
+    mode: Probe damages busbar
+    effect: Hot joint later
+    cause: Technique
+    S: 5
+    O: 3
+    D: 4
+    controls: Probe design
+    tests: []
 teams:
   TM-SE:
     name: Systems architecture
@@ -1221,6 +3079,7 @@ process_steps:
     parts:
     - P-RACK
     team: TM-MFG
+    eol_test: TST-08
 suppliers:
   SUP-01:
     name: Accelerator silicon partner
@@ -1259,12 +3118,210 @@ suppliers:
     status: candidate
     risk: not yet qualified
     owner: TM-IND
-work_items: {}
-findings: {}
+work_items:
+  WI-01:
+    title: 'Thermal test vehicle: heater trays for DVT'
+    owner: TM-TEST
+    team: TM-TEST
+    status: in progress
+    due: '2026-12-15'
+    gate: EVT
+    priority: 1
+    links:
+    - RK-01
+  WI-02:
+    title: Second cold-plate vendor samples and flow test
+    owner: TM-COOL
+    team: TM-COOL
+    status: open
+    due: '2027-01-10'
+    gate: DVT
+    priority: 1
+    links:
+    - RK-02
+  WI-03:
+    title: Leak sensor dew-point chamber test
+    owner: TM-COOL
+    team: TM-COOL
+    status: open
+    due: '2026-12-20'
+    gate: DVT
+    priority: 2
+    links:
+    - RK-03
+  WI-04:
+    title: Optics second-source RFQ
+    owner: TM-PROC
+    team: TM-PROC
+    status: open
+    due: '2026-12-05'
+    gate: DVT
+    priority: 2
+    links:
+    - RK-04
+  WI-05:
+    title: Frame FEA for seismic and lightweighting
+    owner: TM-MECH
+    team: TM-MECH
+    status: in progress
+    due: '2026-12-12'
+    gate: EVT
+    priority: 2
+    links:
+    - RK-05
+    - RK-06
+  WI-06:
+    title: Flow-before-power interlock in RMC firmware
+    owner: TM-MGMT
+    team: TM-MGMT
+    status: open
+    due: '2026-12-01'
+    gate: EVT
+    priority: 1
+    links:
+    - FA-T-02-fires_falsely
+  WI-07:
+    title: Site B fixture duplication plan
+    owner: TM-IND
+    team: TM-IND
+    status: open
+    due: '2027-02-01'
+    gate: PVT
+    priority: 3
+    links:
+    - AD-05
+findings:
+  FD-01:
+    title: No interlock between coolant flow and 48 V enable
+    severity: major
+    status: open
+    element: T-02
+    source: RV-01
+    owner: TM-MGMT
+    action: Add flow-confirmed guard to T-02; implement in RMC (WI-06)
+    due: '2026-12-01'
+    gate: EVT
+  FD-02:
+    title: Wet mass not in the floor-loading calculation
+    severity: major
+    status: closed
+    element: C-04
+    source: RV-01
+    owner: TM-MECH
+    action: C-04 updated with 60 L coolant
+    closed: '2026-11-08'
+    gate: EVT
+  FD-03:
+    title: Leak sensor TRL declared 6, evidence supports 5
+    severity: minor
+    status: open
+    element: P-LEAK
+    source: RV-01
+    owner: TM-COOL
+    action: Chamber test (WI-03) before raising TRL
+    due: '2026-12-20'
+    gate: DVT
+  FD-04:
+    title: Telemetry requirement lacks a cadence
+    severity: minor
+    status: open
+    element: R-08
+    source: RV-01
+    owner: TM-SE
+    action: Add 1 s cadence for thermal and leak channels
+    due: '2026-11-30'
+    gate: EVT
 handoffs: {}
 field_events: {}
-risks: {}
-reviews: {}
+risks:
+  RK-01:
+    title: Accelerator silicon slips (partner TRL 7)
+    prob: 3
+    impact: 5
+    owner: TM-SE
+    team: TM-SE
+    mitigation: Thermal test vehicle with heaters for DVT; mechanical/thermal sign-off independent of silicon
+    status: open
+    links:
+    - P-ACC
+    - SUP-01
+  RK-02:
+    title: Cold-plate ΔT above budget at full load
+    prob: 3
+    impact: 4
+    owner: TM-COOL
+    team: TM-COOL
+    mitigation: Two cold-plate vendors; TIM study; flow-balance fixture
+    status: open
+    links:
+    - P-CP
+    - CDA-01
+    - TST-02
+  RK-03:
+    title: Leak sensor (TRL 5) nuisance trips in humid sites
+    prob: 4
+    impact: 3
+    owner: TM-COOL
+    team: TM-COOL
+    mitigation: Dew-point chamber test; threshold tuning; conformal rope
+    status: open
+    links:
+    - P-LEAK
+    - R-06
+  RK-04:
+    title: 800G optics supply and reach qualification
+    prob: 3
+    impact: 4
+    owner: TM-PROC
+    team: TM-PROC
+    mitigation: Second optics vendor; qualify both reaches at DVT
+    status: open
+    links:
+    - P-OPT
+    - SUP-03
+  RK-05:
+    title: Wet mass exceeds 1,600 kg
+    prob: 2
+    impact: 4
+    owner: TM-MECH
+    team: TM-MECH
+    mitigation: Frame lightweighting study; coolant volume reduction
+    status: open
+    links:
+    - R-12
+    - C-04
+  RK-06:
+    title: Seismic zone 4 certification fails on first attempt
+    prob: 3
+    impact: 3
+    owner: TM-COMP
+    team: TM-COMP
+    mitigation: FEA + shake-table pre-test at DVT
+    status: open
+    links:
+    - R-10
+    - TST-09
+reviews:
+  RV-01:
+    name: Architecture review (EVT readiness)
+    gate: EVT
+    date: '2026-11-04'
+    attendees:
+    - TM-SE
+    - TM-PWR
+    - TM-COOL
+    - TM-FAB
+    - TM-MGMT
+    - TM-MECH
+    - TM-COMP
+    - TM-PM
+    findings:
+    - FD-01
+    - FD-02
+    - FD-03
+    - FD-04
+    decision: conditional — FD-01 before EVT power-on
+    notes: Cooling decision TD-01 confirmed.
 tables: {}
 test_runs:
   RUN-01:
@@ -1289,18 +3346,377 @@ test_runs:
     unit: tray-proto-2
     metrics:
       leak_cutoff_s: 2.8
-simulations: {}
+simulations:
+  SIM-01:
+    name: Cold-plate CFD — ΔT and pressure drop
+    tool: Ansys Fluent
+    element: P-CP
+    inputs:
+      flow_lpm: 1.2
+      inlet_C: 30
+      power_W: 1400
+    outputs:
+      Tj_C: 83.5
+      dP_kPa: 38
+      dT_C: 9.1
+    requirements:
+    - R-03
+    status: done
+    date: '2026-10-30'
+    owner_team: TM-COOL
+    notes: 1.5 °C margin to 85 °C; TIM resistance is the sensitivity.
+  SIM-02:
+    name: Frame FEA — seismic zone 4
+    tool: Abaqus
+    element: P-FRAME
+    inputs:
+      mass_kg: 1540
+      spectrum: GR-63 zone 4
+    outputs:
+      max_stress_MPa: 212
+      yield_MPa: 275
+      deflection_mm: 14
+    requirements:
+    - R-10
+    - R-12
+    status: done
+    date: '2026-11-06'
+    owner_team: TM-MECH
+    notes: Safety factor 1.3; rail deflection near the tray-bind limit.
+  SIM-03:
+    name: Busbar thermal — 2,500 A
+    tool: COMSOL
+    element: P-BUS
+    inputs:
+      current_A: 2500
+      ambient_C: 35
+    outputs:
+      joint_rise_C: 28
+      bar_rise_C: 19
+    requirements:
+    - R-02
+    status: done
+    date: '2026-11-01'
+    owner_team: TM-PWR
+  SIM-04:
+    name: Fabric signal integrity — 2 m copper
+    tool: Keysight ADS
+    element: P-CABLE
+    inputs:
+      length_m: 2.0
+      rate_Gbps: 112
+    outputs:
+      eye_height_mV: 42
+      ber_est: 3.0e-13
+    requirements:
+    - R-04
+    status: in progress
+    date: '2026-11-10'
+    owner_team: TM-FAB
 attachments: {}
 dfx_reviews: {}
 cad_models: {}
-quotes: {}
-tooling: {}
-inspections: {}
-capa: {}
-change_orders: {}
-work_orders: {}
-units: {}
-purchase_orders: {}
+quotes:
+  Q-01:
+    part: P-CP
+    supplier: SUP-02
+    qty: 80
+    unit_cost_usd: 395
+    moq: 50
+    lead_time_d: 70
+    tooling_usd: 45000
+    valid_until: '2027-03-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-18'
+    ref: CPV-26-301
+  Q-02:
+    part: P-MAN
+    supplier: SUP-02
+    qty: 10
+    unit_cost_usd: 1950
+    moq: 5
+    lead_time_d: 84
+    tooling_usd: 30000
+    valid_until: '2027-03-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-18'
+    ref: CPV-26-302
+  Q-03:
+    part: P-OPT
+    supplier: SUP-03
+    qty: 160
+    unit_cost_usd: 880
+    moq: 100
+    lead_time_d: 98
+    valid_until: '2027-01-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-25'
+    ref: OPT-26-7781
+    notes: reach 500 m DR4
+  Q-04:
+    part: P-FRAME
+    supplier: SUP-04
+    qty: 10
+    unit_cost_usd: 2700
+    moq: 5
+    lead_time_d: 60
+    tooling_usd: 22000
+    valid_until: '2027-02-28'
+    incoterm: EXW
+    status: received
+    date: '2026-11-02'
+    ref: CMA-Q-114
+    notes: weld fixtures; seismic-rated
+  Q-05:
+    part: P-PSH
+    supplier: SUP-04
+    qty: 40
+    unit_cost_usd: 4100
+    moq: 20
+    lead_time_d: 112
+    valid_until: '2027-01-15'
+    incoterm: FCA
+    status: received
+    date: '2026-11-05'
+    ref: CMA-Q-115
+    notes: long lead — order by 2026-11-20 for DVT
+tooling:
+  TL-01:
+    part: P-CP
+    supplier: SUP-02
+    tool_id: CPV-BRZ-301
+    type: brazing fixture + skive tooling
+    cavities: 1
+    cost_usd: 45000
+    owner: customer
+    quote: Q-01
+    kickoff: '2026-10-25'
+    t1: '2026-12-10'
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 400
+  TL-02:
+    part: P-MAN
+    supplier: SUP-02
+    tool_id: CPV-MAN-302
+    type: manifold weld fixture
+    cavities: 1
+    cost_usd: 30000
+    owner: customer
+    quote: Q-02
+    kickoff: '2026-10-25'
+    t1: '2026-12-20'
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 20
+  TL-03:
+    part: P-FRAME
+    supplier: SUP-04
+    tool_id: CMA-WF-114
+    type: weld fixture
+    cavities: 1
+    cost_usd: 22000
+    owner: customer
+    quote: Q-04
+    kickoff: ''
+    status: planned
+    ppap: not started
+    ppap_level: 2
+    capacity_per_week: 25
+    notes: kickoff on award
+inspections:
+  INS-01:
+    date: '2026-11-07'
+    part: P-CP
+    stage: incoming
+    qty: 16
+    defects: 1
+    supplier: SUP-02
+    lot: CPV-L301A
+    defect_codes:
+    - braze void > 5 % (CT)
+    disposition: reject 1
+    by: TM-QA
+  INS-02:
+    date: '2026-11-10'
+    part: P-OPT
+    stage: incoming
+    qty: 40
+    defects: 0
+    supplier: SUP-03
+    lot: OPT-L7781
+    defect_codes: []
+    disposition: accept
+    by: TM-QA
+  INS-03:
+    date: '2026-11-11'
+    part: P-QD
+    stage: incoming
+    qty: 60
+    defects: 2
+    supplier: SUP-02
+    lot: QD-L0931
+    defect_codes:
+    - drip on demate > 0.1 ml
+    disposition: reject 2; SCAR
+    by: TM-QA
+capa:
+  CAPA-01:
+    title: QD couplings drip on demate above 0.1 ml
+    source: inspection
+    source_id: INS-03
+    parts:
+    - P-QD
+    fm: FA-F-08-intermittent
+    containment: 100 % demate test on EVT lot; rejects quarantined
+    root_cause: ''
+    corrective: ''
+    preventive: ''
+    verification_test: TST-04
+    owner: TM-COOL
+    team: TM-COOL
+    due: '2026-12-20'
+    status: open
+change_orders:
+  ECO-001:
+    title: Flow-confirmed interlock on 48 V enable
+    reason: 'FD-01: 48 V could be enabled before coolant flow'
+    affected:
+    - P-RMC
+    - P-FW
+    - T-02
+    status: in review
+    approvers:
+    - TM-MGMT
+    - TM-COOL
+    - TM-PWR
+    approvals:
+      TM-COOL:
+        decision: approved
+        by: cooling@kiln.example
+        date: '2026-11-10'
+    effectivity: EVT rack 1
+    owner: TM-MGMT
+    date: '2026-11-06'
+    source: FD-01
+work_orders:
+  WO-EVT-01:
+    build: EVT
+    qty: 2
+    line: CM site A, integration bay 2
+    routing:
+    - PS-01
+    - PS-02
+    - PS-03
+    - PS-04
+    - PS-05
+    status: in progress
+    start: '2027-01-12'
+units:
+  U-WO-EVT-01-KLN-0001:
+    serial: KLN-0001
+    work_order: WO-EVT-01
+    components:
+      P-CP: CPV-L301A
+      P-MAN: CPV-M302-001
+      P-OPT: OPT-L7781
+      P-FRAME: CMA-F-0001
+    stations:
+      PS-01:
+        result: pass
+        date: '2027-01-12'
+      PS-02:
+        result: pass
+        date: '2027-01-14'
+      PS-03:
+        result: pass
+        date: '2027-01-16'
+      PS-04:
+        result: pass
+        date: '2027-01-17'
+        data:
+          hold_kPa_drop: 1.2
+          fill_L: 58
+      PS-05:
+        result: pass
+        date: '2027-01-20'
+        data:
+          power_kW: 117.8
+          Tj_max_C: 84.1
+          ber: 4.0e-13
+          leak_to_isolation_s: 1.6
+          mass_kg: 1555
+    status: complete
+    built: '2027-01-20'
+  U-WO-EVT-01-KLN-0002:
+    serial: KLN-0002
+    work_order: WO-EVT-01
+    components:
+      P-CP: CPV-L301A
+      P-MAN: CPV-M302-002
+      P-FRAME: CMA-F-0002
+    stations:
+      PS-01:
+        result: pass
+        date: '2027-01-13'
+      PS-02:
+        result: pass
+        date: '2027-01-15'
+      PS-03:
+        result: pass
+        date: '2027-01-18'
+      PS-04:
+        result: fail
+        date: '2027-01-19'
+        defect_codes:
+        - 'pressure hold drop 6 kPa — QD #14'
+    status: rework
+purchase_orders:
+  PO-0001:
+    supplier: SUP-02
+    status: partial
+    date: '2026-10-20'
+    lines:
+    - part: P-CP
+      qty: 80
+      unit_cost_usd: 395
+      quote: Q-01
+    - part: P-MAN
+      qty: 10
+      unit_cost_usd: 1950
+      quote: Q-02
+    incoterm: FCA
+    currency: USD
+    by: procurement@kiln.example
+    receipts:
+    - part: P-CP
+      qty: 16
+      lot: CPV-L301A
+      date: '2026-11-07'
+      unit_cost_usd: 395
+  PO-0002:
+    supplier: SUP-03
+    status: partial
+    date: '2026-10-27'
+    lines:
+    - part: P-OPT
+      qty: 160
+      unit_cost_usd: 880
+      quote: Q-03
+    incoterm: FCA
+    currency: USD
+    by: procurement@kiln.example
+    receipts:
+    - part: P-OPT
+      qty: 40
+      lot: OPT-L7781
+      date: '2026-11-10'
+      unit_cost_usd: 880
 cdas:
   CDA-01:
     name: Accelerator Tj at 30 °C inlet, full load

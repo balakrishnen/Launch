@@ -2,8 +2,7 @@ meta:
   name: BrewMaster One
   version: '0.1'
   method: OOSEM
-  description: 10-cup connected drip coffee maker — first product of a connected-kitchen
-    platform (fictional)
+  description: 10-cup connected drip coffee maker — first product of a connected-kitchen platform (fictional)
   system: P-BM1
   stage: Development
   business:
@@ -26,8 +25,7 @@ meta:
 stakeholders:
   STK-CONSUMER:
     name: Household consumer
-    description: Wants consistent great coffee with zero fuss; schedules from the
-      app; descales when told
+    description: Wants consistent great coffee with zero fuss; schedules from the app; descales when told
     concerns: taste, speed, cleaning, safety
   STK-SAFETY:
     name: Safety & certification bodies (UL, NB)
@@ -35,8 +33,7 @@ stakeholders:
     concerns: dry-boil, surface temp, leakage
   STK-SERVICE:
     name: Service network
-    description: Repairs under 2-year warranty; needs field-replaceable board and
-      clear diagnostics
+    description: Repairs under 2-year warranty; needs field-replaceable board and clear diagnostics
     concerns: diagnosability, spares
   STK-MFG:
     name: Contract manufacturer (Vietnam)
@@ -90,8 +87,7 @@ moes:
 needs:
   N-01:
     stk: STK-CONSUMER
-    text: 'Brew coffee that tastes consistently good (Golden Cup: 92–96 °C, 18–22
-      % extraction)'
+    text: 'Brew coffee that tastes consistently good (Golden Cup: 92–96 °C, 18–22 % extraction)'
     moe: MOE-01
   N-02:
     stk: STK-CONSUMER
@@ -111,8 +107,7 @@ needs:
     moe: MOE-05
   N-06:
     stk: STK-SAFETY
-    text: Comply with US and EU appliance safety, EMC, radio, food-contact and energy
-      rules
+    text: Comply with US and EU appliance safety, EMC, radio, food-contact and energy rules
     moe: MOE-06
   N-07:
     stk: STK-SERVICE
@@ -138,9 +133,126 @@ needs:
     stk: STK-CONSUMER
     text: 'Work without the cloud: brew, schedule and alerts on the machine'
     moe: MOE-12
-actors: {}
-use_cases: {}
-scenarios: {}
+actors:
+  AC-USER:
+    name: Household consumer
+  AC-APP:
+    name: Mobile app / cloud
+  AC-SVC:
+    name: Service technician
+  AC-OPS:
+    name: Line operator
+use_cases:
+  UC-01:
+    name: Brew a pot now
+    actors:
+    - AC-USER
+    needs:
+    - N-01
+    - N-02
+  UC-02:
+    name: Schedule tomorrow morning
+    actors:
+    - AC-USER
+    - AC-APP
+    needs:
+    - N-03
+    - N-12
+    includes:
+    - UC-01
+  UC-03:
+    name: Keep coffee warm
+    actors:
+    - AC-USER
+    needs:
+    - N-11
+  UC-04:
+    name: Descale
+    actors:
+    - AC-USER
+    - AC-APP
+    needs:
+    - N-04
+  UC-05:
+    name: Replace the main board
+    actors:
+    - AC-SVC
+    needs:
+    - N-07
+  UC-06:
+    name: Test at end of line
+    actors:
+    - AC-OPS
+    needs:
+    - N-08
+  UC-07:
+    name: Brew with Wi-Fi down
+    actors:
+    - AC-USER
+    needs:
+    - N-12
+    includes:
+    - UC-01
+scenarios:
+  SC-01:
+    uc: UC-01
+    name: Dial press → 10 cups in 6 min
+    steps:
+    - F-12
+    - F-06
+    - F-01
+    - F-02
+    - F-03
+    - F-04
+    - F-11
+    concurrent:
+    - F-07
+  SC-02:
+    uc: UC-02
+    name: App schedule 07:00, notify when done
+    steps:
+    - F-10
+    - F-08
+    - F-01
+    - F-02
+    - F-03
+    - F-08
+  SC-03:
+    uc: UC-03
+    name: Warm for 120 min then off
+    steps:
+    - F-05
+    - F-12
+  SC-04:
+    uc: UC-04
+    name: Prompt, run descale cycle
+    steps:
+    - F-09
+    - F-11
+    - F-02
+    - F-01
+  SC-05:
+    uc: UC-05
+    name: Fault code → board swap → self-test
+    steps:
+    - F-11
+    - F-13
+  SC-06:
+    uc: UC-06
+    name: Hipot, ground bond, brew, flow cal
+    steps:
+    - F-13
+    - F-01
+    - F-02
+    - F-06
+  SC-07:
+    uc: UC-07
+    name: Offline brew and schedule from the dial
+    steps:
+    - F-12
+    - F-08
+    - F-01
+    - F-02
 regulations:
   REG-UL1082:
     name: UL 1082 — Household electric coffee makers
@@ -195,8 +307,7 @@ regulations:
 requirements:
   R-01:
     type: PERF
-    text: Water at the shower head shall be 92–96 °C throughout a 10-cup brew after
-      the first 100 ml.
+    text: Water at the shower head shall be 92–96 °C throughout a 10-cup brew after the first 100 ml.
     verify: test
     tests:
     - TST-01
@@ -208,8 +319,7 @@ requirements:
     attr: brew_temp_c >= 92
   R-02:
     type: PERF
-    text: A 10-cup (1,500 ml) brew shall complete in ≤ 360 s from start to drip-stop
-      at 230 V and 120 V.
+    text: A 10-cup (1,500 ml) brew shall complete in ≤ 360 s from start to drip-stop at 230 V and 120 V.
     verify: test
     tests:
     - TST-02
@@ -220,9 +330,7 @@ requirements:
     attr: brew_time_s <= 360
   R-03:
     type: SAFE
-    text: The heater shall be de-energised within 5 s of the water system detecting
-      an empty reservoir or no flow, independently by software (class B) and by the
-      TCO.
+    text: The heater shall be de-energised within 5 s of the water system detecting an empty reservoir or no flow, independently by software (class B) and by the TCO.
     verify: test
     tests:
     - TST-03
@@ -237,8 +345,7 @@ requirements:
     attr: dry_boil_cutoff_s <= 5
   R-04:
     type: SAFE
-    text: Accessible surfaces shall not exceed the 60335-1 limits (metal 60 K rise,
-      plastic 75 K rise) during and after brew.
+    text: Accessible surfaces shall not exceed the 60335-1 limits (metal 60 K rise, plastic 75 K rise) during and after brew.
     verify: test
     tests:
     - TST-05
@@ -250,8 +357,7 @@ requirements:
     attr: surface_rise_K <= 60
   R-05:
     type: REGU
-    text: The product shall obtain UL 1082 (US) and EN 60335-1/-2-15 (EU) certification
-      before PVT.
+    text: The product shall obtain UL 1082 (US) and EN 60335-1/-2-15 (EU) certification before PVT.
     verify: inspection
     tests:
     - TST-06
@@ -264,9 +370,7 @@ requirements:
     attr: certification = granted
   R-06:
     type: FUNC
-    text: The user shall be able to schedule a brew from the app and from the dial;
-      the machine shall notify ready state on the display, by tone and by push within
-      30 s.
+    text: The user shall be able to schedule a brew from the app and from the dial; the machine shall notify ready state on the display, by tone and by push within 30 s.
     verify: test
     tests:
     - TST-07
@@ -277,8 +381,7 @@ requirements:
     attr: notify_latency_s <= 30
   R-07:
     type: FUNC
-    text: The controller shall estimate scale build-up from water hardness and volume
-      and prompt descaling within ±10 % of the 60 L (15 °dH) reference.
+    text: The controller shall estimate scale build-up from water hardness and volume and prompt descaling within ±10 % of the 60 L (15 °dH) reference.
     verify: analysis
     tests:
     - TST-08
@@ -289,8 +392,7 @@ requirements:
     attr: descale_error_pct <= 10
   R-08:
     type: PERF
-    text: Networked standby power shall be ≤ 0.5 W; the display shall power down after
-      5 min idle.
+    text: Networked standby power shall be ≤ 0.5 W; the display shall power down after 5 min idle.
     verify: test
     tests:
     - TST-09
@@ -302,8 +404,7 @@ requirements:
     attr: standby_W <= 0.5
   R-09:
     type: REGU
-    text: All water- and coffee-contact materials shall have FDA and EU 10/2011 declarations
-      of compliance.
+    text: All water- and coffee-contact materials shall have FDA and EU 10/2011 declarations of compliance.
     verify: inspection
     tests:
     - TST-10
@@ -315,8 +416,7 @@ requirements:
     attr: food_contact_doc = complete
   R-10:
     type: REGU
-    text: Radiated/conducted emissions shall meet FCC 15B class B and EN 55014-1;
-      harmonics IEC 61000-3-2 class A with the 1,400 W heater.
+    text: Radiated/conducted emissions shall meet FCC 15B class B and EN 55014-1; harmonics IEC 61000-3-2 class A with the 1,400 W heater.
     verify: test
     tests:
     - TST-11
@@ -329,8 +429,7 @@ requirements:
     attr: emc = pass
   R-11:
     type: MAINT
-    text: The main board shall be replaceable in ≤ 15 min with a Torx T20 and no soldering;
-      the HMI shall display a fault code for every detected failure.
+    text: The main board shall be replaceable in ≤ 15 min with a Torx T20 and no soldering; the HMI shall display a fault code for every detected failure.
     verify: demonstration
     tests:
     - TST-12
@@ -341,8 +440,7 @@ requirements:
     attr: board_swap_min <= 15
   R-12:
     type: MFG
-    text: Every unit shall pass an end-of-line test (hipot, ground bond, brew cycle
-      with water, Wi-Fi provisioning) in ≤ 240 s.
+    text: Every unit shall pass an end-of-line test (hipot, ground bond, brew cycle with water, Wi-Fi provisioning) in ≤ 240 s.
     verify: test
     tests:
     - TST-13
@@ -353,8 +451,7 @@ requirements:
     attr: eol_s <= 240
   R-13:
     type: IFACE
-    text: Controller, radio module, HMI and app shall interface through the platform
-      ICD so the same parts serve the kettle and grinder.
+    text: Controller, radio module, HMI and app shall interface through the platform ICD so the same parts serve the kettle and grinder.
     verify: inspection
     tests:
     - TST-14
@@ -365,8 +462,7 @@ requirements:
     attr: platform_icd = conformant
   R-14:
     type: PERF
-    text: The keep-warm plate shall hold carafe contents at 80–85 °C for 120 min then
-      shut off.
+    text: The keep-warm plate shall hold carafe contents at 80–85 °C for 120 min then shut off.
     verify: test
     tests:
     - TST-15
@@ -378,8 +474,7 @@ requirements:
     attr: keepwarm_c >= 80
   R-15:
     type: FUNC
-    text: All brew, schedule and alert functions shall work with no network; cloud
-      adds remote start and telemetry only.
+    text: All brew, schedule and alert functions shall work with no network; cloud adds remote start and telemetry only.
     verify: test
     tests:
     - TST-16
@@ -391,8 +486,7 @@ requirements:
     attr: offline = true
   R-16:
     type: SEC
-    text: Firmware updates shall be signed; no default passwords; Wi-Fi credentials
-      stored encrypted (EN 18031).
+    text: Firmware updates shall be signed; no default passwords; Wi-Fi credentials stored encrypted (EN 18031).
     verify: inspection
     tests:
     - TST-17
@@ -404,8 +498,7 @@ requirements:
     attr: security = EN18031
   R-17:
     type: PERF
-    text: Shower head shall wet ≥ 90 % of the coffee bed within the first 60 s (extraction
-      uniformity).
+    text: Shower head shall wet ≥ 90 % of the coffee bed within the first 60 s (extraction uniformity).
     verify: test
     tests:
     - TST-18
@@ -416,8 +509,7 @@ requirements:
     attr: bed_wetting_pct >= 90
   R-18:
     type: SAFE
-    text: The carafe-present switch shall stop drip within 2 s of carafe removal and
-      resume on return.
+    text: The carafe-present switch shall stop drip within 2 s of carafe removal and resume on return.
     verify: test
     tests:
     - TST-19
@@ -1202,12 +1294,79 @@ transitions:
     guard: ''
     sensor: null
     func: F-12
-constraints: {}
+constraints:
+  C-01:
+    name: Heat-up energy
+    formula: t_heat_s = m_water_kg * 4186 * (T_set - T_in) / (P_heater_W * eta) <= 60
+    inputs:
+      m_water_kg: 0.15
+      T_set: 94
+      T_in: 20
+      P_heater_W: 1400
+      eta: 0.9
+    reqs:
+    - R-02
+    tests:
+    - TST-02
+  C-02:
+    name: Brew time
+    formula: t_brew_s = V_ml / flow_ml_s + t_heat_s <= 360
+    inputs:
+      V_ml: 1500
+      flow_ml_s: 5.2
+      t_heat_s: 55
+    reqs:
+    - R-02
+    tests:
+    - TST-02
+  C-03:
+    name: Mains load (US)
+    formula: P_total_W = P_heater + P_plate + P_pump + P_elec <= 1440
+    inputs:
+      P_heater: 1400
+      P_plate: 0
+      P_pump: 20
+      P_elec: 5
+    reqs:
+    - R-02
+    - R-05
+    tests:
+    - TST-06
+  C-04:
+    name: Standby power
+    formula: P_standby_W = P_psu_idle + P_radio_sleep + P_mcu_sleep <= 0.5
+    inputs:
+      P_psu_idle: 0.18
+      P_radio_sleep: 0.12
+      P_mcu_sleep: 0.03
+    reqs:
+    - R-08
+    tests:
+    - TST-09
+  C-05:
+    name: Dry-boil cutoff
+    formula: t_detect + t_sw + t_triac_off <= 5 s
+    inputs:
+      t_detect: 3.0
+      t_sw: 0.2
+      t_triac_off: 0.02
+    reqs:
+    - R-03
+    tests:
+    - TST-03
+  C-06:
+    name: Surface temperature
+    formula: T_surface - T_ambient <= 60 K (metal) per 60335-1
+    inputs:
+      T_ambient: 25
+    reqs:
+    - R-04
+    tests:
+    - TST-05
 trades:
   TD-01:
     name: 'Heater: thermoblock vs tank boiler'
-    question: Which heating architecture meets 92–96 °C at the shower head within
-      360 s for 10 cups at the lowest cost and risk?
+    question: Which heating architecture meets 92–96 °C at the shower head within 360 s for 10 cups at the lowest cost and risk?
     options:
     - Thermoblock 1400 W
     - Tank boiler 1200 W
@@ -1315,9 +1474,8 @@ trades:
     - LC-THERMAL
     - F-01
     decision: Thermoblock 1400 W
-    rationale: 1800 W exceeds the 15 A NEMA 5-15 circuit for the US variant (1800
-      W × 1.25 continuous); the 1400 W block meets MOE-02 with margin and keeps one
-      heater across both markets. Descale sensitivity is handled by R-07 estimator.
+    rationale: 1800 W exceeds the 15 A NEMA 5-15 circuit for the US variant (1800 W × 1.25 continuous); the 1400 W block meets MOE-02 with margin and keeps one heater across both markets. Descale sensitivity
+      is handled by R-07 estimator.
     status: decided
     decided_by: bala@twinmo.ai
     date: '2026-11-12'
@@ -1411,8 +1569,7 @@ trades:
     owner_team: TM-BREW
   TD-03:
     name: 'Radio: pre-certified module vs custom RF'
-    question: Module (modular grant, host SDoC) or custom radio with full FCC 15C
-      / RED testing?
+    question: Module (modular grant, host SDoC) or custom radio with full FCC 15C / RED testing?
     options:
     - ESP32-C3 module
     - Custom RF on main board
@@ -1478,8 +1635,7 @@ trades:
     - P-RADIO
     - LC-CONN
     decision: ESP32-C3 module
-    rationale: Schedule to PVT and platform reuse dominate; $0.80 delta at 100k is
-      below the certification cost of a custom radio.
+    rationale: Schedule to PVT and platform reuse dominate; $0.80 delta at 100k is below the certification cost of a custom radio.
     status: decided
     decided_by: bala@twinmo.ai
     date: '2026-11-12'
@@ -1646,7 +1802,2036 @@ tests:
 gates: {}
 phases: {}
 deliverables: {}
-fm_assessments: {}
+fm_assessments:
+  FA-F-01-loss:
+    element: F-01
+    guide: loss
+    mode: No heating
+    effect: No coffee
+    cause: Triac open; TCO tripped; heater element open
+    S: 6
+    O: 3
+    D: 2
+    controls: Heater current sense; EoL brew
+    tests:
+    - TST-13
+  FA-F-01-degraded:
+    element: F-01
+    guide: degraded
+    mode: Water below 92 °C
+    effect: Under-extracted, sour coffee (MOE-01)
+    cause: Scale on thermoblock; low mains (108 V); NTC drift
+    S: 6
+    O: 5
+    D: 4
+    controls: Descale estimator (R-07); NTC calibration at EoL; CDA-01
+    tests:
+    - TST-01
+    - TST-08
+  FA-F-01-intermittent:
+    element: F-01
+    guide: intermittent
+    mode: Temperature cycles ±6 °C
+    effect: Inconsistent brew
+    cause: Triac control loop; NTC placement
+    S: 5
+    O: 4
+    D: 4
+    controls: Control tuning; profile test
+    tests:
+    - TST-01
+  FA-F-01-unintended:
+    element: F-01
+    guide: unintended
+    mode: Heater on with no water
+    effect: Dry boil; thermoblock damage; fire risk
+    cause: Flow/level logic fault; triac short
+    S: 10
+    O: 2
+    D: 2
+    controls: Class-B software cutoff (R-03) + TCO
+    tests:
+    - TST-03
+    - TST-04
+  FA-F-01-wrong_timing:
+    element: F-01
+    guide: wrong timing
+    mode: Heater stays on after brew
+    effect: Overheat; energy
+    cause: State machine stuck in HEAT
+    S: 8
+    O: 2
+    D: 3
+    controls: Watchdog; state timeout
+    tests:
+    - TST-03
+  FA-F-01-wrong_value:
+    element: F-01
+    guide: wrong value
+    mode: Water above 96 °C / boiling
+    effect: Bitter coffee; steam burns
+    cause: Setpoint error; NTC open reads low
+    S: 7
+    O: 3
+    D: 3
+    controls: NTC open/short detect; TST-01
+    tests:
+    - TST-01
+    - TST-05
+  FA-F-02-loss:
+    element: F-02
+    guide: loss
+    mode: No flow
+    effect: No coffee; dry boil path
+    cause: Pump failed; airlock; inlet blocked by scale
+    S: 7
+    O: 4
+    D: 2
+    controls: Flow meter; dry-boil cutoff
+    tests:
+    - TST-03
+    - TST-02
+  FA-F-02-degraded:
+    element: F-02
+    guide: degraded
+    mode: Low flow
+    effect: Brew > 360 s
+    cause: Scale; pump wear; kinked tube
+    S: 5
+    O: 5
+    D: 3
+    controls: Brew-time CDA-02; descale prompt
+    tests:
+    - TST-02
+  FA-F-02-intermittent:
+    element: F-02
+    guide: intermittent
+    mode: Pulsing flow
+    effect: Uneven extraction
+    cause: Pump cavitation; air in line
+    S: 4
+    O: 4
+    D: 4
+    controls: Priming routine
+    tests:
+    - TST-18
+  FA-F-02-unintended:
+    element: F-02
+    guide: unintended
+    mode: Pump runs in idle
+    effect: Overflow onto counter
+    cause: Driver short; firmware
+    S: 7
+    O: 2
+    D: 3
+    controls: Pump drive monitor
+    tests: []
+  FA-F-02-wrong_timing:
+    element: F-02
+    guide: wrong timing
+    mode: Flow before setpoint
+    effect: Cold first cup
+    cause: Sequencing T-03
+    S: 4
+    O: 3
+    D: 3
+    controls: State test
+    tests:
+    - TST-01
+  FA-F-02-wrong_value:
+    element: F-02
+    guide: wrong value
+    mode: Wrong volume (flow count)
+    effect: Overflow carafe / short brew
+    cause: Flow meter miscalibrated
+    S: 6
+    O: 3
+    D: 3
+    controls: Flow cal at EoL
+    tests:
+    - TST-13
+  FA-F-03-loss:
+    element: F-03
+    guide: loss
+    mode: No distribution (single jet)
+    effect: Channelling; poor extraction
+    cause: Shower head holes blocked by scale
+    S: 5
+    O: 5
+    D: 4
+    controls: Descale; TST-18
+    tests:
+    - TST-18
+  FA-F-03-degraded:
+    element: F-03
+    guide: degraded
+    mode: < 90 % bed wetting
+    effect: Uneven extraction (R-17)
+    cause: Hole pattern (ECO-001)
+    S: 5
+    O: 4
+    D: 3
+    controls: Dye test; CDA-05
+    tests:
+    - TST-18
+  FA-F-03-intermittent:
+    element: F-03
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-03-unintended:
+    element: F-03
+    guide: unintended
+    mode: Water sprays outside basket
+    effect: Mess; hot water on housing
+    cause: Hole angle; pressure surge
+    S: 5
+    O: 3
+    D: 3
+    controls: Spray-pattern test
+    tests:
+    - TST-18
+  FA-F-03-wrong_timing:
+    element: F-03
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-03-wrong_value:
+    element: F-03
+    guide: wrong value
+    mode: Wrong hole count (19 vs 23)
+    effect: R-17 miss
+    cause: Tooling rev mismatch
+    S: 5
+    O: 2
+    D: 2
+    controls: FAI on shower head tool
+    tests:
+    - TST-18
+  FA-F-04-loss:
+    element: F-04
+    guide: loss
+    mode: Drip-stop never opens
+    effect: Basket overflows
+    cause: Valve stuck; carafe switch open
+    S: 6
+    O: 3
+    D: 2
+    controls: Switch test at EoL
+    tests:
+    - TST-19
+  FA-F-04-degraded:
+    element: F-04
+    guide: degraded
+    mode: Slow drip-stop close
+    effect: Drips on plate (R-18)
+    cause: Spring fatigue
+    S: 4
+    O: 4
+    D: 3
+    controls: Response test
+    tests:
+    - TST-19
+  FA-F-04-intermittent:
+    element: F-04
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-04-unintended:
+    element: F-04
+    guide: unintended
+    mode: Drips with carafe removed
+    effect: Burn on plate; mess
+    cause: Valve seal wear
+    S: 5
+    O: 4
+    D: 3
+    controls: Seal life test
+    tests:
+    - TST-19
+  FA-F-04-wrong_timing:
+    element: F-04
+    guide: wrong timing
+    mode: Closes > 2 s
+    effect: R-18 miss
+    cause: Valve travel
+    S: 4
+    O: 3
+    D: 3
+    controls: TST-19
+    tests:
+    - TST-19
+  FA-F-04-wrong_value:
+    element: F-04
+    guide: wrong value
+    ncr: not credible for this function
+  FA-F-05-loss:
+    element: F-05
+    guide: loss
+    mode: Plate cold
+    effect: Coffee cold
+    cause: Plate element open; driver
+    S: 4
+    O: 3
+    D: 2
+    controls: Plate current sense
+    tests:
+    - TST-15
+  FA-F-05-degraded:
+    element: F-05
+    guide: degraded
+    mode: Below 80 °C
+    effect: Lukewarm
+    cause: Plate power; carafe contact
+    S: 4
+    O: 4
+    D: 3
+    controls: Keep-warm test
+    tests:
+    - TST-15
+  FA-F-05-intermittent:
+    element: F-05
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-05-unintended:
+    element: F-05
+    guide: unintended
+    mode: Plate on with no carafe
+    effect: Burn hazard; energy
+    cause: Carafe switch logic
+    S: 7
+    O: 3
+    D: 3
+    controls: Switch interlock
+    tests:
+    - TST-05
+  FA-F-05-wrong_timing:
+    element: F-05
+    guide: wrong timing
+    mode: Stays on > 120 min
+    effect: Burnt coffee; energy
+    cause: Timer
+    S: 4
+    O: 3
+    D: 3
+    controls: Timeout test
+    tests:
+    - TST-15
+  FA-F-05-wrong_value:
+    element: F-05
+    guide: wrong value
+    mode: Above 85 °C
+    effect: Burnt coffee
+    cause: Plate thermostat
+    S: 4
+    O: 3
+    D: 3
+    controls: TST-15
+    tests:
+    - TST-15
+  FA-F-06-loss:
+    element: F-06
+    guide: loss
+    mode: Level/flow unknown
+    effect: Cannot protect dry boil
+    cause: Sensor open; flow meter stuck
+    S: 8
+    O: 3
+    D: 3
+    controls: Sensor plausibility; TCO backup
+    tests:
+    - TST-03
+    - TST-04
+  FA-F-06-degraded:
+    element: F-06
+    guide: degraded
+    mode: Level offset
+    effect: Short brews
+    cause: Capacitive drift with hardness
+    S: 4
+    O: 4
+    D: 4
+    controls: Cal at EoL; drift test
+    tests:
+    - TST-13
+  FA-F-06-intermittent:
+    element: F-06
+    guide: intermittent
+    mode: Flow pulses missed
+    effect: Wrong volume
+    cause: Hall sensor gap
+    S: 5
+    O: 3
+    D: 4
+    controls: Flow cal
+    tests:
+    - TST-13
+  FA-F-06-unintended:
+    element: F-06
+    guide: unintended
+    mode: Reports water when empty
+    effect: Dry boil
+    cause: Residue on sensor
+    S: 9
+    O: 3
+    D: 3
+    controls: Flow cross-check; TCO
+    tests:
+    - TST-03
+  FA-F-06-wrong_timing:
+    element: F-06
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-06-wrong_value:
+    element: F-06
+    guide: wrong value
+    mode: Wrong volume reported
+    effect: Overflow
+    cause: Flow constant
+    S: 6
+    O: 3
+    D: 3
+    controls: Flow cal
+    tests:
+    - TST-13
+  FA-F-07-loss:
+    element: F-07
+    guide: loss
+    mode: Protection absent
+    effect: Fire/thermoblock failure
+    cause: Software fault + TCO failed
+    S: 10
+    O: 1
+    D: 2
+    controls: Independent TCO; class-B library
+    tests:
+    - TST-03
+    - TST-04
+  FA-F-07-degraded:
+    element: F-07
+    guide: degraded
+    mode: Cutoff > 5 s
+    effect: R-03 miss; thermoblock stress
+    cause: Detection threshold
+    S: 8
+    O: 3
+    D: 3
+    controls: CDA-04
+    tests:
+    - TST-03
+  FA-F-07-intermittent:
+    element: F-07
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-07-unintended:
+    element: F-07
+    guide: unintended
+    mode: Nuisance trips
+    effect: Brew aborted
+    cause: Flow threshold too tight
+    S: 4
+    O: 4
+    D: 3
+    controls: Threshold review
+    tests:
+    - TST-03
+  FA-F-07-wrong_timing:
+    element: F-07
+    guide: wrong timing
+    mode: Trips late on NTC open
+    effect: Overtemperature
+    cause: NTC open reads cold
+    S: 9
+    O: 2
+    D: 3
+    controls: Open-detect pull-up
+    tests:
+    - TST-03
+  FA-F-07-wrong_value:
+    element: F-07
+    guide: wrong value
+    ncr: not credible for this function
+  FA-F-08-loss:
+    element: F-08
+    guide: loss
+    mode: Schedule missed
+    effect: No coffee at 7:00
+    cause: RTC drift; sleep bug
+    S: 4
+    O: 3
+    D: 3
+    controls: RTC test
+    tests:
+    - TST-07
+  FA-F-08-degraded:
+    element: F-08
+    guide: degraded
+    mode: Notify late
+    effect: Minor
+    cause: Cloud
+    S: 2
+    O: 4
+    D: 3
+    controls: Latency test
+    tests:
+    - TST-07
+  FA-F-08-intermittent:
+    element: F-08
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-08-unintended:
+    element: F-08
+    guide: unintended
+    mode: Brews without carafe
+    effect: Mess
+    cause: No carafe check in schedule
+    S: 6
+    O: 3
+    D: 3
+    controls: Switch interlock
+    tests:
+    - TST-19
+  FA-F-08-wrong_timing:
+    element: F-08
+    guide: wrong timing
+    mode: Brews at wrong time (DST)
+    effect: Annoyance
+    cause: Timezone handling
+    S: 3
+    O: 4
+    D: 3
+    controls: DST test
+    tests:
+    - TST-07
+  FA-F-08-wrong_value:
+    element: F-08
+    guide: wrong value
+    ncr: not credible for this function
+  FA-F-09-loss:
+    element: F-09
+    guide: loss
+    mode: No descale prompt
+    effect: Scale → heater degradation
+    cause: Estimator disabled
+    S: 5
+    O: 3
+    D: 4
+    controls: Estimator test
+    tests:
+    - TST-08
+  FA-F-09-degraded:
+    element: F-09
+    guide: degraded
+    mode: Estimate ±30 %
+    effect: Early/late descale
+    cause: Hardness input default
+    S: 3
+    O: 5
+    D: 4
+    controls: Accuracy test
+    tests:
+    - TST-08
+  FA-F-09-intermittent:
+    element: F-09
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-09-unintended:
+    element: F-09
+    guide: unintended
+    mode: Prompts constantly
+    effect: User disables
+    cause: Reset not stored
+    S: 3
+    O: 3
+    D: 3
+    controls: NVM test
+    tests:
+    - TST-08
+  FA-F-09-wrong_timing:
+    element: F-09
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-09-wrong_value:
+    element: F-09
+    guide: wrong value
+    ncr: not credible for this function
+  FA-F-10-loss:
+    element: F-10
+    guide: loss
+    mode: No connectivity
+    effect: App features lost (offline still works R-15)
+    cause: Module fault; antenna
+    S: 3
+    O: 3
+    D: 3
+    controls: RF test at EoL; TST-16
+    tests:
+    - TST-16
+  FA-F-10-degraded:
+    element: F-10
+    guide: degraded
+    mode: Weak link
+    effect: Dropouts
+    cause: Antenna in metal trim
+    S: 3
+    O: 4
+    D: 3
+    controls: TRP test
+    tests:
+    - TST-11
+  FA-F-10-intermittent:
+    element: F-10
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-10-unintended:
+    element: F-10
+    guide: unintended
+    mode: Pairing without consent
+    effect: Security
+    cause: Just-works BLE
+    S: 7
+    O: 3
+    D: 3
+    controls: EN 18031 review
+    tests:
+    - TST-17
+  FA-F-10-wrong_timing:
+    element: F-10
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-10-wrong_value:
+    element: F-10
+    guide: wrong value
+    mode: Unsigned firmware accepted
+    effect: Compromise
+    cause: Secure boot off
+    S: 8
+    O: 2
+    D: 3
+    controls: Secure boot check at EoL
+    tests:
+    - TST-17
+  FA-F-11-loss:
+    element: F-11
+    guide: loss
+    mode: Display blank
+    effect: Cannot operate (dial still works)
+    cause: HMI ICD fault
+    S: 4
+    O: 3
+    D: 2
+    controls: ICD conformance
+    tests:
+    - TST-14
+  FA-F-11-degraded:
+    element: F-11
+    guide: degraded
+    mode: Dim/unreadable
+    effect: Usability
+    cause: Backlight
+    S: 2
+    O: 3
+    D: 3
+    controls: ''
+    tests: []
+  FA-F-11-intermittent:
+    element: F-11
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-11-unintended:
+    element: F-11
+    guide: unintended
+    mode: Shows READY while faulted
+    effect: Unsafe use
+    cause: Fault masking
+    S: 6
+    O: 2
+    D: 3
+    controls: Fault display test
+    tests:
+    - TST-14
+  FA-F-11-wrong_timing:
+    element: F-11
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-11-wrong_value:
+    element: F-11
+    guide: wrong value
+    mode: Wrong fault code
+    effect: Wrong service action
+    cause: Code table
+    S: 4
+    O: 3
+    D: 3
+    controls: Service test
+    tests:
+    - TST-12
+  FA-F-12-loss:
+    element: F-12
+    guide: loss
+    mode: Will not wake
+    effect: Dead unit
+    cause: PSU fault
+    S: 5
+    O: 3
+    D: 2
+    controls: PSU incoming test; EoL
+    tests:
+    - TST-13
+  FA-F-12-degraded:
+    element: F-12
+    guide: degraded
+    mode: Standby > 0.5 W
+    effect: R-08 / ecodesign miss
+    cause: Radio not sleeping
+    S: 5
+    O: 5
+    D: 3
+    controls: CDA-03
+    tests:
+    - TST-09
+  FA-F-12-intermittent:
+    element: F-12
+    guide: intermittent
+    ncr: not credible for this function
+  FA-F-12-unintended:
+    element: F-12
+    guide: unintended
+    mode: Wakes at night (display on)
+    effect: Annoyance
+    cause: Radio wake
+    S: 2
+    O: 4
+    D: 3
+    controls: Sleep test
+    tests:
+    - TST-09
+  FA-F-12-wrong_timing:
+    element: F-12
+    guide: wrong timing
+    mode: Sleeps mid-brew
+    effect: Aborted brew
+    cause: Idle timer during brew
+    S: 6
+    O: 2
+    D: 3
+    controls: State test
+    tests: []
+  FA-F-12-wrong_value:
+    element: F-12
+    guide: wrong value
+    ncr: not credible for this function
+  FA-F-13-loss:
+    element: F-13
+    guide: loss
+    mode: EoL test skipped
+    effect: Unsafe unit ships
+    cause: Fixture down
+    S: 8
+    O: 2
+    D: 2
+    controls: Traveler
+    tests:
+    - TST-13
+  FA-F-13-degraded:
+    element: F-13
+    guide: degraded
+    mode: Test > 150 s
+    effect: Throughput
+    cause: Brew step
+    S: 4
+    O: 4
+    D: 3
+    controls: Parallel hipot
+    tests:
+    - TST-13
+  FA-F-13-intermittent:
+    element: F-13
+    guide: intermittent
+    mode: False fails
+    effect: Rework
+    cause: Fixture contacts
+    S: 4
+    O: 4
+    D: 3
+    controls: Gauge R&R
+    tests:
+    - TST-13
+  FA-F-13-unintended:
+    element: F-13
+    guide: unintended
+    mode: Passes with hipot fail
+    effect: Shock hazard
+    cause: Limit set wrong
+    S: 10
+    O: 1
+    D: 3
+    controls: Limit lock; daily check
+    tests:
+    - TST-13
+  FA-F-13-wrong_timing:
+    element: F-13
+    guide: wrong timing
+    ncr: not credible for this function
+  FA-F-13-wrong_value:
+    element: F-13
+    guide: wrong value
+    ncr: not credible for this function
+  FA-IF-01-open:
+    element: IF-01
+    guide: open
+    mode: Cord/PSU open
+    effect: Dead
+    cause: Cord strain relief
+    S: 5
+    O: 3
+    D: 2
+    controls: Pull test; EoL
+    tests:
+    - TST-13
+  FA-IF-01-degraded:
+    element: IF-01
+    guide: degraded
+    mode: Loose mains terminal
+    effect: Heat; fire
+    cause: Crimp
+    S: 9
+    O: 2
+    D: 4
+    controls: Crimp pull test; IR sample
+    tests:
+    - TST-06
+  FA-IF-01-leakage_crosstalk:
+    element: IF-01
+    guide: leakage/crosstalk
+    mode: Leakage current high
+    effect: Shock
+    cause: Creepage
+    S: 10
+    O: 1
+    D: 2
+    controls: Hipot/leakage at EoL
+    tests:
+    - TST-13
+  FA-IF-01-mismatch:
+    element: IF-01
+    guide: mismatch
+    mode: Wrong cord for market
+    effect: Non-compliance
+    cause: Kitting
+    S: 6
+    O: 2
+    D: 2
+    controls: Market scan at PS-04
+    tests: []
+  FA-IF-02-open:
+    element: IF-02
+    guide: open
+    mode: Triac open
+    effect: No heat
+    cause: Over-current
+    S: 6
+    O: 3
+    D: 2
+    controls: Current sense
+    tests:
+    - TST-13
+  FA-IF-02-degraded:
+    element: IF-02
+    guide: degraded
+    mode: Triac partial
+    effect: Slow heat
+    cause: Gate drive
+    S: 4
+    O: 3
+    D: 3
+    controls: Profile
+    tests:
+    - TST-01
+  FA-IF-02-leakage_crosstalk:
+    element: IF-02
+    guide: leakage/crosstalk
+    mode: Triac short
+    effect: Heater always on → dry boil
+    cause: Surge
+    S: 10
+    O: 2
+    D: 2
+    controls: TCO; relay backup considered
+    tests:
+    - TST-04
+  FA-IF-02-mismatch:
+    element: IF-02
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-03-open:
+    element: IF-03
+    guide: open
+    mode: NTC open
+    effect: Reads cold → overheat
+    cause: Lead fatigue
+    S: 9
+    O: 3
+    D: 2
+    controls: Open detect; TCO
+    tests:
+    - TST-03
+  FA-IF-03-degraded:
+    element: IF-03
+    guide: degraded
+    mode: NTC drift
+    effect: Temp error
+    cause: Ageing
+    S: 5
+    O: 3
+    D: 4
+    controls: Cal at EoL
+    tests:
+    - TST-01
+  FA-IF-03-leakage_crosstalk:
+    element: IF-03
+    guide: leakage/crosstalk
+    mode: Noise on NTC
+    effect: Control jitter
+    cause: Triac EMI
+    S: 4
+    O: 4
+    D: 3
+    controls: Filtering
+    tests:
+    - TST-01
+  FA-IF-03-mismatch:
+    element: IF-03
+    guide: mismatch
+    mode: Wrong NTC curve
+    effect: Temp error
+    cause: MPN
+    S: 6
+    O: 2
+    D: 2
+    controls: MPN control
+    tests: []
+  FA-IF-04-open:
+    element: IF-04
+    guide: open
+    mode: TCO open prematurely
+    effect: Dead heater
+    cause: Nuisance trip at 192 °C
+    S: 5
+    O: 3
+    D: 2
+    controls: Rating review
+    tests:
+    - TST-04
+  FA-IF-04-degraded:
+    element: IF-04
+    guide: degraded
+    ncr: not applicable
+  FA-IF-04-leakage_crosstalk:
+    element: IF-04
+    guide: leakage/crosstalk
+    ncr: not applicable
+  FA-IF-04-mismatch:
+    element: IF-04
+    guide: mismatch
+    mode: TCO wrong rating
+    effect: No protection
+    cause: MPN
+    S: 10
+    O: 1
+    D: 2
+    controls: MPN scan
+    tests:
+    - TST-04
+  FA-IF-05-open:
+    element: IF-05
+    guide: open
+    mode: Pump drive open
+    effect: No flow
+    cause: Connector
+    S: 6
+    O: 3
+    D: 2
+    controls: EoL
+    tests:
+    - TST-13
+  FA-IF-05-degraded:
+    element: IF-05
+    guide: degraded
+    mode: Low drive voltage
+    effect: Low flow
+    cause: PSU sag
+    S: 4
+    O: 3
+    D: 3
+    controls: Brew time
+    tests:
+    - TST-02
+  FA-IF-05-leakage_crosstalk:
+    element: IF-05
+    guide: leakage/crosstalk
+    mode: EMI from pump
+    effect: EMC fail
+    cause: No snubber
+    S: 5
+    O: 3
+    D: 3
+    controls: EMC pre-scan
+    tests:
+    - TST-11
+  FA-IF-05-mismatch:
+    element: IF-05
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-06-open:
+    element: IF-06
+    guide: open
+    mode: Flow signal open
+    effect: No volume control
+    cause: Connector
+    S: 7
+    O: 3
+    D: 2
+    controls: Plausibility; dry-boil
+    tests:
+    - TST-03
+  FA-IF-06-degraded:
+    element: IF-06
+    guide: degraded
+    mode: Missed pulses
+    effect: Volume error
+    cause: Hall gap
+    S: 5
+    O: 3
+    D: 4
+    controls: Flow cal
+    tests:
+    - TST-13
+  FA-IF-06-leakage_crosstalk:
+    element: IF-06
+    guide: leakage/crosstalk
+    mode: Triac noise on signal
+    effect: Spurious pulses
+    cause: Routing
+    S: 5
+    O: 4
+    D: 3
+    controls: Filter
+    tests:
+    - TST-13
+  FA-IF-06-mismatch:
+    element: IF-06
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-07-open:
+    element: IF-07
+    guide: open
+    mode: Level open
+    effect: No level reading
+    cause: FPC
+    S: 7
+    O: 3
+    D: 2
+    controls: Plausibility
+    tests:
+    - TST-03
+  FA-IF-07-degraded:
+    element: IF-07
+    guide: degraded
+    mode: Offset
+    effect: Short brew
+    cause: Residue
+    S: 4
+    O: 4
+    D: 4
+    controls: Cal
+    tests:
+    - TST-13
+  FA-IF-07-leakage_crosstalk:
+    element: IF-07
+    guide: leakage/crosstalk
+    mode: Capacitive pickup from user hand
+    effect: False level
+    cause: Shielding
+    S: 6
+    O: 3
+    D: 3
+    controls: Hand test
+    tests:
+    - TST-03
+  FA-IF-07-mismatch:
+    element: IF-07
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-08-open:
+    element: IF-08
+    guide: open
+    mode: HMI link down
+    effect: Dial only
+    cause: Cable
+    S: 4
+    O: 3
+    D: 2
+    controls: ICD test
+    tests:
+    - TST-14
+  FA-IF-08-degraded:
+    element: IF-08
+    guide: degraded
+    ncr: not applicable
+  FA-IF-08-leakage_crosstalk:
+    element: IF-08
+    guide: leakage/crosstalk
+    ncr: not applicable
+  FA-IF-08-mismatch:
+    element: IF-08
+    guide: mismatch
+    mode: ICD version mismatch
+    effect: Blank display
+    cause: Platform release
+    S: 5
+    O: 3
+    D: 2
+    controls: Version check
+    tests:
+    - TST-14
+  FA-IF-09-open:
+    element: IF-09
+    guide: open
+    mode: Radio link down
+    effect: Offline
+    cause: UART
+    S: 3
+    O: 3
+    D: 2
+    controls: ICD test
+    tests:
+    - TST-14
+  FA-IF-09-degraded:
+    element: IF-09
+    guide: degraded
+    ncr: not applicable
+  FA-IF-09-leakage_crosstalk:
+    element: IF-09
+    guide: leakage/crosstalk
+    mode: Radio EMI into NTC
+    effect: Temp jitter
+    cause: Layout
+    S: 4
+    O: 3
+    D: 3
+    controls: EMC
+    tests:
+    - TST-11
+  FA-IF-09-mismatch:
+    element: IF-09
+    guide: mismatch
+    mode: ICD mismatch
+    effect: No app
+    cause: Release
+    S: 4
+    O: 3
+    D: 2
+    controls: Version check
+    tests:
+    - TST-14
+  FA-IF-10-open:
+    element: IF-10
+    guide: open
+    mode: Switch open
+    effect: Drip never stops / never brews
+    cause: Switch wear
+    S: 5
+    O: 3
+    D: 2
+    controls: Life test
+    tests:
+    - TST-19
+  FA-IF-10-degraded:
+    element: IF-10
+    guide: degraded
+    mode: Bounce
+    effect: Flicker
+    cause: No debounce
+    S: 3
+    O: 4
+    D: 3
+    controls: Debounce
+    tests:
+    - TST-19
+  FA-IF-10-leakage_crosstalk:
+    element: IF-10
+    guide: leakage/crosstalk
+    ncr: not applicable
+  FA-IF-10-mismatch:
+    element: IF-10
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-11-open:
+    element: IF-11
+    guide: open
+    mode: Plate drive open
+    effect: Cold
+    cause: Connector
+    S: 4
+    O: 3
+    D: 2
+    controls: EoL
+    tests:
+    - TST-15
+  FA-IF-11-degraded:
+    element: IF-11
+    guide: degraded
+    ncr: not applicable
+  FA-IF-11-leakage_crosstalk:
+    element: IF-11
+    guide: leakage/crosstalk
+    mode: Plate drive short
+    effect: Plate always on
+    cause: Triac
+    S: 7
+    O: 2
+    D: 3
+    controls: Plate thermostat
+    tests:
+    - TST-05
+  FA-IF-11-mismatch:
+    element: IF-11
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-12-open:
+    element: IF-12
+    guide: open
+    mode: Tube off reservoir
+    effect: Leak into housing
+    cause: Clamp
+    S: 7
+    O: 3
+    D: 2
+    controls: Leak test at PS-03
+    tests:
+    - TST-13
+  FA-IF-12-degraded:
+    element: IF-12
+    guide: degraded
+    mode: Kinked tube
+    effect: Low flow
+    cause: Routing
+    S: 4
+    O: 4
+    D: 3
+    controls: Routing guide
+    tests:
+    - TST-02
+  FA-IF-12-leakage_crosstalk:
+    element: IF-12
+    guide: leakage/crosstalk
+    mode: Seep at fitting
+    effect: Water on PCB
+    cause: O-ring
+    S: 7
+    O: 3
+    D: 4
+    controls: Leak test
+    tests:
+    - TST-13
+  FA-IF-12-mismatch:
+    element: IF-12
+    guide: mismatch
+    mode: Wrong tube ID
+    effect: Flow
+    cause: MPN
+    S: 3
+    O: 2
+    D: 2
+    controls: ''
+    tests: []
+  FA-IF-13-open:
+    element: IF-13
+    guide: open
+    mode: Tube off pump
+    effect: Leak
+    cause: Clamp
+    S: 7
+    O: 3
+    D: 2
+    controls: Leak test
+    tests:
+    - TST-13
+  FA-IF-13-degraded:
+    element: IF-13
+    guide: degraded
+    ncr: not applicable
+  FA-IF-13-leakage_crosstalk:
+    element: IF-13
+    guide: leakage/crosstalk
+    mode: Seep
+    effect: Water on PCB
+    cause: Fitting
+    S: 7
+    O: 3
+    D: 4
+    controls: Leak test
+    tests:
+    - TST-13
+  FA-IF-13-mismatch:
+    element: IF-13
+    guide: mismatch
+    ncr: not applicable
+  FA-IF-14-open:
+    element: IF-14
+    guide: open
+    mode: Hot tube off thermoblock
+    effect: Steam/hot water in housing
+    cause: Clamp creep at 96 °C
+    S: 8
+    O: 3
+    D: 3
+    controls: Clamp spec; thermal cycle
+    tests:
+    - TST-05
+  FA-IF-14-degraded:
+    element: IF-14
+    guide: degraded
+    mode: Heat loss in tube
+    effect: Temp miss
+    cause: Long path
+    S: 4
+    O: 3
+    D: 3
+    controls: TST-01
+    tests:
+    - TST-01
+  FA-IF-14-leakage_crosstalk:
+    element: IF-14
+    guide: leakage/crosstalk
+    mode: Steam leak
+    effect: Burn
+    cause: Fitting
+    S: 8
+    O: 2
+    D: 3
+    controls: Thermal cycle
+    tests:
+    - TST-05
+  FA-IF-14-mismatch:
+    element: IF-14
+    guide: mismatch
+    mode: Tube not rated 100 °C
+    effect: Softening; leak
+    cause: MPN
+    S: 8
+    O: 2
+    D: 3
+    controls: Material spec
+    tests: []
+  FA-IF-15-open:
+    element: IF-15
+    guide: open
+    mode: Basket does not seat
+    effect: Overflow
+    cause: Tolerance
+    S: 5
+    O: 3
+    D: 2
+    controls: Fit gauge
+    tests: []
+  FA-IF-15-degraded:
+    element: IF-15
+    guide: degraded
+    mode: Loose basket rattles
+    effect: Perceived quality
+    cause: Tolerance
+    S: 2
+    O: 4
+    D: 3
+    controls: ''
+    tests: []
+  FA-IF-15-leakage_crosstalk:
+    element: IF-15
+    guide: leakage/crosstalk
+    ncr: not applicable
+  FA-IF-15-mismatch:
+    element: IF-15
+    guide: mismatch
+    mode: Basket from other SKU
+    effect: No seat
+    cause: Mix
+    S: 3
+    O: 2
+    D: 2
+    controls: ''
+    tests: []
+  FA-IF-16-open:
+    element: IF-16
+    guide: open
+    mode: App cannot connect
+    effect: No app
+    cause: Pairing
+    S: 3
+    O: 4
+    D: 2
+    controls: Pairing test
+    tests:
+    - TST-16
+  FA-IF-16-degraded:
+    element: IF-16
+    guide: degraded
+    mode: Dropouts
+    effect: Notifications missed
+    cause: Wi-Fi
+    S: 2
+    O: 4
+    D: 3
+    controls: ''
+    tests:
+    - TST-07
+  FA-IF-16-leakage_crosstalk:
+    element: IF-16
+    guide: leakage/crosstalk
+    mode: Unencrypted link
+    effect: Privacy
+    cause: TLS off
+    S: 7
+    O: 2
+    D: 3
+    controls: Security review
+    tests:
+    - TST-17
+  FA-IF-16-mismatch:
+    element: IF-16
+    guide: mismatch
+    mode: API version
+    effect: App breaks
+    cause: Release
+    S: 3
+    O: 3
+    D: 2
+    controls: Version negotiation
+    tests:
+    - TST-14
+  FA-T-01-fails_to_fire:
+    element: T-01
+    guide: fails to fire
+    mode: No wake
+    effect: Dead
+    cause: Dial/PSU
+    S: 4
+    O: 3
+    D: 2
+    controls: EoL
+    tests:
+    - TST-13
+  FA-T-01-fires_falsely:
+    element: T-01
+    guide: fires falsely
+    mode: Wakes alone
+    effect: Energy
+    cause: Radio
+    S: 2
+    O: 3
+    D: 3
+    controls: TST-09
+    tests:
+    - TST-09
+  FA-T-01-fires_late:
+    element: T-01
+    guide: fires late
+    ncr: no effect
+  FA-T-02-fails_to_fire:
+    element: T-02
+    guide: fails to fire
+    mode: Brew does not start
+    effect: No coffee
+    cause: Carafe switch
+    S: 4
+    O: 3
+    D: 2
+    controls: TST-19
+    tests:
+    - TST-19
+  FA-T-02-fires_falsely:
+    element: T-02
+    guide: fires falsely
+    mode: Starts without carafe/water
+    effect: Mess/dry boil
+    cause: Interlocks
+    S: 8
+    O: 2
+    D: 3
+    controls: Interlock test
+    tests:
+    - TST-03
+  FA-T-02-fires_late:
+    element: T-02
+    guide: fires late
+    mode: Schedule late
+    effect: Annoyance
+    cause: RTC
+    S: 3
+    O: 3
+    D: 3
+    controls: TST-07
+    tests:
+    - TST-07
+  FA-T-03-fails_to_fire:
+    element: T-03
+    guide: fails to fire
+    mode: Never reaches setpoint
+    effect: Stuck heating → timeout
+    cause: Heater weak/scale
+    S: 5
+    O: 4
+    D: 3
+    controls: Heat timeout
+    tests:
+    - TST-01
+  FA-T-03-fires_falsely:
+    element: T-03
+    guide: fires falsely
+    mode: Pumps before setpoint
+    effect: Cold first cup
+    cause: NTC error
+    S: 5
+    O: 3
+    D: 3
+    controls: TST-01
+    tests:
+    - TST-01
+  FA-T-03-fires_late:
+    element: T-03
+    guide: fires late
+    mode: Slow to setpoint
+    effect: Brew time
+    cause: Low mains
+    S: 4
+    O: 4
+    D: 3
+    controls: TST-02
+    tests:
+    - TST-02
+  FA-T-04-fails_to_fire:
+    element: T-04
+    guide: fails to fire
+    mode: Keeps pumping
+    effect: Overflow
+    cause: Flow count
+    S: 6
+    O: 3
+    D: 3
+    controls: Volume cap
+    tests:
+    - TST-13
+  FA-T-04-fires_falsely:
+    element: T-04
+    guide: fires falsely
+    mode: Ends early
+    effect: Short pot
+    cause: Level false empty
+    S: 4
+    O: 3
+    D: 3
+    controls: TST-13
+    tests:
+    - TST-13
+  FA-T-04-fires_late:
+    element: T-04
+    guide: fires late
+    ncr: no effect
+  FA-T-05-fails_to_fire:
+    element: T-05
+    guide: fails to fire
+    mode: Plate never off
+    effect: Burn/energy
+    cause: Timer
+    S: 5
+    O: 3
+    D: 3
+    controls: TST-15
+    tests:
+    - TST-15
+  FA-T-05-fires_falsely:
+    element: T-05
+    guide: fires falsely
+    mode: Plate off early
+    effect: Cold coffee
+    cause: Carafe switch bounce
+    S: 3
+    O: 4
+    D: 3
+    controls: Debounce
+    tests:
+    - TST-19
+  FA-T-05-fires_late:
+    element: T-05
+    guide: fires late
+    ncr: no effect
+  FA-T-06-fails_to_fire:
+    element: T-06
+    guide: fails to fire
+    mode: No fault on dry boil
+    effect: Fire risk
+    cause: Logic
+    S: 10
+    O: 2
+    D: 2
+    controls: Class B + TCO
+    tests:
+    - TST-03
+    - TST-04
+  FA-T-06-fires_falsely:
+    element: T-06
+    guide: fires falsely
+    mode: Fault on normal brew
+    effect: Abort
+    cause: Threshold
+    S: 4
+    O: 4
+    D: 3
+    controls: Threshold
+    tests:
+    - TST-03
+  FA-T-06-fires_late:
+    element: T-06
+    guide: fires late
+    mode: Fault > 5 s
+    effect: R-03 miss
+    cause: Sampling
+    S: 8
+    O: 3
+    D: 3
+    controls: CDA-04
+    tests:
+    - TST-03
+  FA-T-07-fails_to_fire:
+    element: T-07
+    guide: fails to fire
+    mode: Descale will not start
+    effect: Scale build-up
+    cause: HMI
+    S: 3
+    O: 3
+    D: 3
+    controls: ''
+    tests:
+    - TST-08
+  FA-T-07-fires_falsely:
+    element: T-07
+    guide: fires falsely
+    mode: Descale starts with coffee in basket
+    effect: Bad taste
+    cause: No basket check
+    S: 3
+    O: 3
+    D: 3
+    controls: Prompt
+    tests: []
+  FA-T-07-fires_late:
+    element: T-07
+    guide: fires late
+    ncr: no effect
+  FA-T-08-fails_to_fire:
+    element: T-08
+    guide: fails to fire
+    mode: Never sleeps
+    effect: Standby miss
+    cause: Idle timer
+    S: 5
+    O: 4
+    D: 3
+    controls: TST-09
+    tests:
+    - TST-09
+  FA-T-08-fires_falsely:
+    element: T-08
+    guide: fires falsely
+    mode: Sleeps during brew
+    effect: Aborted brew
+    cause: Timer scope
+    S: 6
+    O: 2
+    D: 3
+    controls: State test
+    tests: []
+  FA-T-08-fires_late:
+    element: T-08
+    guide: fires late
+    ncr: no effect
+  FA-PS-01-omitted:
+    element: PS-01
+    guide: omitted
+    mode: Trim step skipped
+    effect: Flash; sharp edge
+    cause: Operator
+    S: 4
+    O: 3
+    D: 2
+    controls: Visual
+    tests: []
+  FA-PS-01-wrong_part:
+    element: PS-01
+    guide: wrong part
+    mode: Wrong resin grade
+    effect: Food-contact non-compliance
+    cause: Drum
+    S: 8
+    O: 2
+    D: 5
+    controls: Lot certificate
+    tests:
+    - TST-10
+  FA-PS-01-wrong_orientation:
+    element: PS-01
+    guide: wrong orientation
+    ncr: n/a at this station
+  FA-PS-01-insufficient:
+    element: PS-01
+    guide: insufficient
+    mode: Short shot
+    effect: Weak wall
+    cause: Process
+    S: 5
+    O: 3
+    D: 2
+    controls: SPC on weight
+    tests: []
+  FA-PS-01-excessive:
+    element: PS-01
+    guide: excessive
+    mode: Flash at parting line
+    effect: Cosmetic; cut
+    cause: Tool wear
+    S: 3
+    O: 4
+    D: 2
+    controls: Visual
+    tests: []
+  FA-PS-01-contamination:
+    element: PS-01
+    guide: contamination
+    mode: Oil contamination
+    effect: Odour/taste
+    cause: Mold release
+    S: 6
+    O: 3
+    D: 4
+    controls: Release-agent control
+    tests:
+    - TST-10
+  FA-PS-01-damage:
+    element: PS-01
+    guide: damage
+    mode: Sink/scratch on visible face
+    effect: Cosmetic reject
+    cause: Handling
+    S: 3
+    O: 4
+    D: 2
+    controls: Visual
+    tests: []
+  FA-PS-02-omitted:
+    element: PS-02
+    guide: omitted
+    mode: ICT skipped
+    effect: Defective board
+    cause: Pressure
+    S: 7
+    O: 2
+    D: 3
+    controls: Traveler
+    tests:
+    - TST-13
+  FA-PS-02-wrong_part:
+    element: PS-02
+    guide: wrong part
+    mode: Wrong triac
+    effect: Heater control fails
+    cause: Reel
+    S: 8
+    O: 2
+    D: 2
+    controls: Reel scan
+    tests:
+    - TST-13
+  FA-PS-02-wrong_orientation:
+    element: PS-02
+    guide: wrong orientation
+    mode: TCO/NTC connector reversed
+    effect: No protection / wrong reading
+    cause: Symmetric
+    S: 9
+    O: 2
+    D: 2
+    controls: Keyed connector
+    tests:
+    - TST-03
+  FA-PS-02-insufficient:
+    element: PS-02
+    guide: insufficient
+    mode: Solder on triac tab
+    effect: Hot joint
+    cause: Profile
+    S: 7
+    O: 3
+    D: 4
+    controls: X-ray sample
+    tests: []
+  FA-PS-02-excessive:
+    element: PS-02
+    guide: excessive
+    mode: Bridging on PSU
+    effect: Short
+    cause: Stencil
+    S: 6
+    O: 3
+    D: 2
+    controls: AOI
+    tests: []
+  FA-PS-02-contamination:
+    element: PS-02
+    guide: contamination
+    mode: Flux under radio shield
+    effect: RF drift
+    cause: Clean
+    S: 4
+    O: 3
+    D: 5
+    controls: Ionic test
+    tests: []
+  FA-PS-02-damage:
+    element: PS-02
+    guide: damage
+    mode: ESD to MCU
+    effect: Latent
+    cause: Grounding
+    S: 6
+    O: 2
+    D: 5
+    controls: ESD audit
+    tests: []
+  FA-PS-03-omitted:
+    element: PS-03
+    guide: omitted
+    mode: Clamp missing
+    effect: Leak
+    cause: Operator
+    S: 7
+    O: 3
+    D: 2
+    controls: Leak test at station
+    tests:
+    - TST-13
+  FA-PS-03-wrong_part:
+    element: PS-03
+    guide: wrong part
+    mode: Wrong tube (non-100 °C)
+    effect: Softening
+    cause: Kitting
+    S: 8
+    O: 2
+    D: 3
+    controls: Kit control
+    tests: []
+  FA-PS-03-wrong_orientation:
+    element: PS-03
+    guide: wrong orientation
+    mode: Thermoblock inlet/outlet swapped
+    effect: No flow/overheat
+    cause: Symmetric
+    S: 8
+    O: 2
+    D: 2
+    controls: Keyed fittings
+    tests:
+    - TST-03
+  FA-PS-03-insufficient:
+    element: PS-03
+    guide: insufficient
+    mode: Clamp under-torqued
+    effect: Seep
+    cause: Tool
+    S: 7
+    O: 3
+    D: 4
+    controls: Torque tool
+    tests:
+    - TST-13
+  FA-PS-03-excessive:
+    element: PS-03
+    guide: excessive
+    mode: Clamp over-torqued
+    effect: Tube cut
+    cause: Tool
+    S: 6
+    O: 2
+    D: 3
+    controls: Torque tool
+    tests: []
+  FA-PS-03-contamination:
+    element: PS-03
+    guide: contamination
+    mode: Debris in thermoblock
+    effect: Blockage
+    cause: Open ports
+    S: 6
+    O: 3
+    D: 4
+    controls: Caps; flush
+    tests:
+    - TST-02
+  FA-PS-03-damage:
+    element: PS-03
+    guide: damage
+    mode: Tube nicked
+    effect: Leak later
+    cause: Handling
+    S: 6
+    O: 3
+    D: 4
+    controls: Leak test
+    tests:
+    - TST-13
+  FA-PS-04-omitted:
+    element: PS-04
+    guide: omitted
+    mode: Earth bond screw missing
+    effect: Shock hazard
+    cause: Operator
+    S: 10
+    O: 2
+    D: 2
+    controls: Ground bond at EoL
+    tests:
+    - TST-13
+  FA-PS-04-wrong_part:
+    element: PS-04
+    guide: wrong part
+    mode: Wrong cord
+    effect: Market non-compliance
+    cause: Kitting
+    S: 6
+    O: 2
+    D: 2
+    controls: Scan
+    tests: []
+  FA-PS-04-wrong_orientation:
+    element: PS-04
+    guide: wrong orientation
+    mode: Cord strain relief reversed
+    effect: Pull-out
+    cause: Fixture
+    S: 6
+    O: 2
+    D: 2
+    controls: Pull test
+    tests: []
+  FA-PS-04-insufficient:
+    element: PS-04
+    guide: insufficient
+    mode: Screws under-torqued
+    effect: Rattle; gap
+    cause: Driver
+    S: 3
+    O: 4
+    D: 3
+    controls: Torque
+    tests: []
+  FA-PS-04-excessive:
+    element: PS-04
+    guide: excessive
+    mode: Over-torqued boss
+    effect: Cracked boss
+    cause: Driver
+    S: 4
+    O: 3
+    D: 3
+    controls: Torque
+    tests: []
+  FA-PS-04-contamination:
+    element: PS-04
+    guide: contamination
+    mode: Water in housing from PS-03 test
+    effect: Corrosion
+    cause: Drain
+    S: 4
+    O: 3
+    D: 3
+    controls: Dry step
+    tests: []
+  FA-PS-04-damage:
+    element: PS-04
+    guide: damage
+    mode: Scratch on trim
+    effect: Cosmetic
+    cause: Handling
+    S: 3
+    O: 4
+    D: 2
+    controls: Visual
+    tests: []
+  FA-PS-05-omitted:
+    element: PS-05
+    guide: omitted
+    mode: Hipot skipped
+    effect: Shock hazard ships
+    cause: Fixture
+    S: 10
+    O: 1
+    D: 2
+    controls: Traveler
+    tests:
+    - TST-13
+  FA-PS-05-wrong_part:
+    element: PS-05
+    guide: wrong part
+    ncr: n/a at this station
+  FA-PS-05-wrong_orientation:
+    element: PS-05
+    guide: wrong orientation
+    ncr: n/a at this station
+  FA-PS-05-insufficient:
+    element: PS-05
+    guide: insufficient
+    mode: Brew check too short
+    effect: Misses weak heater
+    cause: Cycle time
+    S: 5
+    O: 3
+    D: 4
+    controls: Minimum brew time
+    tests:
+    - TST-13
+  FA-PS-05-excessive:
+    element: PS-05
+    guide: excessive
+    mode: Hipot too high
+    effect: Insulation damage
+    cause: Setting
+    S: 7
+    O: 2
+    D: 3
+    controls: Setting lock
+    tests:
+    - TST-13
+  FA-PS-05-contamination:
+    element: PS-05
+    guide: contamination
+    mode: Water left in unit
+    effect: Mold in shipping
+    cause: No purge
+    S: 5
+    O: 4
+    D: 3
+    controls: Purge step
+    tests: []
+  FA-PS-05-damage:
+    element: PS-05
+    guide: damage
+    mode: Scratch at fixture
+    effect: Cosmetic
+    cause: Nest
+    S: 3
+    O: 4
+    D: 2
+    controls: Soft nest
+    tests: []
 teams:
   TM-SE:
     name: Systems engineering
@@ -1895,6 +4080,7 @@ process_steps:
     - P-BM1
     team: TM-MFG
     capex_usd: 42000
+    eol_test: TST-13
 suppliers:
   SUP-01:
     name: ThermoTech (thermoblock)
@@ -1942,12 +4128,223 @@ suppliers:
     owner: TM-IND
     lead_time_d: 60
     agreement: MSA-2026-021
-work_items: {}
-findings: {}
+work_items:
+  WI-01:
+    title: Alt-Therm thermoblock samples through brew tests
+    owner: TM-THERM
+    team: TM-THERM
+    status: open
+    due: '2027-02-15'
+    gate: EVT
+    priority: 1
+    links:
+    - RK-01
+  WI-02:
+    title: Standby power measurement with radio connected
+    owner: TM-CTRL
+    team: TM-CTRL
+    status: in progress
+    due: '2026-12-10'
+    gate: G1
+    priority: 2
+    links:
+    - RK-03
+  WI-03:
+    title: Decide TD-02 (pump) before G1
+    owner: TM-THERM
+    team: TM-THERM
+    status: open
+    due: '2026-12-05'
+    gate: G1
+    priority: 1
+    links:
+    - TD-02
+  WI-04:
+    title: Keyed connectors for TCO/NTC on main board
+    owner: TM-CTRL
+    team: TM-CTRL
+    status: open
+    due: '2026-12-20'
+    gate: EVT
+    priority: 2
+    links:
+    - FA-PS-02-wrong_orientation
+  WI-05:
+    title: Claims substantiation plan with legal
+    owner: TM-LEGAL
+    team: TM-LEGAL
+    status: open
+    due: '2027-01-30'
+    gate: DVT
+    priority: 3
+    links:
+    - CL-01
+    - CL-02
+  WI-06:
+    title: Housing tool weekly review with Mold-Viet
+    owner: TM-IND
+    team: TM-IND
+    status: in progress
+    due: '2027-02-20'
+    gate: EVT
+    priority: 1
+    links:
+    - RK-02
+    - TL-01
+findings:
+  FD-01:
+    title: No independent cutoff if the triac shorts and software is healthy
+    severity: critical
+    status: closed
+    element: IF-02
+    source: RV-01
+    owner: TM-SAFE
+    action: TCO in heater line (IF-04) confirmed; relay backup rejected on cost
+    closed: '2026-11-03'
+    gate: G0
+  FD-02:
+    title: Dry-boil detection threshold not derived from thermoblock thermal mass
+    severity: major
+    status: open
+    element: C-05
+    source: RV-01
+    owner: TM-THERM
+    action: Derive 3 s from SIM-01; verify on TST-03
+    due: '2026-12-15'
+    gate: G1
+  FD-03:
+    title: Requirement R-17 wetting has no sample size
+    severity: minor
+    status: open
+    element: R-17
+    source: RV-01
+    owner: TM-SE
+    action: Add n = 5 units × 3 brews
+    due: '2026-11-30'
+    gate: G1
+  FD-04:
+    title: Standby budget C-04 assumes radio sleep not yet demonstrated
+    severity: major
+    status: open
+    element: C-04
+    source: RV-01
+    owner: TM-CTRL
+    action: WI-02 measurement
+    due: '2026-12-10'
+    gate: G1
 handoffs: {}
-field_events: {}
-risks: {}
-reviews: {}
+field_events:
+  FE-01:
+    date: '2027-04-02'
+    symptom: 'Beta unit: coffee lukewarm on second pot (keep-warm plate)'
+    unit: BM1-0002
+    parts:
+    - P-PLATE
+    - P-CARSW
+    fm: FA-F-05-degraded
+    status: open
+    count: 1
+    severity: minor
+    disposition: unit returned; plate thermostat under test
+  FE-02:
+    date: '2027-04-09'
+    symptom: 'Beta unit: drips on plate after carafe removed'
+    unit: BM1-0003
+    parts:
+    - P-BASKET
+    fm: FA-F-04-unintended
+    status: open
+    count: 2
+    severity: minor
+    disposition: drip-stop seal inspected; feeds TST-19 life test
+risks:
+  RK-01:
+    title: Thermoblock single qualified source (ThermoTech); Alt-Therm sample not yet tested
+    prob: 3
+    impact: 4
+    owner: TM-PROC
+    team: TM-PROC
+    mitigation: Alt-Therm samples through TST-01/02 at EVT; dual-source by DVT
+    status: open
+    links:
+    - P-TB
+    - SUP-01
+    - SUP-04
+  RK-02:
+    title: Housing tool (MV-26-0117) T1 slips past EVT need-by
+    prob: 3
+    impact: 4
+    owner: TM-IND
+    team: TM-IND
+    mitigation: Weekly tool-shop review; soft-tool housings for EVT if T1 > 2027-02-28
+    status: open
+    links:
+    - TL-01
+    - P-ENCL
+  RK-03:
+    title: Standby power above 0.5 W with radio connected
+    prob: 4
+    impact: 3
+    owner: TM-CTRL
+    team: TM-CTRL
+    mitigation: Radio deep-sleep with wake-on-LAN; measure on EVT
+    status: open
+    links:
+    - R-08
+    - CDA-03
+  RK-04:
+    title: UL 1082 surface-temperature limits on stainless trim
+    prob: 3
+    impact: 3
+    owner: TM-SAFE
+    team: TM-SAFE
+    mitigation: Thermal sim (SIM-02); trim decoupled from thermoblock
+    status: open
+    links:
+    - R-04
+    - TST-05
+  RK-05:
+    title: PSU supplier ripple (CAPA-01) delays EVT boards
+    prob: 3
+    impact: 3
+    owner: TM-SQ
+    team: TM-SQ
+    mitigation: Known-good lot for EVT; SCAR on Hi-Link
+    status: open
+    links:
+    - CAPA-01
+    - P-PSU
+  RK-06:
+    title: Shower head change (ECO-001) invalidates EVT brew data
+    prob: 2
+    impact: 2
+    owner: TM-BREW
+    team: TM-BREW
+    mitigation: Rerun TST-18/TST-01 on 5 DVT units
+    status: open
+    links:
+    - ECO-001
+    - TST-18
+reviews:
+  RV-01:
+    name: Concept review (G0)
+    gate: G0
+    date: '2026-11-02'
+    attendees:
+    - TM-SE
+    - TM-THERM
+    - TM-CTRL
+    - TM-SAFE
+    - TM-COMP
+    - TM-MFG
+    - TM-PM
+    findings:
+    - FD-01
+    - FD-02
+    - FD-03
+    - FD-04
+    decision: go — TD-01 decided; FD-02/FD-04 before G1
+    notes: Business case approved at $179 / $58 target cost.
 tables: {}
 test_runs:
   RUN-01:
@@ -1987,7 +4384,71 @@ test_runs:
     unit: bench-A
     metrics:
       standby_W: 0.41
-simulations: {}
+simulations:
+  SIM-01:
+    name: Thermoblock dry-boil transient
+    tool: COMSOL
+    element: P-TB
+    inputs:
+      power_W: 1400
+      mass_g: 450
+      water: none
+    outputs:
+      t_to_150C_s: 4.2
+      t_to_192C_TCO_s: 7.8
+    requirements:
+    - R-03
+    status: done
+    date: '2026-10-26'
+    owner_team: TM-THERM
+    notes: Software cutoff must act within 3 s of flow loss to stay below 150 °C; TCO is the backstop at 7.8 s.
+  SIM-02:
+    name: Housing surface temperature
+    tool: Ansys Icepak
+    element: P-ENCL
+    inputs:
+      ambient_C: 25
+      brew_cycles: 2
+    outputs:
+      trim_rise_K: 52
+      pp_rise_K: 31
+    requirements:
+    - R-04
+    status: done
+    date: '2026-11-01'
+    owner_team: TM-ID
+    notes: Stainless trim at 52 K vs 60 K limit; margin thin near the shower head.
+  SIM-03:
+    name: Shower head CFD — bed wetting (ECO-001)
+    tool: OpenFOAM
+    element: P-SHOWER
+    inputs:
+      holes: 23
+      flow_ml_s: 5.2
+    outputs:
+      wetting_60s_pct: 92
+    requirements:
+    - R-17
+    status: done
+    date: '2026-11-09'
+    owner_team: TM-BREW
+    notes: Supports ECO-001; verify with dye test on DVT units.
+  SIM-04:
+    name: Mains inrush and triac stress
+    tool: LTspice
+    element: P-TRIAC
+    inputs:
+      V: 120
+      load_W: 1400
+    outputs:
+      I_peak_A: 38
+      Tj_C: 96
+    requirements:
+    - R-05
+    - R-10
+    status: done
+    date: '2026-10-29'
+    owner_team: TM-CTRL
 attachments: {}
 dfx_reviews: {}
 cad_models: {}

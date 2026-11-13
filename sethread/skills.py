@@ -174,8 +174,14 @@ def suggest(m: dict, extra: dict | None = None) -> list[dict]:
     undecided = [t for t, v in g("trades").items() if v.get("options") and not v.get("decision")]
     if undecided: add("options-to-trade-decision", f"{len(undecided)} trade study without a decision", undecided)
     # parts with no DFMEA
-    assessed = {a.get("element") for a in g("fm_assessments").values()}
-    unassessed = [p for p, v in g("parts").items() if p not in assessed and v.get("type") != "assembly"]
+    from . import derive as D
+    covered = set()
+    for a in g("fm_assessments").values():
+        e = a.get("element"); kind = "function" if e in g("functions") else "interface" if e in g("interfaces") else "transition" if e in g("transitions") else "process" if e in g("process_steps") else None
+        if kind:
+            try: covered |= set(D.element_parts(m, kind, e))
+            except Exception: pass
+    unassessed = [p for p, v in g("parts").items() if p not in covered and v.get("parent") and v.get("discipline") not in ("system",)]
     if unassessed and g("parts"): add("dfmea-from-architecture", f"{len(unassessed)} parts with no failure-mode assessment", unassessed)
     # requirements verified by test with no test
     untested = [r for r, v in g("requirements").items() if (v.get("verify") or "test") == "test" and not [t for t in (v.get("tests") or []) if t in g("tests")]]

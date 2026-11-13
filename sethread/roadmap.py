@@ -53,6 +53,8 @@ SEED = [
          notes="Skills live in sethread/skills.py today. Move the catalog into the org record (seeded from the built-ins), editable under Settings › Skills, versioned with process/teams; 'learn a skill from this run' turns a successful conversation into a procedure. The org's way of working is the asset, not the model.", source="nTop ten-variants post, 2026-11-12"),
     dict(id="RM-22", title="Trade evaluation conditions: record per option, check for consistency", area="engineering", horizon="next", status="planned", priority=2,
          notes="Options scored under different conditions (mesh, load case, solver settings, fixture, sample size) make the comparison meaningless. Add conditions to trade criteria_meta and per-option evidence; the trades check fails when options differ. Prerequisite for sub-agents generating N variants onto one trade.", source="nTop ten-variants post, 2026-11-12"),
+    dict(id="RM-23", title="Modeling recipes: the Launch answer to 'how would you model this?' per kind, with a coverage check", area="model", horizon="next", status="idea", priority=2,
+         notes="Each schema kind is a modeling recipe (question, one-sentence answer, fields, refs, the derived form, the common wrong model). Publish them as the schema reference, and check Launch's coverage against Moberley's 75 SysML v2 recipes: known gaps today are pins/nets on a schematic (EDA adapter only), message/frame definitions (CAN, protocol fields), software/cloud deployment, and non-physical items (licences, data). Pair with RM-13 so exports validate in a SysML v2 parser.", source="Brian Moberley, How to Model Anything in SysML v2, 2026-11-12"),
 ]
 
 def path(data_root): return os.path.join(data_root, ".org", "roadmap.yaml")

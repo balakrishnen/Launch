@@ -698,24 +698,24 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         if eid in W.ids(): return W.summary(eid)
         root = W.path(eid); os.makedirs(root, exist_ok=True)
         if os.path.isdir(os.path.join(src, "docs")): shutil.copytree(os.path.join(src, "docs"), os.path.join(root, "docs"), dirs_exist_ok=True)
-        if W.db is None:
-            shutil.copy(os.path.join(src, "model.yaml"), os.path.join(root, "model.yaml"))
-        else:
-            from ..dbstore import import_yaml_project; import_yaml_project(W.db, W.tenant, eid, src)
-        st = W._store(eid, root); m = st.load(); m["meta"]["created_by"] = user
-        vis = os.path.join(src, "docs", "product.svg")
-        if os.path.isfile(vis):   # the example's product visual becomes the project's
-            os.makedirs(os.path.join(root, "files", "product"), exist_ok=True); shutil.copy(vis, os.path.join(root, "files", "product", "product.svg")); m["meta"]["image"] = "files/product/product.svg"
-        st.save(m)
-        # a shipped example carries its own product development process (example.yaml: process: <template>, process_start, spacing_days);
-        # it is applied to the example project only — the organization's default process is untouched
+        # build the project model in memory first: the example's model plus its own product-development process (example.yaml:
+        # process, process_start, spacing_days), so elements that reference gates (findings, work items, builds) import in one go.
+        # The organization's default process is untouched.
+        m = Store(src).load(); m["meta"]["created_by"] = user
         ex = yaml.safe_load(open(os.path.join(src, "example.yaml"))) or {}
         if ex.get("process") and not m.get("gates"):
             t = pdp.template(ex["process"], root)
             if t:
                 ops = pdp.apply_ops(m, t, ex.get("process_start") or time.strftime("%Y-%m-%d"), int(ex.get("spacing_days", 45)))
-                human_patch(eid, HumanPatch(ops=ops, rationale=f"Shipped example adopts its PDP: {t['name']}", apply=True), user)
-                m = st.load(); m.setdefault("program", {})["pdp"] = t["name"]; st.save(m)
+                m = Store(src).apply_ops(m, [Op(**o) if isinstance(o, dict) else o for o in ops]); m.setdefault("program", {})["pdp"] = t["name"]
+        vis = os.path.join(src, "docs", "product.svg")
+        if os.path.isfile(vis):   # the example's product visual becomes the project's
+            os.makedirs(os.path.join(root, "files", "product"), exist_ok=True); shutil.copy(vis, os.path.join(root, "files", "product", "product.svg")); m["meta"]["image"] = "files/product/product.svg"
+        if W.db is None:
+            Store(root).save(m)
+        else:
+            from ..dbstore import DbStore; DbStore(W.db, W.tenant, eid, m["meta"].get("name", eid)).save(m)
+        W._store(eid, root)
         return W.summary(eid)
 
     @app.delete("/api/p/{pid}")

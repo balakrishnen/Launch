@@ -2,8 +2,7 @@ meta:
   name: Hearth companion speaker
   version: '0.1'
   method: OOSEM
-  description: Screenless portable AI companion speaker — reconstructed from OpenAI
-    consumer-device postings and press (fictional name)
+  description: Screenless portable AI companion speaker — reconstructed from OpenAI consumer-device postings and press (fictional name)
   system: P-HRT
   stage: Development
   business:
@@ -117,9 +116,142 @@ needs:
     stk: STK-CLOUD
     text: Works usefully offline and updates itself safely
     moe: MOE-10
-actors: {}
-use_cases: {}
-scenarios: {}
+actors:
+  AC-USER:
+    name: Household member
+  AC-GUEST:
+    name: Guest / bystander
+  AC-CLOUD:
+    name: Cloud model service
+  AC-HOME:
+    name: Smart-home devices (Matter)
+  AC-OPS:
+    name: Line operator
+  AC-OTA:
+    name: OTA service
+use_cases:
+  UC-01:
+    name: Ask and converse
+    actors:
+    - AC-USER
+    - AC-CLOUD
+    needs:
+    - N-01
+    - N-02
+  UC-02:
+    name: Play music and talk over it
+    actors:
+    - AC-USER
+    needs:
+    - N-02
+    includes:
+    - UC-01
+  UC-03:
+    name: Control the home by voice
+    actors:
+    - AC-USER
+    - AC-HOME
+    needs:
+    - N-05
+    includes:
+    - UC-01
+  UC-04:
+    name: Mute and cover
+    actors:
+    - AC-USER
+    - AC-GUEST
+    needs:
+    - N-04
+    - N-08
+  UC-05:
+    name: Carry and charge
+    actors:
+    - AC-USER
+    needs:
+    - N-03
+    - N-07
+  UC-06:
+    name: Update overnight
+    actors:
+    - AC-OTA
+    needs:
+    - N-10
+  UC-07:
+    name: Test and provision at end of line
+    actors:
+    - AC-OPS
+    needs:
+    - N-09
+  UC-08:
+    name: Work offline
+    actors:
+    - AC-USER
+    needs:
+    - N-10
+scenarios:
+  SC-01:
+    uc: UC-01
+    name: Wake, ask, answer
+    steps:
+    - F-01
+    - F-02
+    - F-03
+    - F-04
+    - F-06
+    concurrent:
+    - F-12
+  SC-02:
+    uc: UC-02
+    name: Barge-in over 65 dBA music
+    steps:
+    - F-04
+    - F-01
+    - F-02
+    - F-03
+    - F-04
+  SC-03:
+    uc: UC-03
+    name: Lights to 30 %
+    steps:
+    - F-02
+    - F-07
+    - F-06
+  SC-04:
+    uc: UC-04
+    name: Guest closes the shutter
+    steps:
+    - F-09
+    - F-06
+  SC-05:
+    uc: UC-05
+    name: Day on battery, charge at night
+    steps:
+    - F-08
+    - F-12
+    - F-08
+  SC-06:
+    uc: UC-06
+    name: A/B update with rollback
+    steps:
+    - F-10
+    - F-12
+    - F-10
+  SC-07:
+    uc: UC-07
+    name: 'EoL: chamber, MTF, RF, charge, provision'
+    steps:
+    - F-11
+    - F-04
+    - F-05
+    - F-12
+    - F-08
+    - F-10
+  SC-08:
+    uc: UC-08
+    name: Timer and lights with Wi-Fi down
+    steps:
+    - F-02
+    - F-07
 regulations:
   REG-FCC:
     name: FCC Part 15 B/C
@@ -169,9 +301,7 @@ regulations:
 requirements:
   R-01:
     type: PERF
-    text: Voice-to-first-audio latency shall be ≤ 700 ms p50 and ≤ 1.2 s p95 over
-      Wi-Fi; on-device fallback shall answer wake, timers and local control with no
-      network.
+    text: Voice-to-first-audio latency shall be ≤ 700 ms p50 and ≤ 1.2 s p95 over Wi-Fi; on-device fallback shall answer wake, timers and local control with no network.
     verify: test
     tests:
     - TST-01
@@ -182,8 +312,7 @@ requirements:
     attr: latency_ms <= 700
   R-02:
     type: PERF
-    text: Wake-word recall shall be ≥ 95 % at 5 m with 65 dBA music playing from the
-      device itself (AEC).
+    text: Wake-word recall shall be ≥ 95 % at 5 m with 65 dBA music playing from the device itself (AEC).
     verify: test
     tests:
     - TST-02
@@ -194,8 +323,7 @@ requirements:
     attr: wake_recall_pct >= 95
   R-03:
     type: PERF
-    text: Battery shall deliver ≥ 8 h mixed active use and ≥ 24 h standby from a 20
-      Wh pack at 25 °C.
+    text: Battery shall deliver ≥ 8 h mixed active use and ≥ 24 h standby from a 20 Wh pack at 25 °C.
     verify: test
     tests:
     - TST-03
@@ -207,8 +335,7 @@ requirements:
     attr: battery_h >= 8
   R-04:
     type: SAFE
-    text: A hardware privacy shutter shall block the camera; mic mute shall be a hardware
-      cut with an LED that cannot be overridden by software.
+    text: A hardware privacy shutter shall block the camera; mic mute shall be a hardware cut with an LED that cannot be overridden by software.
     verify: demonstration
     tests:
     - TST-04
@@ -220,8 +347,7 @@ requirements:
     attr: mute_latency_ms <= 100
   R-05:
     type: FUNC
-    text: The device shall act as a Matter controller over Thread and Wi-Fi with ≥
-      99 % command success within 2 s.
+    text: The device shall act as a Matter controller over Thread and Wi-Fi with ≥ 99 % command success within 2 s.
     verify: test
     tests:
     - TST-05
@@ -233,8 +359,7 @@ requirements:
     attr: matter_success_pct >= 99
   R-06:
     type: PERF
-    text: The expressive mechanism shall produce ≤ 25 dBA at 0.5 m and survive 500,000
-      cycles.
+    text: The expressive mechanism shall produce ≤ 25 dBA at 0.5 m and survive 500,000 cycles.
     verify: test
     tests:
     - TST-06
@@ -245,8 +370,7 @@ requirements:
     attr: mech_noise_dba <= 25
   R-07:
     type: REGU
-    text: The product shall obtain FCC 15B/15C, RED (incl. EN 18031), IEC 62368-1,
-      IEC 62133-2 and UN 38.3 before PVT.
+    text: The product shall obtain FCC 15B/15C, RED (incl. EN 18031), IEC 62368-1, IEC 62133-2 and UN 38.3 before PVT.
     verify: inspection
     tests:
     - TST-07
@@ -262,8 +386,7 @@ requirements:
     attr: certification = granted
   R-08:
     type: SAFE
-    text: Pack shall include cell-level protection, charge temperature window 0–45
-      °C, and thermal runaway containment per IEC 62133-2.
+    text: Pack shall include cell-level protection, charge temperature window 0–45 °C, and thermal runaway containment per IEC 62133-2.
     verify: test
     tests:
     - TST-08
@@ -275,8 +398,7 @@ requirements:
     attr: charge_temp_window = 0-45C
   R-09:
     type: SEC
-    text: Audio and image data shall be processed on device for wake/intent; uploads
-      require explicit indicator state; firmware shall be signed with rollback protection.
+    text: Audio and image data shall be processed on device for wake/intent; uploads require explicit indicator state; firmware shall be signed with rollback protection.
     verify: inspection
     tests:
     - TST-09
@@ -289,8 +411,7 @@ requirements:
     attr: security = EN18031
   R-10:
     type: MFG
-    text: End-of-line test shall cover audio chamber, camera MTF, RF, battery charge/discharge
-      and provisioning in ≤ 180 s.
+    text: End-of-line test shall cover audio chamber, camera MTF, RF, battery charge/discharge and provisioning in ≤ 180 s.
     verify: test
     tests:
     - TST-10
@@ -301,8 +422,7 @@ requirements:
     attr: eol_s <= 180
   R-11:
     type: FUNC
-    text: OTA updates shall be A/B with automatic rollback; a failed update shall
-      not brick the device.
+    text: OTA updates shall be A/B with automatic rollback; a failed update shall not brick the device.
     verify: test
     tests:
     - TST-11
@@ -313,8 +433,7 @@ requirements:
     attr: ota_rollback = true
   R-12:
     type: PERF
-    text: System power shall stay ≤ 2.5 W average in always-listening idle with the
-      application SoC asleep (RTOS co-processor owns wake).
+    text: System power shall stay ≤ 2.5 W average in always-listening idle with the application SoC asleep (RTOS co-processor owns wake).
     verify: test
     tests:
     - TST-12
@@ -325,8 +444,7 @@ requirements:
     attr: idle_w <= 2.5
   R-13:
     type: PERF
-    text: Full-range driver + passive radiator shall deliver 85 dB SPL at 1 m with
-      ≤ 3 % THD at 1 kHz.
+    text: Full-range driver + passive radiator shall deliver 85 dB SPL at 1 m with ≤ 3 % THD at 1 kHz.
     verify: test
     tests:
     - TST-13
@@ -337,8 +455,7 @@ requirements:
     attr: spl_db >= 85
   R-14:
     type: REGU
-    text: RF exposure (SAR/MPE) shall comply for a device carried in hand and placed
-      on a table.
+    text: RF exposure (SAR/MPE) shall comply for a device carried in hand and placed on a table.
     verify: test
     tests:
     - TST-14
@@ -1041,7 +1158,77 @@ transitions:
     guard: ''
     sensor: P-BATT
     func: F-08
-constraints: {}
+constraints:
+  C-01:
+    name: Battery energy budget
+    formula: E_Wh = P_active_W * t_active_h + P_idle_W * t_idle_h <= 0.9 * 20
+    inputs:
+      P_active_W: 2.1
+      t_active_h: 8
+      P_idle_W: 0.6
+      t_idle_h: 16
+    reqs:
+    - R-03
+    - R-12
+    tests:
+    - TST-03
+    - TST-12
+  C-02:
+    name: Latency budget
+    formula: capture_ms + wake_ms + uplink_ms + model_ms + tts_first_ms + playout_ms <= 700 (p50)
+    inputs:
+      capture_ms: 80
+      wake_ms: 120
+      uplink_ms: 60
+      model_ms: 280
+      tts_first_ms: 90
+      playout_ms: 40
+    reqs:
+    - R-01
+    tests:
+    - TST-01
+  C-03:
+    name: Acoustic output
+    formula: SPL_1m = sensitivity_dB + 10*log10(P_amp_W) - 3 >= 85
+    inputs:
+      sensitivity_dB: 84
+      P_amp_W: 10
+    reqs:
+    - R-13
+    tests:
+    - TST-13
+  C-04:
+    name: Mass budget
+    formula: m_total_g = sum(part mass) <= 650
+    inputs:
+      m_pack_g: 176
+      m_encl_g: 210
+      m_acoustic_g: 95
+      m_pcba_g: 48
+      m_mech_g: 60
+    reqs:
+    - R-03
+    tests:
+    - TST-03
+  C-05:
+    name: Charge thermal window
+    formula: T_cell_C in [0, 45] during charge; cut at 50
+    inputs:
+      T_cut_C: 50
+    reqs:
+    - R-08
+    tests:
+    - TST-08
+  C-06:
+    name: RF exposure
+    formula: SAR_1g_W_kg = f(P_tx_dBm, distance_mm) <= 1.6
+    inputs:
+      P_tx_dBm: 18
+      distance_mm: 5
+    reqs:
+    - R-14
+    tests:
+    - TST-14
 trades:
   TD-01:
     name: 'Expression mechanism: gearmotor vs voice-coil vs none'
@@ -1116,7 +1303,67 @@ trades:
     - LC-EXPR
     status: open
     owner_team: TM-EXPR
-arch_decisions: {}
+arch_decisions:
+  AD-01:
+    title: Screenless, voice-first with a light ring
+    decision: No display; a 24-LED ring and motion carry state
+    rationale: Cost, battery and the companion concept; a screen pulls attention and doubles idle power
+    reqs:
+    - R-03
+    - R-12
+    consequences:
+    - light semantics must be accessible (F-06)
+    - setup needs the phone app
+  AD-02:
+    title: Always-on audio on an RTOS co-processor
+    decision: MCU runs wake-word with SoC asleep; SoC wakes on detection
+    rationale: R-12 idle ≤ 2.5 W is impossible with the application SoC awake
+    reqs:
+    - R-12
+    - R-02
+    consequences:
+    - dual-firmware update path (IF-09)
+    - wake-to-listen handshake in the latency budget
+  AD-03:
+    title: 'Hardware privacy: mechanical shutter + mic rail cut'
+    decision: Shutter is a mechanical slide with a hall sensor; mute cuts the mic power rail and drives the LED from the rail
+    rationale: Trust requirement R-04 cannot depend on software state
+    reqs:
+    - R-04
+    - R-09
+    consequences:
+    - shutter independent of the expression actuator
+    - EoL test of the rail cut
+  AD-04:
+    title: Matter controller over Thread and Wi-Fi
+    decision: Device is a Matter controller and Thread border router
+    rationale: N-05 without a hub; Thread for low-power devices
+    reqs:
+    - R-05
+    consequences:
+    - coexistence test with music streaming
+    - fabric persistence across OTA
+  AD-05:
+    title: Pre-certified radio module
+    decision: Wi-Fi 6 / BLE / Thread module with modular approval
+    rationale: Removes radio certification from the critical path; antenna integration still needs SAR
+    reqs:
+    - R-07
+    - R-14
+    consequences:
+    - BOM +$1.1 vs discrete
+    - antenna slot in aluminium enclosure
+  AD-06:
+    title: Expression mechanism — open
+    decision: Pending TD-01 (gearmotor vs voice-coil vs light/haptic only)
+    rationale: Noise, life and cost unresolved; TRL 4 on the gearmotor
+    reqs:
+    - R-06
+    trade: TD-01
+    concerns:
+    - 500k-cycle life
+    - ≤ 25 dBA at 0.5 m
+    - motor noise into mics
 tests:
   TST-01:
     name: Voice latency p50/p95
@@ -1219,7 +1466,2046 @@ tests:
 gates: {}
 phases: {}
 deliverables: {}
-fm_assessments: {}
+fm_assessments:
+  FA-F-01-loss:
+    element: F-01
+    guide: loss
+    mode: No audio captured
+    effect: Device deaf; no wake, no conversation
+    cause: Mic array supply or I²S clock lost; mic port blocked by fabric
+    S: 7
+    O: 3
+    D: 2
+    controls: Mic self-test at boot; EoL audio chamber
+    tests:
+    - TST-10
+  FA-F-01-degraded:
+    element: F-01
+    guide: degraded
+    mode: SNR drops below 20 dB at 5 m
+    effect: Wake-word recall below 95 % with music
+    cause: Fabric acoustic loss; one mic failed; AEC reference misaligned
+    S: 6
+    O: 5
+    D: 4
+    controls: Per-mic health monitor; AEC reference loop-back
+    tests:
+    - TST-02
+  FA-F-01-intermittent:
+    element: F-01
+    guide: intermittent
+    mode: Dropouts under vibration
+    effect: Words lost mid-sentence; wrong intent
+    cause: FPC connector micro-fretting; mechanism vibration couples to mics
+    S: 6
+    O: 4
+    D: 5
+    controls: Locking FPC; mechanism isolation mounts
+    tests:
+    - TST-06
+    - TST-02
+  FA-F-01-unintended:
+    element: F-01
+    guide: unintended
+    mode: Captures when muted
+    effect: Privacy breach
+    cause: Mute cut implemented in software only; power rail not cut
+    S: 10
+    O: 2
+    D: 3
+    controls: Hardware mute in mic power rail; LED tied to rail
+    tests:
+    - TST-04
+    - TST-09
+  FA-F-01-wrong_timing:
+    element: F-01
+    guide: wrong timing
+    mode: Buffer latency > 120 ms
+    effect: Conversation feels laggy
+    cause: Audio pipeline buffering set for music, not voice
+    S: 5
+    O: 4
+    D: 4
+    controls: Latency budget per stage; CDA-01 monitor
+    tests:
+    - TST-01
+  FA-F-01-wrong_value:
+    element: F-01
+    guide: wrong value
+    mode: Self-playback not cancelled
+    effect: Device wakes on its own speech
+    cause: AEC diverges above 80 dB SPL; amp-to-mic path non-linear
+    S: 5
+    O: 5
+    D: 4
+    controls: AEC convergence test; barge-in test with own music
+    tests:
+    - TST-02
+  FA-F-02-loss:
+    element: F-02
+    guide: loss
+    mode: No wake detection
+    effect: Device unresponsive
+    cause: NPU model fails to load after OTA; MCU always-on path stalls
+    S: 8
+    O: 2
+    D: 3
+    controls: Model hash check; watchdog on MCU audio path
+    tests:
+    - TST-11
+  FA-F-02-degraded:
+    element: F-02
+    guide: degraded
+    mode: Recall < 95 % at 5 m
+    effect: Users repeat themselves
+    cause: Model not trained on room reverberation; mic SNR
+    S: 6
+    O: 5
+    D: 4
+    controls: Recall test at 5 m with 65 dBA music
+    tests:
+    - TST-02
+  FA-F-02-intermittent:
+    element: F-02
+    guide: intermittent
+    mode: Recall varies with temperature
+    effect: Inconsistent wake
+    cause: MEMS mic sensitivity drift; NPU throttling
+    S: 5
+    O: 3
+    D: 5
+    controls: Thermal chamber recall sweep
+    tests:
+    - TST-02
+  FA-F-02-unintended:
+    element: F-02
+    guide: unintended
+    mode: False accepts on TV speech
+    effect: Device interrupts; privacy annoyance
+    cause: Threshold tuned for recall only
+    S: 6
+    O: 6
+    D: 3
+    controls: False-accept rate ≤ 1/24 h spec; TV corpus test
+    tests:
+    - TST-02
+  FA-F-02-wrong_timing:
+    element: F-02
+    guide: wrong timing
+    mode: Wake fires after the utterance
+    effect: User talks before device listens
+    cause: MCU to SoC wake handshake slow
+    S: 5
+    O: 4
+    D: 4
+    controls: Wake-to-listen ≤ 150 ms spec
+    tests:
+    - TST-01
+  FA-F-02-wrong_value:
+    element: F-02
+    guide: wrong value
+    mode: Wrong intent on device
+    effect: Wrong action (lights off instead of on)
+    cause: Small on-device model; no confirmation for destructive intents
+    S: 6
+    O: 5
+    D: 4
+    controls: Confirmation for destructive intents; cloud fallback
+    tests:
+    - TST-05
+  FA-F-03-loss:
+    element: F-03
+    guide: loss
+    mode: No cloud reply
+    effect: Only offline intents work
+    cause: Wi-Fi down; cloud outage; expired cert
+    S: 5
+    O: 4
+    D: 2
+    controls: Offline fallback (R-01); graceful message
+    tests:
+    - TST-01
+  FA-F-03-degraded:
+    element: F-03
+    guide: degraded
+    mode: p95 latency > 1.2 s
+    effect: Conversation feels slow
+    cause: Streaming not used; TLS renegotiation per turn
+    S: 6
+    O: 5
+    D: 3
+    controls: Keep-alive session; streaming TTS
+    tests:
+    - TST-01
+  FA-F-03-intermittent:
+    element: F-03
+    guide: intermittent
+    mode: Replies cut off
+    effect: Confusing half-answers
+    cause: Audio stream buffer underrun on weak Wi-Fi
+    S: 5
+    O: 4
+    D: 4
+    controls: Jitter buffer; link-quality adaptive bitrate
+    tests:
+    - TST-01
+  FA-F-03-unintended:
+    element: F-03
+    guide: unintended
+    mode: Uploads audio without indication
+    effect: Trust/regulatory violation
+    cause: Indicator logic not tied to upload path
+    S: 9
+    O: 2
+    D: 3
+    controls: Light ring hard-linked to upload state; audit
+    tests:
+    - TST-09
+  FA-F-03-wrong_timing:
+    element: F-03
+    guide: wrong timing
+    ncr: timing is covered by degraded (latency)
+  FA-F-03-wrong_value:
+    element: F-03
+    guide: wrong value
+    mode: Hallucinated device state
+    effect: Tells user lights are off when on
+    cause: Cloud model not grounded in device state
+    S: 4
+    O: 5
+    D: 4
+    controls: Grounding on Matter state; UX review
+    tests: []
+  FA-F-04-loss:
+    element: F-04
+    guide: loss
+    mode: No sound
+    effect: Device silent
+    cause: Amp fault; driver open; gasket leak collapses output
+    S: 7
+    O: 3
+    D: 2
+    controls: Amp fault pin; EoL SPL check
+    tests:
+    - TST-13
+    - TST-10
+  FA-F-04-degraded:
+    element: F-04
+    guide: degraded
+    mode: THD > 3 % or SPL < 85 dB
+    effect: Poor music; speech unclear
+    cause: Passive radiator leak; amp clipping on low battery
+    S: 5
+    O: 5
+    D: 4
+    controls: SPL/THD test; brownout limiter
+    tests:
+    - TST-13
+  FA-F-04-intermittent:
+    element: F-04
+    guide: intermittent
+    mode: Crackle on bass
+    effect: Perceived defect
+    cause: Driver surround rubbing; enclosure buzz
+    S: 5
+    O: 4
+    D: 5
+    controls: Buzz & rattle sweep in EoL
+    tests:
+    - TST-13
+    - TST-10
+  FA-F-04-unintended:
+    element: F-04
+    guide: unintended
+    mode: Plays at full volume on wake
+    effect: Startles user
+    cause: Volume state not persisted across reboot
+    S: 4
+    O: 4
+    D: 3
+    controls: Volume persistence; max on-boot volume
+    tests: []
+  FA-F-04-wrong_timing:
+    element: F-04
+    guide: wrong timing
+    mode: Audio and light ring out of sync
+    effect: Feels broken
+    cause: Separate clocks for audio and LED pipelines
+    S: 3
+    O: 5
+    D: 4
+    controls: Shared timebase; sync test
+    tests: []
+  FA-F-04-wrong_value:
+    element: F-04
+    guide: wrong value
+    mode: Wrong channel/EQ
+    effect: Muffled speech
+    cause: EQ preset mismatched to fabric batch
+    S: 3
+    O: 4
+    D: 5
+    controls: Golden-unit EQ check per fabric lot
+    tests:
+    - TST-13
+  FA-F-05-loss:
+    element: F-05
+    guide: loss
+    mode: No image
+    effect: Vision features unavailable
+    cause: MIPI connector unseated; shutter stuck closed
+    S: 5
+    O: 3
+    D: 2
+    controls: Camera MTF at EoL; shutter position sensor
+    tests:
+    - TST-10
+    - TST-04
+  FA-F-05-degraded:
+    element: F-05
+    guide: degraded
+    mode: MTF below spec
+    effect: Poor recognition
+    cause: Lens decentred; fabric lint on window
+    S: 4
+    O: 4
+    D: 4
+    controls: MTF test; sealed window
+    tests:
+    - TST-10
+  FA-F-05-intermittent:
+    element: F-05
+    guide: intermittent
+    mode: Frames dropped
+    effect: Scene lag
+    cause: MIPI EMI from gearmotor drive
+    S: 4
+    O: 4
+    D: 5
+    controls: Shielded FPC; EMI pre-scan with motors running
+    tests:
+    - TST-07
+  FA-F-05-unintended:
+    element: F-05
+    guide: unintended
+    mode: Camera active with shutter closed is reported open
+    effect: Trust breach
+    cause: Shutter state read from software flag
+    S: 10
+    O: 2
+    D: 3
+    controls: Mechanical shutter with hall sensor; LED on rail
+    tests:
+    - TST-04
+    - TST-09
+  FA-F-05-wrong_timing:
+    element: F-05
+    guide: wrong timing
+    ncr: no timing-critical use of the camera
+  FA-F-05-wrong_value:
+    element: F-05
+    guide: wrong value
+    mode: Wrong exposure/colour
+    effect: Misread scene
+    cause: ALS not used for exposure
+    S: 2
+    O: 4
+    D: 4
+    controls: ALS-driven AE
+    tests: []
+  FA-F-06-loss:
+    element: F-06
+    guide: loss
+    mode: No motion
+    effect: Feels dead; TD-01 value lost
+    cause: Gearmotor stalls; driver over-current
+    S: 4
+    O: 5
+    D: 2
+    controls: Stall detection; TD-01 decision
+    tests:
+    - TST-06
+  FA-F-06-degraded:
+    element: F-06
+    guide: degraded
+    mode: Motion noisy > 25 dBA
+    effect: Annoying at night
+    cause: Gear wear; backlash
+    S: 5
+    O: 5
+    D: 4
+    controls: Noise test over life
+    tests:
+    - TST-06
+  FA-F-06-intermittent:
+    element: F-06
+    guide: intermittent
+    mode: Jitter
+    effect: Looks broken
+    cause: Encoder noise; PWM resolution
+    S: 3
+    O: 4
+    D: 4
+    controls: Motion smoothness test
+    tests:
+    - TST-06
+  FA-F-06-unintended:
+    element: F-06
+    guide: unintended
+    mode: Moves while muted
+    effect: Confusing privacy signal
+    cause: Expression state machine ignores muted
+    S: 6
+    O: 3
+    D: 3
+    controls: Muted = no motion rule; state test
+    tests:
+    - TST-04
+  FA-F-06-wrong_timing:
+    element: F-06
+    guide: wrong timing
+    mode: Light ring lags audio
+    effect: Feels unnatural
+    cause: See F-04 wrong timing
+    S: 3
+    O: 5
+    D: 4
+    controls: Shared timebase
+    tests: []
+  FA-F-06-wrong_value:
+    element: F-06
+    guide: wrong value
+    mode: Colour means the wrong state
+    effect: User misreads listening state
+    cause: Colour scheme not accessible
+    S: 6
+    O: 3
+    D: 3
+    controls: Light semantics spec; accessibility review
+    tests:
+    - TST-04
+  FA-F-07-loss:
+    element: F-07
+    guide: loss
+    mode: No control
+    effect: Core use case fails
+    cause: Thread radio down; Matter fabric lost after OTA
+    S: 6
+    O: 4
+    D: 3
+    controls: Fabric persistence test across OTA
+    tests:
+    - TST-05
+    - TST-11
+  FA-F-07-degraded:
+    element: F-07
+    guide: degraded
+    mode: Success < 99 %
+    effect: Unreliable
+    cause: Thread mesh weak; Wi-Fi coexistence
+    S: 6
+    O: 5
+    D: 4
+    controls: Command success test in RF-noisy home
+    tests:
+    - TST-05
+  FA-F-07-intermittent:
+    element: F-07
+    guide: intermittent
+    mode: Commands dropped under load
+    effect: Frustration
+    cause: Radio coexistence arbitration
+    S: 5
+    O: 4
+    D: 4
+    controls: Coexistence test with music streaming
+    tests:
+    - TST-05
+  FA-F-07-unintended:
+    element: F-07
+    guide: unintended
+    mode: Wrong device actuated
+    effect: Lock/garage opened by mistake
+    cause: Ambiguous names; no confirmation
+    S: 9
+    O: 3
+    D: 3
+    controls: Confirmation for locks/garage; name disambiguation
+    tests:
+    - TST-05
+  FA-F-07-wrong_timing:
+    element: F-07
+    guide: wrong timing
+    mode: Command delivered seconds late
+    effect: Lights flicker late
+    cause: Retry back-off too long
+    S: 3
+    O: 4
+    D: 4
+    controls: Latency budget
+    tests:
+    - TST-05
+  FA-F-07-wrong_value:
+    element: F-07
+    guide: wrong value
+    mode: Wrong level (100 % vs 10 %)
+    effect: Annoyance
+    cause: Intent slot parsing
+    S: 3
+    O: 4
+    D: 4
+    controls: Slot validation
+    tests: []
+  FA-F-08-loss:
+    element: F-08
+    guide: loss
+    mode: Will not charge
+    effect: Dead device
+    cause: PD negotiation fails with cable; charger IC fault
+    S: 7
+    O: 3
+    D: 3
+    controls: PD compliance test; charge at EoL
+    tests:
+    - TST-10
+    - TST-03
+  FA-F-08-degraded:
+    element: F-08
+    guide: degraded
+    mode: Battery life < 8 h
+    effect: Misses R-03
+    cause: Idle power > 2.5 W; SoC not sleeping
+    S: 6
+    O: 5
+    D: 3
+    controls: Idle power test; CDA-03
+    tests:
+    - TST-12
+    - TST-03
+  FA-F-08-intermittent:
+    element: F-08
+    guide: intermittent
+    mode: Charging stops and starts
+    effect: Slow charge
+    cause: Thermal throttle at 45 °C boundary
+    S: 4
+    O: 4
+    D: 4
+    controls: Charge thermal profile test
+    tests:
+    - TST-08
+  FA-F-08-unintended:
+    element: F-08
+    guide: unintended
+    mode: Charges outside 0–45 °C
+    effect: Cell damage; safety
+    cause: NTC placement away from cells
+    S: 10
+    O: 2
+    D: 3
+    controls: NTC on cell; BMS cut; pack abuse test
+    tests:
+    - TST-08
+  FA-F-08-wrong_timing:
+    element: F-08
+    guide: wrong timing
+    mode: Shutdown before 0 % shown
+    effect: Surprise off
+    cause: Fuel gauge not calibrated
+    S: 4
+    O: 5
+    D: 3
+    controls: Gauge learning cycle at EoL
+    tests:
+    - TST-03
+  FA-F-08-wrong_value:
+    element: F-08
+    guide: wrong value
+    mode: Over-voltage charge
+    effect: Thermal runaway
+    cause: PMIC config error; BMS secondary protection missing
+    S: 10
+    O: 1
+    D: 3
+    controls: Dual protection; UN 38.3; IEC 62133-2
+    tests:
+    - TST-08
+    - TST-07
+  FA-F-09-loss:
+    element: F-09
+    guide: loss
+    mode: Mute does nothing
+    effect: Privacy breach
+    cause: Switch wired to GPIO only
+    S: 10
+    O: 2
+    D: 2
+    controls: Hardware cut in mic rail (R-04)
+    tests:
+    - TST-04
+  FA-F-09-degraded:
+    element: F-09
+    guide: degraded
+    mode: LED dim/invisible
+    effect: User cannot tell state
+    cause: LED behind fabric
+    S: 6
+    O: 4
+    D: 3
+    controls: LED visibility test at 3 m
+    tests:
+    - TST-04
+  FA-F-09-intermittent:
+    element: F-09
+    guide: intermittent
+    mode: Switch bounce toggles mute
+    effect: Confusing state
+    cause: No debounce in hardware
+    S: 6
+    O: 3
+    D: 4
+    controls: Debounce RC; state test
+    tests:
+    - TST-04
+  FA-F-09-unintended:
+    element: F-09
+    guide: unintended
+    mode: Shutter opens on motion
+    effect: Trust breach
+    cause: Shutter coupled to expression mechanism
+    S: 9
+    O: 2
+    D: 3
+    controls: Shutter independent of actuator; interlock
+    tests:
+    - TST-04
+  FA-F-09-wrong_timing:
+    element: F-09
+    guide: wrong timing
+    mode: Mute acts after 1 s
+    effect: Audio captured during delay
+    cause: Software path before rail cut
+    S: 8
+    O: 3
+    D: 3
+    controls: Rail cut first, then software
+    tests:
+    - TST-04
+  FA-F-09-wrong_value:
+    element: F-09
+    guide: wrong value
+    ncr: binary function; covered by loss/unintended
+  FA-F-10-loss:
+    element: F-10
+    guide: loss
+    mode: No OTA
+    effect: Security fixes not delivered
+    cause: OTA service unreachable; cert expired
+    S: 6
+    O: 3
+    D: 3
+    controls: Cert rotation; OTA monitoring
+    tests:
+    - TST-11
+  FA-F-10-degraded:
+    element: F-10
+    guide: degraded
+    mode: Update takes hours
+    effect: User disables Wi-Fi
+    cause: Full image instead of delta
+    S: 3
+    O: 4
+    D: 3
+    controls: Delta updates
+    tests:
+    - TST-11
+  FA-F-10-intermittent:
+    element: F-10
+    guide: intermittent
+    mode: Update fails and retries
+    effect: Battery drain
+    cause: Power loss mid-write
+    S: 5
+    O: 4
+    D: 3
+    controls: A/B slots; power-fail test
+    tests:
+    - TST-11
+  FA-F-10-unintended:
+    element: F-10
+    guide: unintended
+    mode: Unsigned image accepted
+    effect: Compromise
+    cause: Secure boot fuses not blown in production
+    S: 10
+    O: 2
+    D: 3
+    controls: Fuse check at EoL; attestation
+    tests:
+    - TST-09
+    - TST-10
+  FA-F-10-wrong_timing:
+    element: F-10
+    guide: wrong timing
+    mode: Reboots during conversation
+    effect: Annoyance
+    cause: No maintenance window logic
+    S: 3
+    O: 5
+    D: 3
+    controls: Idle-only reboot
+    tests:
+    - TST-11
+  FA-F-10-wrong_value:
+    element: F-10
+    guide: wrong value
+    mode: Wrong image for hardware rev
+    effect: Brick
+    cause: HW rev not in manifest
+    S: 8
+    O: 2
+    D: 3
+    controls: HW-rev gated manifest; rollback
+    tests:
+    - TST-11
+  FA-F-11-loss:
+    element: F-11
+    guide: loss
+    mode: EoL station down
+    effect: Line stops
+    cause: Fixture firmware; chamber calibration
+    S: 5
+    O: 4
+    D: 2
+    controls: Golden unit daily; spare fixture
+    tests:
+    - TST-10
+  FA-F-11-degraded:
+    element: F-11
+    guide: degraded
+    mode: Test time > target
+    effect: Throughput missed
+    cause: Camera MTF step slow
+    S: 4
+    O: 5
+    D: 3
+    controls: Parallel RF and MTF; CDA on test time
+    tests:
+    - TST-10
+  FA-F-11-intermittent:
+    element: F-11
+    guide: intermittent
+    mode: False fails
+    effect: Scrap/rework
+    cause: Chamber door seal; ambient noise
+    S: 5
+    O: 5
+    D: 3
+    controls: Gauge R&R on chamber
+    tests:
+    - TST-10
+  FA-F-11-unintended:
+    element: F-11
+    guide: unintended
+    mode: Passes a bad unit
+    effect: Field return
+    cause: Limits too wide
+    S: 7
+    O: 3
+    D: 4
+    controls: Limit review vs DVT data
+    tests:
+    - TST-10
+  FA-F-11-wrong_timing:
+    element: F-11
+    guide: wrong timing
+    ncr: not applicable
+  FA-F-11-wrong_value:
+    element: F-11
+    guide: wrong value
+    mode: Provisioning writes wrong keys
+    effect: Device cannot attest
+    cause: Key server mapping error
+    S: 8
+    O: 2
+    D: 3
+    controls: Attestation check in EoL
+    tests:
+    - TST-10
+    - TST-09
+  FA-F-12-loss:
+    element: F-12
+    guide: loss
+    mode: No connectivity
+    effect: Offline only
+    cause: Module fault; antenna detuned by hand/fabric
+    S: 6
+    O: 3
+    D: 3
+    controls: RF test at EoL; antenna hand-loading test
+    tests:
+    - TST-10
+    - TST-14
+  FA-F-12-degraded:
+    element: F-12
+    guide: degraded
+    mode: Low throughput
+    effect: Latency; dropouts
+    cause: Antenna near aluminium enclosure
+    S: 5
+    O: 5
+    D: 3
+    controls: TRP/TIS; enclosure slot design
+    tests:
+    - TST-01
+  FA-F-12-intermittent:
+    element: F-12
+    guide: intermittent
+    mode: Wi-Fi roams badly
+    effect: Dropouts
+    cause: Roaming thresholds
+    S: 4
+    O: 4
+    D: 4
+    controls: Roaming test
+    tests:
+    - TST-05
+  FA-F-12-unintended:
+    element: F-12
+    guide: unintended
+    mode: BLE pairing without consent
+    effect: Security
+    cause: Just-works pairing
+    S: 8
+    O: 3
+    D: 3
+    controls: Confirm-on-device pairing; EN 18031
+    tests:
+    - TST-09
+  FA-F-12-wrong_timing:
+    element: F-12
+    guide: wrong timing
+    mode: Reconnect after sleep slow
+    effect: First command fails after idle
+    cause: Wi-Fi power save
+    S: 4
+    O: 5
+    D: 3
+    controls: Reconnect ≤ 1 s spec
+    tests:
+    - TST-01
+  FA-F-12-wrong_value:
+    element: F-12
+    guide: wrong value
+    mode: SAR above limit
+    effect: Regulatory block
+    cause: Power table not per-market
+    S: 9
+    O: 2
+    D: 3
+    controls: SAR/MPE test per market
+    tests:
+    - TST-14
+  FA-IF-01-open:
+    element: IF-01
+    guide: open
+    mode: Mic FPC open
+    effect: One or more mics dead
+    cause: FPC crack at bend; connector unlatched
+    S: 6
+    O: 3
+    D: 2
+    controls: Per-mic self-test
+    tests:
+    - TST-10
+  FA-IF-01-degraded:
+    element: IF-01
+    guide: degraded
+    mode: I²S noise
+    effect: SNR loss
+    cause: Ground loop from amp
+    S: 5
+    O: 4
+    D: 4
+    controls: Layout review; SNR at EoL
+    tests:
+    - TST-10
+  FA-IF-01-leakage_crosstalk:
+    element: IF-01
+    guide: leakage/crosstalk
+    mode: Amp noise couples into mic lines
+    effect: Hiss; AEC worse
+    cause: Routing near class-D
+    S: 4
+    O: 4
+    D: 4
+    controls: Guard traces
+    tests:
+    - TST-02
+  FA-IF-01-mismatch:
+    element: IF-01
+    guide: mismatch
+    mode: Mic timing skew
+    effect: Beamforming wrong
+    cause: Clock domain mismatch
+    S: 5
+    O: 2
+    D: 4
+    controls: Array calibration at EoL
+    tests:
+    - TST-10
+  FA-IF-02-open:
+    element: IF-02
+    guide: open
+    mode: Driver open
+    effect: No sound
+    cause: Lead wire fatigue from radiator excursion
+    S: 7
+    O: 3
+    D: 2
+    controls: Amp load detect
+    tests:
+    - TST-13
+  FA-IF-02-degraded:
+    element: IF-02
+    guide: degraded
+    mode: High contact resistance
+    effect: Distortion
+    cause: Spring terminal oxidation
+    S: 4
+    O: 3
+    D: 4
+    controls: Plated terminals
+    tests:
+    - TST-13
+  FA-IF-02-leakage_crosstalk:
+    element: IF-02
+    guide: leakage/crosstalk
+    ncr: single channel
+  FA-IF-02-mismatch:
+    element: IF-02
+    guide: mismatch
+    mode: Impedance mismatch
+    effect: Amp over-current
+    cause: Driver variant 4 Ω vs 8 Ω
+    S: 5
+    O: 2
+    D: 3
+    controls: MPN control
+    tests: []
+  FA-IF-03-open:
+    element: IF-03
+    guide: open
+    mode: MIPI link down
+    effect: No camera
+    cause: Connector unseated in drop
+    S: 5
+    O: 3
+    D: 2
+    controls: Camera check at EoL; latch
+    tests:
+    - TST-10
+  FA-IF-03-degraded:
+    element: IF-03
+    guide: degraded
+    mode: Bit errors
+    effect: Artifacts
+    cause: FPC length; EMI
+    S: 3
+    O: 4
+    D: 4
+    controls: Eye test
+    tests: []
+  FA-IF-03-leakage_crosstalk:
+    element: IF-03
+    guide: leakage/crosstalk
+    mode: EMI into radio
+    effect: Wi-Fi throughput loss
+    cause: MIPI harmonics
+    S: 4
+    O: 4
+    D: 4
+    controls: Pre-scan with camera on
+    tests:
+    - TST-07
+  FA-IF-03-mismatch:
+    element: IF-03
+    guide: mismatch
+    mode: Lane config mismatch
+    effect: No image
+    cause: Driver config
+    S: 4
+    O: 2
+    D: 2
+    controls: Bring-up test
+    tests: []
+  FA-IF-04-open:
+    element: IF-04
+    guide: open
+    mode: Shutter detached from slide
+    effect: Cannot cover camera
+    cause: Snap feature breaks
+    S: 9
+    O: 3
+    D: 2
+    controls: Life test; hall sensor
+    tests:
+    - TST-04
+    - TST-06
+  FA-IF-04-degraded:
+    element: IF-04
+    guide: degraded
+    mode: Partial cover
+    effect: Lens partly visible
+    cause: Tolerance stack
+    S: 7
+    O: 3
+    D: 3
+    controls: Tolerance analysis; 100 % check
+    tests:
+    - TST-04
+  FA-IF-04-leakage_crosstalk:
+    element: IF-04
+    guide: leakage/crosstalk
+    ncr: mechanical only
+  FA-IF-04-mismatch:
+    element: IF-04
+    guide: mismatch
+    mode: Hall sensor reads closed when open
+    effect: False privacy signal
+    cause: Magnet polarity reversed
+    S: 9
+    O: 2
+    D: 3
+    controls: Polarity check at EoL
+    tests:
+    - TST-04
+  FA-IF-05-open:
+    element: IF-05
+    guide: open
+    mode: Mute line open
+    effect: Mics never powered
+    cause: Switch wire broken
+    S: 5
+    O: 3
+    D: 2
+    controls: EoL audio
+    tests:
+    - TST-10
+  FA-IF-05-degraded:
+    element: IF-05
+    guide: degraded
+    mode: Rail not fully cut
+    effect: Residual audio
+    cause: FET leakage
+    S: 9
+    O: 2
+    D: 4
+    controls: Rail measurement at EoL
+    tests:
+    - TST-04
+  FA-IF-05-leakage_crosstalk:
+    element: IF-05
+    guide: leakage/crosstalk
+    mode: LED state differs from rail
+    effect: False indication
+    cause: LED driven by MCU not rail
+    S: 9
+    O: 2
+    D: 3
+    controls: LED on rail
+    tests:
+    - TST-04
+  FA-IF-05-mismatch:
+    element: IF-05
+    guide: mismatch
+    ncr: binary signal
+  FA-IF-06-open:
+    element: IF-06
+    guide: open
+    mode: Motor lead open
+    effect: No motion
+    cause: Lead fatigue at 500k cycles
+    S: 4
+    O: 4
+    D: 3
+    controls: Flex life test
+    tests:
+    - TST-06
+  FA-IF-06-degraded:
+    element: IF-06
+    guide: degraded
+    mode: Driver thermal limit
+    effect: Slow motion
+    cause: Driver under fabric heat
+    S: 3
+    O: 3
+    D: 4
+    controls: Thermal test
+    tests:
+    - TST-06
+  FA-IF-06-leakage_crosstalk:
+    element: IF-06
+    guide: leakage/crosstalk
+    mode: PWM noise into mics
+    effect: Hum when moving
+    cause: Shared ground
+    S: 5
+    O: 4
+    D: 4
+    controls: Star ground; mic test with motion
+    tests:
+    - TST-02
+  FA-IF-06-mismatch:
+    element: IF-06
+    guide: mismatch
+    mode: Stall current above driver rating
+    effect: Driver damage
+    cause: Vendor motor change
+    S: 5
+    O: 2
+    D: 3
+    controls: Stall test on vendor lots
+    tests:
+    - TST-06
+  FA-IF-07-open:
+    element: IF-07
+    guide: open
+    mode: Pack connector open
+    effect: Dead device
+    cause: Connector not latched at PS-04
+    S: 7
+    O: 3
+    D: 2
+    controls: EoL charge/discharge
+    tests:
+    - TST-10
+  FA-IF-07-degraded:
+    element: IF-07
+    guide: degraded
+    mode: High resistance
+    effect: Heat; brownout at peak
+    cause: Connector pin damage
+    S: 6
+    O: 3
+    D: 4
+    controls: IR at EoL
+    tests:
+    - TST-10
+  FA-IF-07-leakage_crosstalk:
+    element: IF-07
+    guide: leakage/crosstalk
+    ncr: power only
+  FA-IF-07-mismatch:
+    element: IF-07
+    guide: mismatch
+    mode: Wrong pack (18 Wh)
+    effect: Battery life miss
+    cause: Supplier substitution
+    S: 5
+    O: 2
+    D: 3
+    controls: Pack ID over SMBus
+    tests:
+    - TST-03
+  FA-IF-08-open:
+    element: IF-08
+    guide: open
+    mode: VBUS open
+    effect: No charge
+    cause: Port solder crack
+    S: 6
+    O: 3
+    D: 2
+    controls: Port pull test; EoL charge
+    tests:
+    - TST-10
+  FA-IF-08-degraded:
+    element: IF-08
+    guide: degraded
+    mode: PD negotiates 5 V only
+    effect: Slow charge
+    cause: CC resistor
+    S: 4
+    O: 4
+    D: 3
+    controls: PD test
+    tests:
+    - TST-10
+  FA-IF-08-leakage_crosstalk:
+    element: IF-08
+    guide: leakage/crosstalk
+    mode: ESD into SoC
+    effect: Reset on cable insert
+    cause: Missing TVS
+    S: 6
+    O: 3
+    D: 3
+    controls: ESD test
+    tests:
+    - TST-07
+  FA-IF-08-mismatch:
+    element: IF-08
+    guide: mismatch
+    mode: Non-compliant charger
+    effect: No charge or heat
+    cause: No PD fallback
+    S: 5
+    O: 4
+    D: 3
+    controls: Charger matrix test
+    tests: []
+  FA-IF-09-open:
+    element: IF-09
+    guide: open
+    mode: SoC–MCU link down
+    effect: No wake
+    cause: UART/SPI fault
+    S: 7
+    O: 2
+    D: 3
+    controls: Watchdog; link health
+    tests:
+    - TST-11
+  FA-IF-09-degraded:
+    element: IF-09
+    guide: degraded
+    mode: Slow handshake
+    effect: Wake latency
+    cause: Low baud
+    S: 4
+    O: 4
+    D: 3
+    controls: Wake-to-listen test
+    tests:
+    - TST-01
+  FA-IF-09-leakage_crosstalk:
+    element: IF-09
+    guide: leakage/crosstalk
+    ncr: digital link
+  FA-IF-09-mismatch:
+    element: IF-09
+    guide: mismatch
+    mode: Protocol version mismatch after OTA
+    effect: No wake until re-flash
+    cause: Separate update of MCU and SoC
+    S: 7
+    O: 3
+    D: 3
+    controls: Atomic dual update; rollback
+    tests:
+    - TST-11
+  FA-IF-10-open:
+    element: IF-10
+    guide: open
+    mode: Cloud unreachable
+    effect: Offline mode
+    cause: ISP; outage
+    S: 5
+    O: 4
+    D: 2
+    controls: Graceful offline
+    tests:
+    - TST-01
+  FA-IF-10-degraded:
+    element: IF-10
+    guide: degraded
+    mode: High latency
+    effect: p95 miss
+    cause: Region routing
+    S: 5
+    O: 4
+    D: 3
+    controls: Latency monitoring
+    tests:
+    - TST-01
+  FA-IF-10-leakage_crosstalk:
+    element: IF-10
+    guide: leakage/crosstalk
+    mode: Data to wrong tenant
+    effect: Privacy
+    cause: Session mix-up
+    S: 10
+    O: 1
+    D: 4
+    controls: Security review
+    tests:
+    - TST-09
+  FA-IF-10-mismatch:
+    element: IF-10
+    guide: mismatch
+    mode: API version break
+    effect: Features stop
+    cause: Server deploy
+    S: 5
+    O: 3
+    D: 3
+    controls: Version negotiation
+    tests:
+    - TST-11
+  FA-IF-11-open:
+    element: IF-11
+    guide: open
+    mode: Thread network lost
+    effect: No control
+    cause: Border router role lost
+    S: 6
+    O: 3
+    D: 3
+    controls: Fabric persistence
+    tests:
+    - TST-05
+  FA-IF-11-degraded:
+    element: IF-11
+    guide: degraded
+    mode: Packet loss
+    effect: Success < 99 %
+    cause: Interference
+    S: 6
+    O: 4
+    D: 4
+    controls: Command success test
+    tests:
+    - TST-05
+  FA-IF-11-leakage_crosstalk:
+    element: IF-11
+    guide: leakage/crosstalk
+    mode: Wi-Fi/Thread coexistence
+    effect: Drops when streaming
+    cause: Shared antenna
+    S: 5
+    O: 4
+    D: 4
+    controls: Coexistence test
+    tests:
+    - TST-05
+  FA-IF-11-mismatch:
+    element: IF-11
+    guide: mismatch
+    mode: Matter version
+    effect: Device not supported
+    cause: SDK version
+    S: 4
+    O: 3
+    D: 3
+    controls: Certification
+    tests:
+    - TST-07
+  FA-IF-12-open:
+    element: IF-12
+    guide: open
+    mode: Gasket leak
+    effect: Bass loss; buzz
+    cause: Gasket compression set
+    S: 5
+    O: 4
+    D: 4
+    controls: Leak test at PS-02; EoL SPL
+    tests:
+    - TST-13
+    - TST-10
+  FA-IF-12-degraded:
+    element: IF-12
+    guide: degraded
+    mode: Enclosure resonance
+    effect: Buzz at 120 Hz
+    cause: Panel thickness
+    S: 4
+    O: 4
+    D: 4
+    controls: Buzz & rattle sweep
+    tests:
+    - TST-13
+  FA-IF-12-leakage_crosstalk:
+    element: IF-12
+    guide: leakage/crosstalk
+    mode: Vibration into mics
+    effect: AEC worse
+    cause: Mic mount shares enclosure
+    S: 5
+    O: 5
+    D: 4
+    controls: Isolated mic mounts
+    tests:
+    - TST-02
+  FA-IF-12-mismatch:
+    element: IF-12
+    guide: mismatch
+    mode: Radiator tuning off
+    effect: Weak bass
+    cause: Fabric batch mass
+    S: 3
+    O: 4
+    D: 4
+    controls: Golden unit per lot
+    tests:
+    - TST-13
+  FA-IF-13-open:
+    element: IF-13
+    guide: open
+    mode: SE not responding
+    effect: Cannot attest
+    cause: I²C fault
+    S: 7
+    O: 2
+    D: 3
+    controls: Attestation at EoL
+    tests:
+    - TST-10
+  FA-IF-13-degraded:
+    element: IF-13
+    guide: degraded
+    ncr: digital
+  FA-IF-13-leakage_crosstalk:
+    element: IF-13
+    guide: leakage/crosstalk
+    mode: Key material in logs
+    effect: Compromise
+    cause: Debug build in production
+    S: 10
+    O: 2
+    D: 3
+    controls: Release build check; security review
+    tests:
+    - TST-09
+  FA-IF-13-mismatch:
+    element: IF-13
+    guide: mismatch
+    mode: SE provisioned for wrong product
+    effect: Cannot attest
+    cause: Key server mapping
+    S: 7
+    O: 2
+    D: 3
+    controls: Provisioning check
+    tests:
+    - TST-10
+  FA-T-01-fails_to_fire:
+    element: T-01
+    guide: fails to fire
+    mode: Wake word not acted on
+    effect: Device unresponsive
+    cause: MCU→SoC wake lost
+    S: 7
+    O: 3
+    D: 3
+    controls: Wake test
+    tests:
+    - TST-02
+  FA-T-01-fires_falsely:
+    element: T-01
+    guide: fires falsely
+    mode: Enters conversation on TV
+    effect: Privacy annoyance
+    cause: False accept
+    S: 6
+    O: 5
+    D: 3
+    controls: FA rate spec
+    tests:
+    - TST-02
+  FA-T-01-fires_late:
+    element: T-01
+    guide: fires late
+    mode: Listens after user spoke
+    effect: Repeat
+    cause: SoC resume slow
+    S: 5
+    O: 4
+    D: 3
+    controls: Wake-to-listen ≤ 150 ms
+    tests:
+    - TST-01
+  FA-T-02-fails_to_fire:
+    element: T-02
+    guide: fails to fire
+    mode: Stays listening
+    effect: Uploads continue
+    cause: Silence detector fails with fan noise
+    S: 8
+    O: 3
+    D: 3
+    controls: Max turn timeout
+    tests:
+    - TST-09
+  FA-T-02-fires_falsely:
+    element: T-02
+    guide: fires falsely
+    mode: Ends turn mid-sentence
+    effect: Cut-off
+    cause: Pause threshold too short
+    S: 4
+    O: 5
+    D: 3
+    controls: Endpointing tuning
+    tests:
+    - TST-01
+  FA-T-02-fires_late:
+    element: T-02
+    guide: fires late
+    mode: Ring stays on
+    effect: Looks like still listening
+    cause: Timer
+    S: 3
+    O: 4
+    D: 3
+    controls: UX test
+    tests: []
+  FA-T-03-fails_to_fire:
+    element: T-03
+    guide: fails to fire
+    mode: Mute ignored
+    effect: Privacy breach
+    cause: Switch state not read
+    S: 10
+    O: 2
+    D: 2
+    controls: Hardware rail cut
+    tests:
+    - TST-04
+  FA-T-03-fires_falsely:
+    element: T-03
+    guide: fires falsely
+    mode: Mutes randomly
+    effect: Device stops working
+    cause: Switch bounce
+    S: 5
+    O: 3
+    D: 3
+    controls: Debounce
+    tests:
+    - TST-04
+  FA-T-03-fires_late:
+    element: T-03
+    guide: fires late
+    mode: Audio captured for 1 s after mute
+    effect: Trust
+    cause: Software path
+    S: 8
+    O: 3
+    D: 3
+    controls: Rail cut first
+    tests:
+    - TST-04
+  FA-T-04-fails_to_fire:
+    element: T-04
+    guide: fails to fire
+    mode: Stays muted
+    effect: Unresponsive
+    cause: Hall sensor stuck
+    S: 5
+    O: 3
+    D: 3
+    controls: Sensor check
+    tests:
+    - TST-04
+  FA-T-04-fires_falsely:
+    element: T-04
+    guide: fires falsely
+    mode: Unmutes while shutter closed
+    effect: Privacy
+    cause: Logic treats either as enough
+    S: 9
+    O: 2
+    D: 3
+    controls: AND logic test
+    tests:
+    - TST-04
+  FA-T-04-fires_late:
+    element: T-04
+    guide: fires late
+    mode: Delay to unmute
+    effect: Minor
+    cause: Poll interval
+    S: 2
+    O: 4
+    D: 3
+    controls: ''
+    tests: []
+  FA-T-05-fails_to_fire:
+    element: T-05
+    guide: fails to fire
+    mode: No charge state
+    effect: Battery drains on charger
+    cause: PD detect
+    S: 6
+    O: 3
+    D: 3
+    controls: Charge test
+    tests:
+    - TST-10
+  FA-T-05-fires_falsely:
+    element: T-05
+    guide: fires falsely
+    mode: Shows charging without cable
+    effect: Confusion
+    cause: VBUS sense leak
+    S: 3
+    O: 2
+    D: 3
+    controls: ''
+    tests: []
+  FA-T-05-fires_late:
+    element: T-05
+    guide: fires late
+    ncr: seconds-scale; no effect
+  FA-T-06-fails_to_fire:
+    element: T-06
+    guide: fails to fire
+    mode: Update never applies
+    effect: Security exposure
+    cause: Idle window never met
+    S: 6
+    O: 4
+    D: 3
+    controls: Forced window after 7 days
+    tests:
+    - TST-11
+  FA-T-06-fires_falsely:
+    element: T-06
+    guide: fires falsely
+    mode: Reboots during use
+    effect: Annoyance
+    cause: Idle detection
+    S: 4
+    O: 4
+    D: 3
+    controls: Idle-only reboot
+    tests:
+    - TST-11
+  FA-T-06-fires_late:
+    element: T-06
+    guide: fires late
+    ncr: covered by fails to fire
+  FA-T-07-fails_to_fire:
+    element: T-07
+    guide: fails to fire
+    mode: Charges while hot
+    effect: Cell damage; fire
+    cause: NTC not on cells
+    S: 10
+    O: 2
+    D: 3
+    controls: BMS secondary cut
+    tests:
+    - TST-08
+  FA-T-07-fires_falsely:
+    element: T-07
+    guide: fires falsely
+    mode: Fault on warm day
+    effect: Will not charge
+    cause: Threshold at 40 °C
+    S: 4
+    O: 4
+    D: 3
+    controls: Threshold review
+    tests:
+    - TST-08
+  FA-T-07-fires_late:
+    element: T-07
+    guide: fires late
+    mode: Cut after 2 min over-temp
+    effect: Degradation
+    cause: Sampling interval
+    S: 7
+    O: 3
+    D: 3
+    controls: 1 s sampling
+    tests:
+    - TST-08
+  FA-PS-01-omitted:
+    element: PS-01
+    guide: omitted
+    mode: ICT skipped
+    effect: Defective boards downstream
+    cause: Bypass under schedule pressure
+    S: 7
+    O: 2
+    D: 3
+    controls: ICT pass required to print label
+    tests:
+    - TST-10
+  FA-PS-01-wrong_part:
+    element: PS-01
+    guide: wrong part
+    mode: Wrong SoC variant
+    effect: No NPU; recall fails
+    cause: Reel mix-up
+    S: 8
+    O: 2
+    D: 2
+    controls: Reel scan; ICT reads device ID
+    tests:
+    - TST-10
+  FA-PS-01-wrong_orientation:
+    element: PS-01
+    guide: wrong orientation
+    mode: PMIC rotated
+    effect: Short on power-up
+    cause: Feeder setup
+    S: 7
+    O: 2
+    D: 2
+    controls: AOI
+    tests: []
+  FA-PS-01-insufficient:
+    element: PS-01
+    guide: insufficient
+    mode: Solder voids under SoC
+    effect: Intermittent reset
+    cause: Profile
+    S: 7
+    O: 3
+    D: 5
+    controls: X-ray sampling
+    tests: []
+  FA-PS-01-excessive:
+    element: PS-01
+    guide: excessive
+    mode: Solder bridging on PMIC
+    effect: Short
+    cause: Stencil
+    S: 6
+    O: 3
+    D: 2
+    controls: AOI; ICT
+    tests: []
+  FA-PS-01-contamination:
+    element: PS-01
+    guide: contamination
+    mode: Flux residue under radio shield
+    effect: RF drift
+    cause: Clean step skipped
+    S: 5
+    O: 3
+    D: 5
+    controls: Ionic test sampling
+    tests:
+    - TST-10
+  FA-PS-01-damage:
+    element: PS-01
+    guide: damage
+    mode: ESD damage to SE
+    effect: Cannot attest
+    cause: Grounding
+    S: 7
+    O: 2
+    D: 5
+    controls: ESD audits
+    tests:
+    - TST-10
+  FA-PS-02-omitted:
+    element: PS-02
+    guide: omitted
+    mode: Gasket missing
+    effect: Bass loss; buzz
+    cause: Operator
+    S: 5
+    O: 3
+    D: 3
+    controls: Leak test at station
+    tests:
+    - TST-13
+  FA-PS-02-wrong_part:
+    element: PS-02
+    guide: wrong part
+    mode: Wrong radiator mass
+    effect: Tuning off
+    cause: Variant
+    S: 3
+    O: 2
+    D: 4
+    controls: Kanban control
+    tests: []
+  FA-PS-02-wrong_orientation:
+    element: PS-02
+    guide: wrong orientation
+    mode: Driver polarity reversed
+    effect: Phase error
+    cause: Lead colour
+    S: 4
+    O: 3
+    D: 3
+    controls: Polarity test
+    tests:
+    - TST-13
+  FA-PS-02-insufficient:
+    element: PS-02
+    guide: insufficient
+    mode: Screw torque low
+    effect: Rattle
+    cause: Driver setting
+    S: 4
+    O: 4
+    D: 3
+    controls: Torque monitor
+    tests:
+    - TST-13
+  FA-PS-02-excessive:
+    element: PS-02
+    guide: excessive
+    mode: Gasket over-compressed
+    effect: Leak after creep
+    cause: Torque
+    S: 4
+    O: 3
+    D: 5
+    controls: Torque monitor
+    tests: []
+  FA-PS-02-contamination:
+    element: PS-02
+    guide: contamination
+    mode: Adhesive on cone
+    effect: Distortion
+    cause: Handling
+    S: 4
+    O: 3
+    D: 4
+    controls: Visual
+    tests:
+    - TST-13
+  FA-PS-02-damage:
+    element: PS-02
+    guide: damage
+    mode: Cone punctured
+    effect: Scrap
+    cause: Tooling
+    S: 5
+    O: 2
+    D: 2
+    controls: SPL/THD at EoL
+    tests:
+    - TST-13
+  FA-PS-03-omitted:
+    element: PS-03
+    guide: omitted
+    mode: Shutter magnet missing
+    effect: Hall sensor never reads closed
+    cause: Operator
+    S: 9
+    O: 2
+    D: 2
+    controls: Shutter test at station
+    tests:
+    - TST-04
+  FA-PS-03-wrong_part:
+    element: PS-03
+    guide: wrong part
+    mode: Camera without IR filter
+    effect: Colour cast
+    cause: Supplier mix
+    S: 4
+    O: 2
+    D: 3
+    controls: Lot control
+    tests: []
+  FA-PS-03-wrong_orientation:
+    element: PS-03
+    guide: wrong orientation
+    mode: Magnet polarity reversed
+    effect: False closed
+    cause: No poka-yoke
+    S: 9
+    O: 3
+    D: 2
+    controls: Keyed magnet pocket
+    tests:
+    - TST-04
+  FA-PS-03-insufficient:
+    element: PS-03
+    guide: insufficient
+    mode: Motor gear mesh loose
+    effect: Noise
+    cause: Fixture
+    S: 5
+    O: 4
+    D: 4
+    controls: Noise check
+    tests:
+    - TST-06
+  FA-PS-03-excessive:
+    element: PS-03
+    guide: excessive
+    mode: Preload too high
+    effect: Stall; wear
+    cause: Fixture
+    S: 5
+    O: 3
+    D: 4
+    controls: Current check
+    tests:
+    - TST-06
+  FA-PS-03-contamination:
+    element: PS-03
+    guide: contamination
+    mode: Lint on lens
+    effect: MTF fail
+    cause: Fabric area adjacent
+    S: 4
+    O: 5
+    D: 2
+    controls: Lens cap until EoL
+    tests:
+    - TST-10
+  FA-PS-03-damage:
+    element: PS-03
+    guide: damage
+    mode: FPC creased
+    effect: Intermittent camera
+    cause: Routing
+    S: 5
+    O: 3
+    D: 5
+    controls: Routing guide; EoL camera
+    tests:
+    - TST-10
+  FA-PS-04-omitted:
+    element: PS-04
+    guide: omitted
+    mode: Pack connector not latched
+    effect: Dead on arrival
+    cause: Operator
+    S: 7
+    O: 3
+    D: 2
+    controls: Latch click sensor; EoL
+    tests:
+    - TST-10
+  FA-PS-04-wrong_part:
+    element: PS-04
+    guide: wrong part
+    mode: Wrong fabric colour
+    effect: Cosmetic
+    cause: Kanban
+    S: 2
+    O: 3
+    D: 2
+    controls: Visual
+    tests: []
+  FA-PS-04-wrong_orientation:
+    element: PS-04
+    guide: wrong orientation
+    mode: Pack reversed in cavity
+    effect: Cable strain
+    cause: Symmetric cavity
+    S: 5
+    O: 2
+    D: 3
+    controls: Asymmetric cavity
+    tests: []
+  FA-PS-04-insufficient:
+    element: PS-04
+    guide: insufficient
+    mode: Fabric tension low
+    effect: Sag
+    cause: Operator
+    S: 3
+    O: 4
+    D: 3
+    controls: Gauge
+    tests: []
+  FA-PS-04-excessive:
+    element: PS-04
+    guide: excessive
+    mode: Pack pressed
+    effect: Cell dent; safety
+    cause: Cavity tolerance
+    S: 9
+    O: 2
+    D: 4
+    controls: Cavity gauge; pack inspection
+    tests:
+    - TST-08
+  FA-PS-04-contamination:
+    element: PS-04
+    guide: contamination
+    mode: Metal swarf in enclosure
+    effect: Short
+    cause: Machining area
+    S: 7
+    O: 2
+    D: 4
+    controls: Air-blow station
+    tests: []
+  FA-PS-04-damage:
+    element: PS-04
+    guide: damage
+    mode: Pack pierced by screw
+    effect: Fire
+    cause: Screw length
+    S: 10
+    O: 1
+    D: 3
+    controls: Screw length control; X-ray sampling
+    tests:
+    - TST-08
+  FA-PS-05-omitted:
+    element: PS-05
+    guide: omitted
+    mode: RF test skipped
+    effect: Non-compliant unit ships
+    cause: Fixture down
+    S: 8
+    O: 2
+    D: 2
+    controls: Traveler enforces
+    tests:
+    - TST-10
+  FA-PS-05-wrong_part:
+    element: PS-05
+    guide: wrong part
+    ncr: not applicable at this station
+  FA-PS-05-wrong_orientation:
+    element: PS-05
+    guide: wrong orientation
+    mode: Unit misaligned in chamber
+    effect: False fail
+    cause: Nest
+    S: 3
+    O: 4
+    D: 2
+    controls: Nest redesign
+    tests:
+    - TST-10
+  FA-PS-05-insufficient:
+    element: PS-05
+    guide: insufficient
+    mode: Charge test too short to detect bad cell
+    effect: Field DOA
+    cause: Cycle time pressure
+    S: 6
+    O: 3
+    D: 4
+    controls: Minimum test time
+    tests:
+    - TST-10
+  FA-PS-05-excessive:
+    element: PS-05
+    guide: excessive
+    ncr: not applicable at this station
+  FA-PS-05-contamination:
+    element: PS-05
+    guide: contamination
+    mode: Chamber noise floor rises
+    effect: False fails
+    cause: Door seal
+    S: 4
+    O: 4
+    D: 3
+    controls: Daily golden unit
+    tests:
+    - TST-10
+  FA-PS-05-damage:
+    element: PS-05
+    guide: damage
+    mode: Scratch at nest
+    effect: Cosmetic reject
+    cause: Nest material
+    S: 3
+    O: 4
+    D: 2
+    controls: Soft nest
+    tests: []
 teams:
   TM-SE:
     name: Systems engineering
@@ -1434,6 +3720,7 @@ process_steps:
     parts:
     - P-HRT
     team: TM-MFG
+    eol_test: TST-10
 suppliers:
   SUP-01:
     name: Sunny Optical (camera module)
@@ -1465,12 +3752,213 @@ suppliers:
     risk: 500k-cycle life unproven
     owner: TM-SC
     lead_time_d: 45
-work_items: {}
-findings: {}
+work_items:
+  WI-01:
+    title: Run TD-01 life and noise test on 10 gearmotor samples
+    owner: TM-EXPR
+    team: TM-EXPR
+    status: in progress
+    due: '2026-12-05'
+    gate: EVT
+    priority: 1
+    links:
+    - TD-01
+    - RK-01
+  WI-02:
+    title: 'SoC shortlist: wake-word recall on two dev kits'
+    owner: TM-AI
+    team: TM-AI
+    status: open
+    due: '2026-12-12'
+    gate: EVT
+    priority: 1
+    links:
+    - RK-02
+    - P-SOC
+  WI-03:
+    title: Idle power measurement with Thread BR on
+    owner: TM-PWR
+    team: TM-PWR
+    status: open
+    due: '2026-12-01'
+    gate: EVT
+    priority: 2
+    links:
+    - RK-03
+  WI-04:
+    title: Threat model and EN 18031 pre-assessment booking
+    owner: TM-COMP
+    team: TM-COMP
+    status: open
+    due: '2026-12-19'
+    gate: EVT
+    priority: 2
+    links:
+    - RK-04
+  WI-05:
+    title: Antenna slot concept in enclosure CAD
+    owner: TM-ID
+    team: TM-ID
+    status: open
+    due: '2026-11-28'
+    gate: EVT
+    priority: 2
+    links:
+    - RK-06
+  WI-06:
+    title: Shutter hall-sensor polarity poka-yoke in fixture
+    owner: TM-MFG
+    team: TM-MFG
+    status: open
+    due: '2027-01-15'
+    gate: EVT
+    priority: 2
+    links:
+    - FA-PS-03-wrong_orientation
+  WI-07:
+    title: Second camera module qualification plan
+    owner: TM-PROC
+    team: TM-PROC
+    status: open
+    due: '2027-01-30'
+    gate: DVT
+    priority: 3
+    links:
+    - RK-05
+findings:
+  FD-01:
+    title: Mute LED driven from MCU GPIO, not the mic rail
+    severity: major
+    status: open
+    element: IF-05
+    source: RV-01
+    owner: TM-AI
+    action: Drive LED from the switched rail; update schematic before EVT
+    due: '2026-12-10'
+    gate: EVT
+  FD-02:
+    title: Latency budget has no allocation for Wi-Fi power-save resume
+    severity: minor
+    status: open
+    element: C-02
+    source: RV-01
+    owner: TM-CONN
+    action: Add 40 ms resume term; verify in TST-01
+    due: '2026-12-10'
+    gate: EVT
+  FD-03:
+    title: No requirement for false-accept rate
+    severity: major
+    status: open
+    element: F-02
+    source: RV-01
+    owner: TM-SE
+    action: 'Add R-15: ≤ 1 false accept / 24 h on TV corpus'
+    due: '2026-12-01'
+    gate: EVT
+  FD-04:
+    title: Pack mass 176 g vs 180 g budget — 2 % margin
+    severity: observation
+    status: closed
+    element: P-BATT
+    source: RV-01
+    owner: TM-PWR
+    action: Accepted; tracked as CDA-05
+    closed: '2026-11-06'
+    gate: EVT
 handoffs: {}
 field_events: {}
-risks: {}
-reviews: {}
+risks:
+  RK-01:
+    title: Gearmotor mechanism fails 500k-cycle life (TRL 4)
+    prob: 4
+    impact: 4
+    owner: TM-EXPR
+    team: TM-EXPR
+    mitigation: Decide TD-01 by EVT; life test on 10 vendor samples before EVT
+    status: open
+    links:
+    - TD-01
+    - P-ACT
+    - TST-06
+  RK-02:
+    title: NPU SoC not selected (TBD) — EVT boards slip
+    prob: 3
+    impact: 5
+    owner: TM-AI
+    team: TM-AI
+    mitigation: Shortlist two SoCs with ≥ 4 TOPS; dev-kit wake-word recall by EVT
+    status: open
+    links:
+    - P-SOC
+    - R-02
+  RK-03:
+    title: Idle power above 2.5 W with Thread border router active
+    prob: 4
+    impact: 3
+    owner: TM-PWR
+    team: TM-PWR
+    mitigation: Measure on dev kit; Thread duty-cycling; C-01 budget review
+    status: open
+    links:
+    - R-12
+    - C-01
+    - TST-12
+  RK-04:
+    title: EN 18031 security assessment delays RED
+    prob: 3
+    impact: 4
+    owner: TM-COMP
+    team: TM-COMP
+    mitigation: Pre-assessment with the notified body at DVT; threat model doc by EVT
+    status: open
+    links:
+    - R-07
+    - TST-09
+  RK-05:
+    title: Camera module single source (Sunny)
+    prob: 2
+    impact: 3
+    owner: TM-PROC
+    team: TM-PROC
+    mitigation: Qualify second module with same lens spec by DVT
+    status: open
+    links:
+    - P-CAM
+    - SUP-01
+  RK-06:
+    title: Aluminium enclosure detunes antenna / SAR
+    prob: 3
+    impact: 3
+    owner: TM-CONN
+    team: TM-CONN
+    mitigation: Antenna slot in ID by EVT; SAR pre-test at EVT
+    status: open
+    links:
+    - R-14
+    - P-ENCL
+    - TST-14
+reviews:
+  RV-01:
+    name: Architecture review (EVT readiness)
+    gate: EVT
+    date: '2026-11-05'
+    attendees:
+    - TM-SE
+    - TM-AI
+    - TM-AUDIO
+    - TM-PWR
+    - TM-CONN
+    - TM-COMP
+    - TM-TRUST
+    - TM-PM
+    findings:
+    - FD-01
+    - FD-02
+    - FD-03
+    - FD-04
+    decision: conditional — close FD-01 and FD-03 before EVT
+    notes: TD-01 to be decided at EVT; SoC shortlist due.
 tables: {}
 test_runs:
   RUN-01:
@@ -1495,18 +3983,414 @@ test_runs:
     unit: bench-1
     metrics:
       wake_recall_pct: 96.2
-simulations: {}
+simulations:
+  SIM-01:
+    name: Enclosure acoustic FEA — panel resonance
+    tool: COMSOL
+    element: P-ENCL
+    inputs:
+      wall_mm: 1.2
+      material: 6063 Al
+    outputs:
+      first_mode_Hz: 412
+      spl_loss_120Hz_dB: 0.8
+    requirements:
+    - R-13
+    status: done
+    date: '2026-10-28'
+    owner_team: TM-AUDIO
+    notes: No panel mode in the passband below 400 Hz; fabric damping not modelled.
+  SIM-02:
+    name: Battery thermal — charge at 40 °C ambient
+    tool: Ansys Icepak
+    element: P-BATT
+    inputs:
+      ambient_C: 40
+      charge_W: 15
+    outputs:
+      cell_max_C: 46.5
+      time_to_45C_min: 18
+    requirements:
+    - R-08
+    status: done
+    date: '2026-11-02'
+    owner_team: TM-PWR
+    notes: Exceeds the 45 °C window at 40 °C ambient — charge current must derate above 35 °C.
+  SIM-03:
+    name: Antenna in aluminium enclosure — efficiency
+    tool: CST
+    element: P-RADIO
+    inputs:
+      slot_mm: 38
+    outputs:
+      efficiency_2G4_pct: 41
+      efficiency_5G_pct: 55
+    requirements:
+    - R-05
+    - R-14
+    status: in progress
+    date: '2026-11-10'
+    owner_team: TM-CONN
+  SIM-04:
+    name: Gearmotor acoustic — tonal noise
+    tool: measurement + model
+    element: P-ACT
+    inputs:
+      rpm: 120
+    outputs:
+      dBA_0p5m: 28
+    requirements:
+    - R-06
+    status: done
+    date: '2026-11-08'
+    owner_team: TM-EXPR
+    notes: 28 dBA on vendor sample vs 25 dBA target; feeds TD-01.
 attachments: {}
 dfx_reviews: {}
 cad_models: {}
-quotes: {}
-tooling: {}
-inspections: {}
-capa: {}
-change_orders: {}
-work_orders: {}
-units: {}
-purchase_orders: {}
+quotes:
+  Q-01:
+    part: P-CAM
+    supplier: SUP-01
+    qty: 300
+    unit_cost_usd: 7.4
+    moq: 1000
+    lead_time_d: 70
+    tooling_usd: 0
+    valid_until: '2027-02-28'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-20'
+    ref: SO-26-4471
+  Q-02:
+    part: P-BATT
+    supplier: SUP-03
+    qty: 300
+    unit_cost_usd: 10.2
+    moq: 500
+    lead_time_d: 90
+    tooling_usd: 12000
+    valid_until: '2027-01-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-22'
+    ref: PK-26-0931
+    notes: UN 38.3 report included; tooling for pack frame
+  Q-03:
+    part: P-ACT
+    supplier: SUP-04
+    qty: 600
+    unit_cost_usd: 3.2
+    moq: 2000
+    lead_time_d: 56
+    tooling_usd: 0
+    valid_until: '2026-12-31'
+    incoterm: EXW
+    status: received
+    date: '2026-11-01'
+    ref: GM-1182
+    notes: pending TD-01
+  Q-04:
+    part: P-ENCL
+    supplier: SUP-02
+    qty: 300
+    unit_cost_usd: 14.8
+    moq: 300
+    lead_time_d: 45
+    tooling_usd: 96000
+    valid_until: '2027-03-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-30'
+    ref: LX-Q-7720
+    notes: extrusion die + CNC fixtures; anodise line at Luxshare
+  Q-05:
+    part: P-MAIN
+    supplier: SUP-02
+    qty: 300
+    unit_cost_usd: 33.5
+    moq: 100
+    lead_time_d: 35
+    nre_usd: 18000
+    valid_until: '2027-03-31'
+    incoterm: FCA
+    status: awarded
+    date: '2026-10-30'
+    ref: LX-Q-7721
+    notes: PCBA incl. ICT fixture NRE; SoC consigned
+tooling:
+  TL-01:
+    part: P-ENCL
+    supplier: SUP-02
+    tool_id: LX-26-0410
+    type: extrusion die + CNC fixture
+    cavities: 1
+    cost_usd: 96000
+    owner: customer
+    quote: Q-04
+    kickoff: '2026-11-10'
+    t0: '2026-12-20'
+    t1: '2027-01-12'
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 6000
+  TL-02:
+    part: P-SHUT
+    supplier: SUP-02
+    tool_id: LX-26-0411
+    type: injection mold
+    cavities: 4
+    cost_usd: 28000
+    owner: customer
+    kickoff: '2026-11-18'
+    t0: '2026-12-28'
+    t1: '2027-01-15'
+    status: kicked off
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 20000
+  TL-03:
+    part: P-BATT
+    supplier: SUP-03
+    tool_id: PK-F-0931
+    type: pack frame mold
+    cavities: 2
+    cost_usd: 12000
+    owner: customer
+    quote: Q-02
+    kickoff: '2026-11-01'
+    t0: '2026-12-05'
+    t1: '2026-12-15'
+    status: in build
+    ppap: not started
+    ppap_level: 3
+    capacity_per_week: 8000
+  TL-04:
+    part: P-MAIN
+    supplier: SUP-02
+    tool_id: LX-ICT-0412
+    type: ICT fixture
+    cavities: 1
+    cost_usd: 18000
+    owner: customer
+    quote: Q-05
+    kickoff: '2026-11-12'
+    t1: '2027-01-05'
+    status: kicked off
+    ppap: n/a
+    capacity_per_week: 5000
+inspections:
+  INS-01:
+    date: '2026-11-04'
+    part: P-CAM
+    stage: incoming
+    qty: 60
+    defects: 2
+    supplier: SUP-01
+    lot: SO-L4471A
+    defect_codes:
+    - lens decentre > 20 µm
+    disposition: reject 2; use 58 for EVT
+    by: TM-QA
+  INS-02:
+    date: '2026-11-06'
+    part: P-ACT
+    stage: incoming
+    qty: 40
+    defects: 3
+    supplier: SUP-04
+    lot: GM-L1182
+    defect_codes:
+    - noise > 25 dBA
+    - gear backlash
+    disposition: hold — TD-01 pending
+    by: TM-QA
+  INS-03:
+    date: '2026-11-09'
+    part: P-BATT
+    stage: incoming
+    qty: 60
+    defects: 0
+    supplier: SUP-03
+    lot: PK-L0931
+    defect_codes: []
+    disposition: accept
+    by: TM-QA
+    notes: OCV and IR within spec; UN 38.3 cert on file
+capa:
+  CAPA-01:
+    title: Gearmotor samples exceed 25 dBA and show backlash
+    source: inspection
+    source_id: INS-02
+    parts:
+    - P-ACT
+    fm: FA-F-06-degraded
+    containment: Lot on hold; EVT builds with light/haptic-only expression until TD-01 decides
+    root_cause: ''
+    corrective: ''
+    preventive: ''
+    verification_test: TST-06
+    owner: TM-EXPR
+    team: TM-EXPR
+    due: '2026-12-12'
+    status: open
+change_orders:
+  ECO-001:
+    title: Mute LED driven from the switched mic rail
+    reason: 'FD-01: LED must reflect the hardware cut, not MCU state'
+    affected:
+    - P-MUTE
+    - P-MAIN
+    - IF-05
+    status: in review
+    approvers:
+    - TM-AI
+    - TM-TRUST
+    - TM-MFG
+    approvals:
+      TM-TRUST:
+        decision: approved
+        by: trust@hearth.example
+        date: '2026-11-11'
+        note: required for R-04
+    effectivity: EVT build
+    owner: TM-AI
+    date: '2026-11-09'
+    source: FD-01
+work_orders:
+  WO-EVT-01:
+    build: EVT
+    qty: 50
+    line: Luxshare NPI line 3
+    routing:
+    - PS-01
+    - PS-02
+    - PS-03
+    - PS-04
+    - PS-05
+    status: in progress
+    start: '2027-01-20'
+units:
+  U-WO-EVT-01-HRT-0001:
+    serial: HRT-0001
+    work_order: WO-EVT-01
+    components:
+      P-CAM: SO-L4471A-003
+      P-BATT: PK-L0931-011
+      P-MAIN: LX-PCBA-0001
+    stations:
+      PS-01:
+        result: pass
+        date: '2027-01-20'
+      PS-02:
+        result: pass
+        date: '2027-01-20'
+      PS-03:
+        result: pass
+        date: '2027-01-21'
+      PS-04:
+        result: pass
+        date: '2027-01-21'
+      PS-05:
+        result: pass
+        date: '2027-01-21'
+        data:
+          spl_dB: 86.1
+          thd_pct: 2.4
+          mtf_center: 0.62
+          idle_W: 2.7
+          test_time_s: 212
+    status: complete
+    built: '2027-01-21'
+  U-WO-EVT-01-HRT-0002:
+    serial: HRT-0002
+    work_order: WO-EVT-01
+    components:
+      P-CAM: SO-L4471A-004
+      P-BATT: PK-L0931-012
+      P-MAIN: LX-PCBA-0002
+    stations:
+      PS-01:
+        result: pass
+        date: '2027-01-20'
+      PS-02:
+        result: pass
+        date: '2027-01-20'
+      PS-03:
+        result: fail
+        date: '2027-01-21'
+        defect_codes:
+        - hall sensor reads closed with shutter open
+    status: rework
+  U-WO-EVT-01-HRT-0003:
+    serial: HRT-0003
+    work_order: WO-EVT-01
+    components:
+      P-CAM: SO-L4471A-005
+      P-BATT: PK-L0931-013
+      P-MAIN: LX-PCBA-0003
+    stations:
+      PS-01:
+        result: pass
+        date: '2027-01-20'
+      PS-02:
+        result: pass
+        date: '2027-01-21'
+      PS-03:
+        result: pass
+        date: '2027-01-21'
+      PS-04:
+        result: pass
+        date: '2027-01-22'
+      PS-05:
+        result: pass
+        date: '2027-01-22'
+        data:
+          spl_dB: 85.4
+          thd_pct: 2.9
+          mtf_center: 0.58
+          idle_W: 2.6
+          test_time_s: 205
+    status: complete
+    built: '2027-01-22'
+purchase_orders:
+  PO-0001:
+    supplier: SUP-01
+    status: partial
+    date: '2026-10-24'
+    lines:
+    - part: P-CAM
+      qty: 300
+      unit_cost_usd: 7.4
+      quote: Q-01
+    incoterm: FCA
+    currency: USD
+    by: procurement@hearth.example
+    receipts:
+    - part: P-CAM
+      qty: 60
+      lot: SO-L4471A
+      date: '2026-11-04'
+      unit_cost_usd: 7.4
+  PO-0002:
+    supplier: SUP-03
+    status: partial
+    date: '2026-10-25'
+    lines:
+    - part: P-BATT
+      qty: 300
+      unit_cost_usd: 10.2
+      quote: Q-02
+    incoterm: FCA
+    currency: USD
+    by: procurement@hearth.example
+    receipts:
+    - part: P-BATT
+      qty: 60
+      lot: PK-L0931
+      date: '2026-11-09'
+      unit_cost_usd: 10.35
 cdas:
   CDA-01:
     name: Voice-to-first-audio p95
