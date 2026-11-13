@@ -208,6 +208,30 @@ Cameo Simulation Toolkit, formal SysML v2 API interchange, enterprise SSO. Diagr
 * **Outputs** — SysML v2 textual packages (needs, use cases, requirements, logical, structure, behavior, states,
   analysis, risk), 13 model-rendered views, OOSEM-ordered design documentation with provenance columns, Word export.
 
+## Launch as an MCP server, and named skills
+
+Launch exposes the graph to any MCP client — Claude (desktop, Code, Cowork), an IDE, another agent — so the same tools the
+app's agents use are available where engineers already work. The server runs two ways:
+
+- **Streamable HTTP**, mounted on the web app at `/mcp/`, HTTP Basic `email:token` (the token is at `/api/token` once signed in).
+  Claude Code: `claude mcp add --transport http launch https://your-launch/mcp/ --header "Authorization: Basic <base64 email:token>"`.
+- **stdio**, for local clients: `launch mcp --data <workspace> [--database postgresql://…] [--tenant t] --user you@company.com`.
+
+Tools (19): `list_projects`, `search`, `element`, `collection`, `form` (any standard form as rows), `coverage`, `procurement_plan`,
+`rfq_package`, `quality` (PPM, CAPA, inspections), `trade_studies`, `leading_indicators`, `analytics`, `maturity` (TRL + CDA),
+`gates`, `change_impact`, `skills`; writes are `propose_patch` (staged for review in the project inbox — a client never applies a
+change itself) and three observation records applied under your name: `record_inspection`, `record_test_run`,
+`record_station_result`. Resources: `launch://{pid}/form/{name}`.
+
+**Skills** are packaged, repeatable jobs over the model, in the sense Anthropic uses for its manufacturing skills: each has a trigger,
+what it reads, a procedure, what it leaves behind, and the role that runs it (`sethread/skills.py`). The catalog today:
+options → trade decision, DFMEA from architecture, EOL test plan, certification & compliance plan, change-order impact,
+inspection → CAPA, field-event 8D, supplier PPM review, design-review readiness, RFQ → award, tooling kickoff & T1 plan,
+gate readiness review, steering-committee summary, maturity & TRL review, claims substantiation, service & FRU plan, and
+"set us up" for a new organization. `GET /api/p/{pid}/skills` says which apply right now and why (open trades, parts without DFMEA,
+lots with defects and no CAPA, …); the home page and the Skills page show them; `POST /api/p/{pid}/skill/{id}/run` runs one as its
+role in a conversation, scoped to the chosen ids. MCP clients get the same catalog as prompts (`skill_<id>`).
+
 ## Install and run
 
 ```bash

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Building2, Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell } from 'lucide-react'
+import { BarChart3, Building2, Users, Home, Library, GitBranch, Inbox, Plug, Sparkles, Search, Sun, Moon, ChevronDown, X, Hammer, PanelLeft, HelpCircle, FolderOpen, Bell, Wand2 } from 'lucide-react'
 import { useProject } from '../state'
 import { FORMS, KIND_LABEL, STAGE_COLOR, stageColor, LIFECYCLE } from '../api'
 import { AgentDrawer } from './Agent'
@@ -97,6 +97,7 @@ function Tree() {
     <Item to={`/p/${pid}/chat`} label="Conversations" icon={<Sparkles size={17} />} />
     {myTeams.map(t => <Item key={t} to={`/p/${pid}/team/${t}`} label={`My team · ${project.teams?.[t]?.name || t}`} icon={<Users size={17} />} />)}
     <Item to={`/p/${pid}/analytics`} label="Analytics" icon={<BarChart3 size={17} />} />
+    <Item to={`/p/${pid}/skills`} label="Skills" icon={<Wand2 size={17} />} />
     <Item to={`/p/${pid}/artifacts`} label="Artifacts" icon={<Library size={17} />} />
     <Item to={`/p/${pid}/inbox`} label="Reviews" icon={<Inbox size={17} />} pill={staged ? String(staged) : undefined} />
     <Item to={`/p/${pid}/notifications`} label="Notifications" icon={<Bell size={17} />} />

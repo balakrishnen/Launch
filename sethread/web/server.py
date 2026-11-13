@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, analytics as AN, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, analytics as AN, skills as SK, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -220,6 +220,10 @@ class Chat(BaseModel):
     role: str | None = None
     thread: str | None = None
     context: dict | None = None
+class SkillRun(BaseModel):
+    ids: list[str] | None = None
+    thread: str | None = None
+    note: str = ""
 class NewThread(BaseModel):
     title: str = ""
 class SheetCommit(BaseModel):
@@ -342,6 +346,40 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     W.token_ok = lambda email, token: hmac.compare_digest(token, sign("token:" + email.strip().lower()))
     OA = oslc_oauth.OAuthStore(W.data_root or os.path.dirname(W.single))
     app.include_router(oslc.router(W, current_user, OA)); app.include_router(oslc_oauth.router(OA, current_user))
+
+    # ---- Launch as an MCP server (streamable HTTP) at /mcp — HTTP Basic email:token (see /api/token)
+    try:
+        import contextvars
+        from .. import mcp_server as MCPS
+        _mcp_user = contextvars.ContextVar("mcp_user", default="mcp")
+        _mcp = MCPS.build(W, user_of=lambda: _mcp_user.get())
+        _mcp_app = _mcp.streamable_http_app(streamable_http_path="/")   # served at /mcp/ (mount below)
+        class _McpAuth:   # pure ASGI: streaming (SSE) responses must not be buffered
+            def __init__(self, inner): self.inner = inner
+            async def __call__(self, scope, receive, send):
+                if scope["type"] != "http": return await self.inner(scope, receive, send)
+                req = Request(scope, receive)
+                u = MCPS.basic_auth_user(W, req.headers)
+                if not u:
+                    try: u = current_user(req)
+                    except HTTPException:
+                        r = Response(status_code=401, content="Launch MCP: HTTP Basic email:token (get the token at /api/token)", headers={"WWW-Authenticate": "Basic realm=launch"})
+                        return await r(scope, receive, send)
+                tok = _mcp_user.set(u)
+                try: return await self.inner(scope, receive, send)
+                finally: _mcp_user.reset(tok)
+        app.mount("/mcp", _McpAuth(_mcp_app))
+        # a mounted app's own lifespan never runs, so drive the session manager from the parent app's startup/shutdown
+        import contextlib
+        _prev = app.router.lifespan_context
+        @contextlib.asynccontextmanager
+        async def _lifespan(a):
+            async with _mcp.session_manager.run():
+                async with _prev(a) as st: yield st
+        app.router.lifespan_context = _lifespan
+        app.state.mcp_session_manager = _mcp.session_manager
+    except Exception as e:   # the MCP SDK is optional
+        print("MCP server not mounted:", e)
 
     @app.get("/api/token")
     def api_token(request: Request):
@@ -505,6 +543,27 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
     def analytics(pid: str, user: str = U):
         """Project status and analytics in one aggregate: headline, burndown, gates, departments, teams, verification, risk, quality, supply, cost, maturity (TRL, CDA, composite project maturity vs the expected profile), change, activity."""
         S = W.get(pid); m = S.store.load(); return AN.compute(m, S.store)
+
+    @app.get("/api/skills")
+    def skills_catalog(user: str = U):
+        """The named skills: packaged jobs a role agent runs over the model (trigger, reads, procedure, outputs)."""
+        return {"skills": SK.catalog(), "departments": schema.DEPARTMENTS}
+    @app.get("/api/p/{pid}/skills")
+    def skills_for(pid: str, user: str = U):
+        """Skills that apply to this project right now, with the reason and the ids to scope them to."""
+        S = W.get(pid); m = S.store.load()
+        try: ind = IND.compute(m, S.store)
+        except Exception: ind = {}
+        return {"suggested": SK.suggest(m, ind), "skills": SK.catalog()}
+    @app.post("/api/p/{pid}/skill/{sid}/run")
+    async def skill_run(pid: str, sid: str, r: SkillRun, user: str = U):
+        """Run a skill: opens (or continues) a conversation with the skill's role and the procedure scoped to the chosen ids."""
+        sk = SK.BY_ID.get(sid)
+        if not sk: raise HTTPException(404, "no such skill")
+        S = W.get(pid); t = S.threads.get(r.thread) if r.thread else None
+        if t is None: t = S.new_thread(sk["name"], user)
+        if t["busy"]: raise HTTPException(409, "this conversation is busy")
+        asyncio.create_task(S.turn(SK.prompt_for(sk, r.ids, r.note), sk["role"], user, t["id"], {"skill": sid, "ids": r.ids or []})); return {"ok": True, "thread": t["id"], "role": sk["role"]}
 
     @app.get("/api/p/{pid}/indicators")
     def indicators(pid: str, user: str = U):

@@ -122,6 +122,13 @@ def cmd_ui(a):
     from .web.server import main as ui
     ui(a.dir, a.port, a.model, not a.no_browser)
 
+def cmd_mcp(a):
+    """Organization-wide MCP server over stdio: every project, read tools in standard shape, proposals staged for review."""
+    from .web.server import Workspace
+    from . import mcp_server as MCPS
+    W = Workspace(a.data, None, None, a.database or os.environ.get("DATABASE_URL"), a.tenant)
+    MCPS.build(W, user_of=lambda: a.user).run("stdio")
+
 def cmd_serve(a):
     from .web.server import main as ui
     ui(None, a.port, a.model, False, data_root=a.data, host=a.host, database_url=a.database, tenant=a.tenant)
@@ -158,6 +165,7 @@ def main(argv=None):
     s = sp.add_parser("serve"); s.add_argument("--data", required=True, help="directory holding one sub-directory per project (files; the model too unless --database)"); s.add_argument("--database", help="postgresql://… or sqlite:///… (default: env DATABASE_URL; unset = YAML files)"); s.add_argument("--tenant", default=os.environ.get("SETHREAD_TENANT", "default")); s.add_argument("--host", default="0.0.0.0"); s.add_argument("--port", type=int, default=8765); s.add_argument("--model"); s.set_defaults(f=cmd_serve)
     s = sp.add_parser("import"); s.add_argument("dirs", nargs="+"); s.add_argument("--database"); s.add_argument("--tenant", default=os.environ.get("SETHREAD_TENANT", "default")); s.set_defaults(f=cmd_import)
     s = sp.add_parser("serve-mcp"); s.add_argument("dir", nargs="?", default="."); s.set_defaults(f=cmd_serve_mcp)
+    s = sp.add_parser("mcp", help="Launch as an MCP server over stdio for the whole organization (multi-project); for Claude Code / desktop configs"); s.add_argument("--data", required=True); s.add_argument("--database"); s.add_argument("--tenant", default=os.environ.get("SETHREAD_TENANT", "default")); s.add_argument("--user", default=os.environ.get("USER", "mcp")); s.set_defaults(f=cmd_mcp)
     a = p.parse_args(argv); a.f(a)
 
 if __name__ == "__main__": main()

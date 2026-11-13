@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowUp, FileSearch, ListTree, Boxes, ShieldAlert, FlaskConical, Plus } from 'lucide-react'
+import { ArrowUp, FileSearch, ListTree, Boxes, ShieldAlert, FlaskConical, Plus, Sparkles } from 'lucide-react'
 import { useProject } from '../state'
 import { P, KIND_LABEL, STAGE_COLOR, FORMS, MATRIX_PAIRS, stageColor, LIFECYCLE, PROCESS_STAGE } from '../api'
 import { Bar, IdLink, ProductVisual } from '../components/common'
 import { PatchCard } from '../components/Agent'
 import { ProjectLifecycle } from './Lifecycle'
+import { useSkills, runSkill } from './Skills'
 
 function greeting() { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening' }
 
@@ -39,6 +40,7 @@ export function Overview() {
     <ProjectLifecycle />
     <h3 style={{ margin: '28px 0 10px' }}>Suggestions</h3>
     <div className="sugg">{suggestions.map(s => <button key={s.t} onClick={() => send(s.q)}><span className="ic">{s.icon}</span><span className="t">{s.t}</span><span className="d">{s.d}</span></button>)}</div>
+    <SkillsNow />
     <div className="sechead" style={{ marginTop: 32 }}><div className="seg"><button className={seg === 'recent' ? 'active' : ''} onClick={() => setSeg('recent')}>Recently viewed</button><button className={seg === 'artifacts' ? 'active' : ''} onClick={() => setSeg('artifacts')}>Artifacts</button><button className={seg === 'reviews' ? 'active' : ''} onClick={() => setSeg('reviews')}>Reviews{staged.length ? ` (${staged.length})` : ''}</button></div>
       <button className="btn primary" onClick={() => nav(`/p/${pid}/documents`)}><Plus size={15} />New</button></div>
     <div className="list"><div className="li lh" style={{ cursor: 'default' }}><span>Name</span><span>Type</span><span>Stage</span><span></span></div>
@@ -62,4 +64,18 @@ function ProductCard() {
     <div style={{ flex: 1, minWidth: 0 }}><div className="row between"><div className="t">{m.name}</div><label className="btn ghost sm" style={{ cursor: 'pointer' }}>{m.image ? 'Replace visual' : 'Add product visual'}<input type="file" accept=".svg,.png,.jpg,.jpeg,.webp" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && upload(e.target.files[0])} /></label></div>
       <div className="d">{m.description}</div>
       <div className="row" style={{ gap: 6, marginTop: 8, flexWrap: 'wrap' }}><span className="pill">{m.system || '—'}</span><span className="pill">{m.method || 'OOSEM'}</span>{m.stage && <span className="pill">{m.stage}</span>}{b.price && <span className="pill">price {b.price} {b.currency || ''}</span>}{b.target_cost && <span className="pill">target cost {b.target_cost}</span>}{b.launch_date && <span className="pill">launch {b.launch_date}</span>}{b.annual_volume && <span className="pill">{Number(b.annual_volume).toLocaleString()} / yr</span>}</div></div></div>
+}
+
+
+// Skills the model is calling for right now (top five), from /skills — one click runs the skill as its role.
+function SkillsNow() {
+  const { pid, patches } = useProject(); const nav = useNavigate()
+  const d = useSkills(pid, [patches.length])
+  const rows = (d?.suggested || []).filter((s: any) => !s.always).slice(0, 5)
+  if (!rows.length) return null
+  return <>
+    <div className="row between" style={{ margin: '24px 0 8px' }}><h3 style={{ margin: 0 }}>Skills to run now</h3><button className="chip" onClick={() => nav(`/p/${pid}/skills`)}>all skills →</button></div>
+    <div className="card" style={{ padding: 0, overflow: 'auto' }}><table className="dt"><thead><tr><th>Skill</th><th>Why now</th><th>Role</th><th /></tr></thead><tbody>
+      {rows.map((s: any) => <tr key={s.id}><td><b>{s.name}</b></td><td className="small">{s.why}</td><td className="small muted">{s.role}</td><td><button className="chip" onClick={() => runSkill(pid, s.id, s.ids?.length ? s.ids : undefined, nav)}><Sparkles size={12} />run</button></td></tr>)}</tbody></table></div>
+  </>
 }

@@ -22,7 +22,7 @@ for pid in pids:
     _pj = g('/project')
     if _pj and (_pj.get('meta') or {}).get('image'): _pj['image_svg'] = _img(pid, _pj['meta']['image'])
     P['/project'] = _pj
-    for k in ['/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/departments', '/indicators', '/analytics', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
+    for k in ['/runs', '/threads', '/board', '/pdp', '/pdp/tailoring', '/dfx', '/trades', '/eda', '/rfq/P-TB', '/departments', '/indicators', '/analytics', '/skills', '/timeline', '/trend', '/harness', '/graph', '/artifacts', '/scorecard', '/requirements_quality', '/budgets', '/lifecycle', '/patches', '/comments?element=', '/notifications', '/history', '/baselines', '/documents', '/settings']:
         v = g(k);  P[k] = v if v is not None else {}
     for kind in list(schema.KINDS) + ['fmea', 'screened', 'unassessed', 'gaps', 'verification_matrix', 'certification_plan']: P['/collection/' + kind] = g('/collection/' + kind) or []
     for f in ['dfmea', 'dvpr', 'vcrm', 'reqspec', 'hazards', 'n2', 'n2l', 'icd', 'pugh', 'fta', 'drbfm', 'pfmea', 'control_plan', 'avl', 'risks', 'fracas', 'work_items', 'findings', 'handoffs', 'claims', 'cost', 'markets', 'staffing', 'procurement', 'ppm', 'capa', 'tooling', 'eco', 'work_orders', 'purchase_orders', 'trl', 'cda']: P['/form/' + f] = g('/form/' + f)
