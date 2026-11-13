@@ -49,6 +49,10 @@ SEED = [
          notes="data.json is ~16.0 MB with six examples; split per project or drop history from the snapshot before adding examples.", source="review build"),
     dict(id="RM-20", title="Skills as MCP prompts: evaluate with real runs", area="agents & skills", horizon="next", status="idea", priority=3,
          notes="Each skill should have a worked run on an example project (expected patches) so a change to a procedure can be checked.", source="skills session"),
+    dict(id="RM-21", title="Organization-owned skills: edit, add and version the catalog in Settings", area="agents & skills", horizon="next", status="planned", priority=1,
+         notes="Skills live in sethread/skills.py today. Move the catalog into the org record (seeded from the built-ins), editable under Settings › Skills, versioned with process/teams; 'learn a skill from this run' turns a successful conversation into a procedure. The org's way of working is the asset, not the model.", source="nTop ten-variants post, 2026-11-12"),
+    dict(id="RM-22", title="Trade evaluation conditions: record per option, check for consistency", area="engineering", horizon="next", status="planned", priority=2,
+         notes="Options scored under different conditions (mesh, load case, solver settings, fixture, sample size) make the comparison meaningless. Add conditions to trade criteria_meta and per-option evidence; the trades check fails when options differ. Prerequisite for sub-agents generating N variants onto one trade.", source="nTop ten-variants post, 2026-11-12"),
 ]
 
 def path(data_root): return os.path.join(data_root, ".org", "roadmap.yaml")
