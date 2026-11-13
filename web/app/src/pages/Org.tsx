@@ -3,11 +3,11 @@
 // projects can re-apply it as a reviewable patch. Outside any project (no ProjectProvider), so it has its own tiny state.
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, GitBranch, Users, UserPlus, Plug, Shield, Save } from 'lucide-react'
+import { Building2, GitBranch, Users, UserPlus, Plug, Shield, Save, Map } from 'lucide-react'
 import { api } from '../api'
 
 type Col = { key: string; name: string; type?: 'text' | 'number' | 'list' | 'bool' | 'select'; options?: string[]; width?: number }
-const TABS = ['Process', 'Structure', 'Teams', 'Members', 'Tools', 'Policy']
+const TABS = ['Process', 'Structure', 'Teams', 'Members', 'Tools', 'Policy', 'Roadmap']
 
 export function Org() {
   const nav = useNavigate()
@@ -28,7 +28,7 @@ export function Org() {
     <div className="row between" style={{ marginBottom: 6 }}><div><div className="row" style={{ gap: 8 }}><Building2 size={18} /><h1 style={{ margin: 0 }}>{o.name}</h1><span className="pill">{o.me?.role}</span></div><div className="muted small">Defined once, inherited by every project. {o.me?.email} · <a href="#" onClick={e => { e.preventDefault(); nav('/') }}>projects</a></div></div>
       <div className="row">{dirty && <span className="pill warn">unsaved</span>}<button className="btn primary" disabled={!canEdit || !dirty} onClick={save}><Save size={14} />Save</button></div></div>
     {!canEdit && <div className="card small" style={{ margin: '8px 0', borderColor: '#f5d78e' }}>You can view the organization; admins and program managers edit it. The first users before any member is listed are admins — add yourself under Members.</div>}
-    <div className="sectabs">{TABS.map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div>
+    <div className="sectabs">{TABS.filter(t => t !== 'Roadmap' || o.me?.role === 'admin').map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div>
 
     {tab === 'Process' && <div className="stack" style={{ gap: 14 }}>
       <div className="card"><div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}><span className="small" style={{ fontWeight: 600 }}>Process variants</span>{o.processes.map((p: any) => <button key={p.id} className="chip" style={(pv || o.default_process) === p.id ? { borderColor: 'var(--accent)', color: 'var(--accent-ink)', background: 'var(--accent-soft)' } : {}} onClick={() => setPv(p.id)}>{p.name || p.id}{p.id === o.default_process ? ' · default' : ''}</button>)}<button className="btn sm" onClick={addVariant}>+ Variant</button>{pv && pv !== o.default_process && <><button className="btn sm" onClick={() => { set('default_process', pv) }}>Make default</button><button className="btn sm" onClick={delVariant}>Delete</button></>}<span className="muted small">A multi-product company keeps several (platform, derivative, accessory…); a project picks one and tailors it.</span></div>
@@ -43,6 +43,7 @@ export function Org() {
     </div>}
 
     {tab === 'Structure' && <StructureTab o={o} set={set} />}
+    {tab === 'Roadmap' && o.me?.role === 'admin' && <RoadmapTab toast={toast} />}
     {tab === 'Teams' && <div className="card" style={{ marginBottom: 10 }}><h4>Departments</h4><div className="muted small" style={{ margin: '4px 0 8px' }}>A team's focus places it in a department. Quality does both halves — design quality and manufacturing quality; regulatory compliance and the design studio sit in Engineering; supply chain is sourcing, procurement, industrialization and logistics.</div>
       <div className="grid3" style={{ gap: 10 }}>{Object.entries((o.departments || {}) as Record<string, string[]>).map(([d, fs]) => <div key={d}><b className="small">{d}</b><div className="row" style={{ flexWrap: 'wrap', gap: 4, marginTop: 4 }}>{fs.map(f => <span key={f} className="pill" style={{ fontWeight: 400 }}>{f.replace(/_/g, ' ')}{o.teams.some((t: any) => t.focus === f) ? '' : ' · none'}</span>)}</div></div>)}</div></div>}
     {tab === 'Teams' && <Table title="Team catalog" icon={<Users size={14} />} rows={o.teams} onChange={rows => set('teams', rows)} idPrefix="TM-" cols={[{ key: 'id', name: 'id' }, { key: 'name', name: 'name', width: 200 }, { key: 'kind', name: 'kind', type: 'select', options: ['functional', 'subsystem'] }, { key: 'unit', name: 'unit (org structure)', type: 'select', options: ['', ...(o.structure || []).map((u: any) => u.id)] }, { key: 'focus', name: 'view override (built-in)', type: 'select', options: ['', ...o.focus_options] }, { key: 'discipline', name: 'discipline' }, { key: 'lead', name: 'lead (email)' }, { key: 'parts', name: 'scope root parts (subsystem; per project)', type: 'list' }]}
@@ -113,5 +114,45 @@ function StructureTab({ o, set }: { o: any; set: (k: string, v: any) => void }) 
       <label className="small muted">built-in view (what Launch derives for this unit)</label><select className="field" value={cur.view || ''} onChange={e => upd(cur.id, { view: e.target.value })}><option value="">— none / inherit from parent</option>{(o.views || o.focus_options || []).map((v: string) => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}</select>
       <label className="small muted">description</label><textarea className="field" rows={3} value={cur.description || ''} onChange={e => upd(cur.id, { description: e.target.value })} />
       <div className="small muted">Teams in this unit: {teamsOf(cur.id).map((t: any) => t.name).join(', ') || '— assign under Teams'}</div></div> : <div className="muted small">Select a unit to edit it. Built-in views: {(o.views || []).length}.</div>}</div>
+  </div>
+}
+
+
+// Platform roadmap — the admin's backlog for Launch itself, seeded with what the build sessions parked. Grouped by horizon,
+// edited inline, saved as a whole. Separate from the organization record (its own file, its own save).
+function RoadmapTab({ toast }: { toast: (m: string) => void }) {
+  const [d, setD] = useState<any>(null); const [dirty, setDirty] = useState(false); const [sel, setSel] = useState<string | null>(null); const [showDone, setShowDone] = useState(false)
+  useEffect(() => { api.get('/roadmap').then(setD).catch(e => toast(e.message)) }, [])
+  if (!d) return <div className="empty">Loading roadmap…</div>
+  const items: any[] = d.items || []
+  const setItems = (n: any[]) => { setD({ ...d, items: n }); setDirty(true) }
+  const upd = (id: string, patch: any) => setItems(items.map(i => i.id === id ? { ...i, ...patch } : i))
+  const add = (horizon: string) => { let n = items.length + 1, id = `RM-${String(n).padStart(2, '0')}`; while (items.some(i => i.id === id)) id = `RM-${String(++n).padStart(2, '0')}`; setItems([...items, { id, title: 'New item', area: 'platform', horizon, status: 'idea', priority: 3, notes: '', source: 'manual', created: new Date().toISOString().slice(0, 10) }]); setSel(id) }
+  const del = (id: string) => { setItems(items.filter(i => i.id !== id)); if (sel === id) setSel(null) }
+  const save = async () => { try { const r = await api.post('/roadmap', { items }); setD(r); setDirty(false); toast('Roadmap saved') } catch (e: any) { toast(e.message) } }
+  const order = (h: string) => d.horizons.indexOf(h)
+  const vis = items.filter(i => showDone || !['done', 'dropped'].includes(i.status)).sort((a, b) => order(a.horizon) - order(b.horizon) || (a.priority ?? 9) - (b.priority ?? 9) || a.id.localeCompare(b.id))
+  const cur = items.find(i => i.id === sel)
+  const counts = Object.fromEntries(d.horizons.map((h: string) => [h, items.filter(i => i.horizon === h && !['done', 'dropped'].includes(i.status)).length]))
+  const statusPill = (s: string) => s === 'in progress' ? 'pill accent' : s === 'decision needed' ? 'pill warn' : s === 'done' ? 'pill good' : s === 'dropped' ? 'pill' : 'pill'
+  return <div className="stack" style={{ gap: 12 }}>
+    <div className="row between" style={{ flexWrap: 'wrap', gap: 8 }}><div><h4><Map size={14} style={{ verticalAlign: -2 }} /> Platform roadmap</h4><div className="muted small">What Launch itself should do next — not product work (that lives in the projects). {d.horizons.map((h: string) => `${h}: ${counts[h]}`).join(' · ')}{d.updated ? ` · last saved ${d.updated} by ${d.updated_by}` : d.seeded ? ` · seeded ${d.seeded}` : ''}</div></div>
+      <div className="row" style={{ gap: 6 }}><label className="small row" style={{ gap: 4 }}><input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} />show done / dropped</label>{dirty && <span className="pill warn">unsaved</span>}<button className="btn primary" disabled={!dirty} onClick={save}><Save size={14} />Save roadmap</button></div></div>
+    <div className="row" style={{ gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div className="card" style={{ padding: 0, overflow: 'auto', flex: '1 1 640px', minWidth: 0 }}><table className="dt"><thead><tr><th style={{ width: 60 }}>id</th><th>Item</th><th>Area</th><th>Status</th><th style={{ width: 40 }}>Pri</th><th /></tr></thead><tbody>
+        {d.horizons.flatMap((h: string) => [<tr key={'h:' + h} style={{ background: 'var(--surface-2)' }}><td colSpan={6}><span className="row between"><b className="small" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>{h}</b><button className="btn sm" onClick={() => add(h)}>+ Item</button></span></td></tr>,
+          ...vis.filter(i => i.horizon === h).map(i => <tr key={i.id} className="clickable" style={sel === i.id ? { background: 'var(--surface-3)' } : ['done', 'dropped'].includes(i.status) ? { opacity: 0.6 } : {}} onClick={() => setSel(i.id)}><td className="mono small muted" style={{ whiteSpace: 'nowrap' }}>{i.id}</td><td><b>{i.title}</b>{i.notes && sel !== i.id && <div className="muted small" style={{ maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.notes}</div>}</td><td className="small">{i.area}</td><td><span className={statusPill(i.status)}>{i.status}</span></td><td className="num">{i.priority}</td><td className="rowtool" style={{ cursor: 'pointer', color: 'var(--ink-3)' }} onClick={e => { e.stopPropagation(); del(i.id) }} title="remove">✕</td></tr>)])}</tbody></table></div>
+      {cur && <div className="card" style={{ flex: '0 1 360px', minWidth: 280 }}><div className="row between"><h4 style={{ margin: 0 }}>{cur.id}</h4><span className="muted small">{cur.created}</span></div>
+        <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+          <label className="small">Title<input className="field" value={cur.title} onChange={e => upd(cur.id, { title: e.target.value })} /></label>
+          <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>Horizon<select className="field" value={cur.horizon} onChange={e => upd(cur.id, { horizon: e.target.value })}>{d.horizons.map((h: string) => <option key={h}>{h}</option>)}</select></label>
+            <label className="small" style={{ flex: 1 }}>Status<select className="field" value={cur.status} onChange={e => upd(cur.id, { status: e.target.value })}>{d.statuses.map((x: string) => <option key={x}>{x}</option>)}</select></label></div>
+          <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>Area<select className="field" value={cur.area} onChange={e => upd(cur.id, { area: e.target.value })}>{d.areas.map((x: string) => <option key={x}>{x}</option>)}</select></label>
+            <label className="small" style={{ width: 80 }}>Priority<input className="field" type="number" min={1} max={5} value={cur.priority ?? ''} onChange={e => upd(cur.id, { priority: Number(e.target.value) })} /></label></div>
+          <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>Owner<input className="field" value={cur.owner || ''} onChange={e => upd(cur.id, { owner: e.target.value })} /></label><label className="small" style={{ flex: 1 }}>Due<input className="field" type="date" value={cur.due || ''} onChange={e => upd(cur.id, { due: e.target.value })} /></label></div>
+          <label className="small">Notes<textarea className="field" rows={6} value={cur.notes || ''} onChange={e => upd(cur.id, { notes: e.target.value })} /></label>
+          <label className="small">Source<input className="field" value={cur.source || ''} onChange={e => upd(cur.id, { source: e.target.value })} /></label>
+        </div></div>}
+    </div>
   </div>
 }

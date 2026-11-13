@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from claude_agent_sdk import (ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, ResultMessage, UserMessage,
                               TextBlock, ToolUseBlock, ToolResultBlock, PermissionResultAllow, PermissionResultDeny)
 from ..store import Store
-from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, analytics as AN, skills as SK, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
+from .. import derive, schema, tables, testdata, memory, pdp, dfx as DFX, diagrams as DG, cadbrief, cad as CAD, eda as EDA, org as ORG, policy as harness, trades as TRADES, ops as OPS, indicators as IND, analytics as AN, skills as SK, roadmap as RM, sysml, views, docs, forms, quality, oslc, oslc_oauth, lifecycle, comments as C
 from ..store import Patch, Op
 from ..agents.tools import make_server
 from ..agents import roles as R
@@ -437,6 +437,17 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
                 if x in seen or x == u["id"]: raise HTTPException(400, f"unit {u['id']}: cycle in structure")
                 seen.add(x); x = idx[x].get("parent")
         ORG.save(org_root(), o); return get_org(user)
+    # ---- platform roadmap: the superadmin's backlog for Launch itself (Settings › Roadmap), admins only
+    @app.get("/api/roadmap")
+    def get_roadmap(user: str = U):
+        o = ORG.load(org_root(), W.tenant)
+        if ORG.role_of(o, user) != "admin": raise HTTPException(403, "the platform roadmap is for organization admins")
+        return RM.load(org_root())
+    @app.post("/api/roadmap")
+    def set_roadmap(body: dict, user: str = U):
+        o = ORG.load(org_root(), W.tenant)
+        if ORG.role_of(o, user) != "admin": raise HTTPException(403, "the platform roadmap is for organization admins")
+        return RM.save(org_root(), body.get("items") or [], user)
     @app.post("/api/org/apply/{pid}")
     def apply_org(pid: str, body: dict, user: str = U):
         S = W.get(pid); m = S.store.load(); o = ORG.load(org_root(), W.tenant)
