@@ -272,3 +272,29 @@
   standard: IEC 62368-1
   requirement_hint: Energy-source classification; applies to the control electronics
     / external PSU.
+- id: UL-3115
+  trigger:
+  - ai_function
+  - ml_model
+  - llm
+  - ai_safety_function
+  market: global
+  name: UL 3115 Outline of Investigation for the Safety of AI-Based Products (voluntary certification, UL Mark for AI Safety)
+  standard: UL 3115
+  requirement_hint: Horizontal evaluation used alongside the product's own safety standard. Technical pillar (robustness and
+    reliability, risk management, quality management, AI-based functional safety), ethical pillar (fairness and bias, data
+    privacy), governance pillar (data collection and analysis, documentation and reporting, life cycle management); user
+    control and override assessed at the interface; cybersecurity where applicable. Evidence expected - documented intended
+    use and AI functions, AI risk ownership, documented limitations, explainable outputs, human review and override of AI
+    recommendations, and robustness tests across operating conditions. First certified products (2026) were Qcells EMS and
+    Omniconn Platform 4.0.
+- id: EU-AI-ACT
+  trigger:
+  - ai_safety_function
+  market: EU
+  name: EU Artificial Intelligence Act, Regulation (EU) 2024/1689 (AI as a safety component of a product under Annex I legislation)
+  standard: Regulation (EU) 2024/1689; harmonised standards from CEN-CENELEC JTC 21
+  requirement_hint: An AI system that is a safety component of a product covered by Annex I legislation (machinery, toys, radio
+    equipment, medical devices and others) is high-risk - risk management system, data governance, technical documentation,
+    logging, transparency to users, human oversight, accuracy/robustness/cybersecurity, and conformity assessment through the
+    product's route. Check the current application dates for Annex I high-risk obligations before planning.
