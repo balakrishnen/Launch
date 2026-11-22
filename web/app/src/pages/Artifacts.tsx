@@ -75,7 +75,7 @@ export function MatrixPage() {
   </div>
 }
 
-const FORM_VIEW: Record<string, string> = { dfmea: 'fmea', hazards: 'fmea', fta: 'fmea', drbfm: 'fmea', dvpr: 'verification', vcrm: 'verification', reqspec: 'requirements', n2: 'interconnection', n2l: 'logical', icd: 'interconnection', pfmea: 'process', control_plan: 'process' }
+const FORM_VIEW: Record<string, string> = { dfmea: 'fmea', hazards: 'fmea', fta: 'fmea', drbfm: 'fmea', dvpr: 'verification', vcrm: 'verification', reqspec: 'requirements', n2: 'interconnection', n2l: 'logical', icd: 'interconnection', pfmea: 'process', control_plan: 'process', pfd: 'process', special_chars: 'process' }
 export function LiveDiagrams() {
   const { pid } = useProject(); const [views, setViews] = useState<any[]>([]); const [cur, setCur] = useState('interconnection')
   useEffect(() => { P(pid).get('/diagrams').then(setViews).catch(() => { }) }, [pid])

@@ -26,7 +26,8 @@ def _focus(m, f):
 def _func_levels(m, f):
     """Function analysis: function of next higher level (the requirement the element realizes), of focus element, of next lower level."""
     reqs = D.element_reqs(m, f["kind"], f["element"]) if hasattr(D, "element_reqs") else []
-    higher = "; ".join(f"{r}: {m['requirements'][r]['text']}" for r in reqs[:2] if r in m["requirements"]) or "—"
+    cut = lambda t: t if len(t) <= 70 else t[:68].rsplit(" ", 1)[0] + "…"
+    higher = "; ".join(f"{r}: {cut(m['requirements'][r]['text'])}" for r in reqs[:2] if r in m["requirements"]) or "—"
     if f["kind"] == "functions": focus = f"{f['element']}: {f['element_name']}" + (f" ({m['functions'][f['element']].get('perf','')})" if m["functions"][f["element"]].get("perf") else "")
     elif f["kind"] == "interfaces": focus = f"{f['element']}: carry {', '.join(m['interfaces'][f['element']].get('items', []))}"
     else: focus = f"{f['element']}: {f['element_name']}"
@@ -38,10 +39,22 @@ def _lower_function(m, f):
     if f.get("char"): return f["char"]
     parts = m["parts"]; keep = ("ctq", "mpn", "rating", "power_W", "material", "ul_file")
     out = []
-    for p in [p for p in f.get("parts", []) if p in parts][:3]:
-        a = parts[p].get("attrs") or {}; ch = [f"{k}={a[k]}" for k in keep if a.get(k) not in (None, "")][:2]
+    for p in [p for p in f.get("parts", []) if p in parts][:2]:
+        a = parts[p].get("attrs") or {}; ch = [f"{k}={a[k]}" for k in keep if a.get(k) not in (None, "")][:1]
         out.append(f"{parts[p]['name']}" + (f" ({'; '.join(ch)})" if ch else ""))
     return "; ".join(out) or "—"
+
+def _structure(m, f):
+    """AIAG-VDA step 2 for one row: next higher level (the product), focus element (the logical component that performs the
+    function, the interface or the station), next lower level (the parts that realise it)."""
+    short = lambda t: t if len(t) <= 28 else t[:26].rsplit(" ", 1)[0] + "…"
+    if f["kind"] == "function":
+        lcs = [f"{l} {v['name']}" for l, v in m.get("logical_components", {}).items() if f["element"] in v.get("funcs", [])]
+        focus = ", ".join(lcs) or f["focus"]
+    elif f["kind"] == "interface": focus = f"{f['element']} {m['interfaces'][f['element']]['name']}"
+    else: focus = f["focus"]
+    lower = ", ".join(short(m["parts"][p]["name"]) for p in f.get("parts", [])[:4] if p in m["parts"]) or f["lower"]
+    return m["meta"].get("name", "System"), focus, lower
 
 def _who(m, owner):
     if not owner: return ""
@@ -51,7 +64,7 @@ def _who(m, owner):
 def dfmea(m):
     rows = []; fm = D.fmea(m)
     for i, f in enumerate(fm, 1):
-        hi, fo, lo = f['higher'], f['focus'], f['lower']; fh, ff = _func_levels(m, f)
+        hi, fo, lo = _structure(m, f); fh, ff = _func_levels(m, f)
         det = "; ".join(f"{t} {m['tests'][t]['name']}" for t in f["tests"] if t in m["tests"]) or "—"
         acts = f.get("actions") or []
         pa = [a for a in acts if a.get("type", "prevention") == "prevention"]; da = [a for a in acts if a.get("type") == "detection"]
@@ -75,7 +88,7 @@ def dfmea(m):
                "1. Failure Effects (FE) to the Next Higher Level Element and/or End User", "Severity (S) of FE", "2. Failure Mode (FM) of the Focus Element", "3. Failure Cause (FC) of the Next Lower Element or Characteristic",
                "Current Prevention Control (PC) of FC", "Occurrence (O) of FC", "Current Detection Controls (DC) of FC or FM", "Detection (D) of FC/FM", "DFMEA AP", "Filter Code (Optional)",
                "DFMEA Prevention Action", "DFMEA Detection Action", "Responsible Person's Name", "Target Completion Date", "Status", "Action Taken with Pointer to Evidence", "Completion Date", "Severity (S)", "Occurrence (O)", "Detection (D)", "DFMEA AP", "Remarks"]
-    widths = [5, 8, 8, 10, 14, 16, 26, 24, 18, 30, 7, 28, 30, 28, 7, 28, 7, 7, 6, 24, 22, 16, 12, 12, 26, 12, 7, 7, 7, 7, 24]
+    widths = [4, 7, 9, 7, 11, 16, 20, 12, 18, 18, 5, 16, 20, 18, 5, 18, 5, 5, 5, 20, 18, 12, 9, 10, 18, 9, 5, 5, 5, 5, 12]
     return groups, headers, widths, rows
 
 def _runs(m, tid):
@@ -341,19 +354,21 @@ def pfmea(m):
 def control_plan(m):
     """AIAG APQP control plan (2nd ed. columns): part/process, machine, characteristic (product/process), special class, spec/tolerance,
     evaluation/measurement technique, sample size and frequency, control method, reaction plan."""
-    rows = []; fm = D.fmea(m); phase = (m.get("meta") or {}).get("stage", "")
+    rows = []; fm = D.fmea(m); gs = m.get("gates", {})
+    passed = lambda g: (gs.get(g) or {}).get("status") == "passed"
+    phase = "Production" if passed("MP") else ("Pre-launch" if passed("DVT") or passed("EVT") else ("Prototype" if gs else ""))
     for p, ps in sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("seq", 0)):
         fms = [f for f in fm if f["element"] == p]
         chars = _chars(ps) or [{"name": "—"}]
         for n, c in enumerate(chars, 1):
             eol = m["tests"].get(ps.get("eol_test"), {}) if ps.get("eol_test") else {}
-            sc = c.get("sc") or ("SC" if any(f["S"] >= 9 for f in fms) else "")
+            sc = c["sc"] if "sc" in c else ("SC" if any(f["S"] >= 9 for f in fms) else "")
             rows.append([f"{ps.get('seq', '')}.{n}", p, ps["name"], ps.get("machine") or ps["station"], c["name"], c.get("kind", "product"), sc, c.get("spec") or eol.get("passfail", ""),
                          c.get("method") or (eol.get("name", "") if eol else ""), c.get("size", ""), c.get("freq", ""), c.get("control") or ps.get("controls", ""), c.get("reaction", ""),
                          ps.get("cycle_s", ""), m.get("teams", {}).get(ps.get("team"), {}).get("name", ""), ", ".join(f["id"] for f in fms)])
     headers = ["Char. no.", "Step id", "Process name / operation", "Machine, device, jig, tools", "Characteristic", "Product / process", "Special char. class", "Product / process spec / tolerance",
                "Evaluation / measurement technique", "Sample size", "Sample freq.", "Control method", "Reaction plan", "Cycle (s)", "Owner team", "PFMEA rows"]
-    return [(f"CONTROL PLAN (AIAG APQP){' — ' + phase if phase else ''}", len(headers))], headers, [6, 7, 22, 22, 24, 9, 7, 24, 24, 7, 10, 26, 30, 7, 12, 14], rows
+    return [(f"CONTROL PLAN (AIAG APQP){', phase: ' + phase if phase else ''}", len(headers))], headers, [6, 7, 22, 22, 24, 9, 7, 24, 24, 7, 10, 26, 30, 7, 12, 14], rows
 
 def avl(m):
     rows = []
@@ -421,3 +436,77 @@ from . import ops as _OPS
 FORMS.update(_OPS.FORMS)   # eco, work_orders, purchase_orders
 from . import maturity as _MAT
 FORMS.update(_MAT.FORMS)   # trl, cda
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Configuration, process and record artifacts that companies keep alongside the forms above
+
+def bom(m):
+    """Indented bill of materials from the part tree: level, part number, revision, qty, UoM, make/buy, supplier, cost, mass, lifecycle."""
+    parts = m["parts"]; kids = {}
+    for p, v in parts.items(): kids.setdefault(v.get("parent"), []).append(p)
+    rows = []; roots = [p for p, v in parts.items() if v.get("parent") not in parts]
+    def walk(p, lvl):
+        v = parts[p]; a = v.get("attrs") or {}; sup = m.get("suppliers", {}).get(v.get("supplier") or "", {})
+        rows.append([lvl, ("· " * lvl) + p, v["name"], a.get("rev", ""), a.get("qty", 1), a.get("uom", "ea"), v.get("make_buy", ""), sup.get("name", "") if sup else "", a.get("mpn", ""),
+                     a.get("cost_usd", ""), a.get("mass_g", ""), v.get("lifecycle", "active"), v.get("discipline", ""), m.get("teams", {}).get(v.get("owner_team"), {}).get("name", ""), a.get("last_eco", "")])
+        for c in sorted(kids.get(p, [])): walk(c, lvl + 1)
+    for r in sorted(roots): walk(r, 0)
+    headers = ["Level", "Part number", "Description", "Rev", "Qty", "UoM", "Make/buy", "Supplier", "MPN", "Unit cost (USD)", "Mass (g)", "Lifecycle", "Discipline", "Owner", "Last ECO"]
+    return [("INDENTED BILL OF MATERIALS (from the part tree)", len(headers))], headers, [5, 14, 30, 5, 4, 4, 7, 22, 14, 8, 7, 8, 9, 14, 8], rows
+
+def pfd(m):
+    """Process flow diagram, tabular (AIAG APQP): operation sequence with inputs, outputs, machine, characteristics, controls and the PFMEA rows each step carries."""
+    fm = D.fmea(m); rows = []; steps = sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("seq", kv[1].get("order", 0)))
+    for i, (p, ps) in enumerate(steps):
+        fms = [f for f in fm if f["element"] == p]; nxt = steps[i + 1][0] if i + 1 < len(steps) else "ship"
+        rows.append([ps.get("seq", ""), p, ps["name"], ps.get("station", ""), ps.get("machine", ""), ", ".join(m["parts"][x]["name"] for x in ps.get("parts", []) if x in m["parts"]),
+                     ", ".join(c["name"] for c in _chars(ps)), ps.get("controls", ""), ps.get("cycle_s", ""), (m["tests"].get(ps.get("eol_test"), {}) or {}).get("name", "") if ps.get("eol_test") else "",
+                     f"{len(fms)} ({sum(1 for f in fms if f['AP'] == 'H')} H)", nxt])
+    headers = ["Seq", "Step", "Operation", "Station", "Machine / fixture", "Inputs (parts)", "Characteristics", "Controls", "Cycle (s)", "Test", "PFMEA rows", "Next"]
+    return [("PROCESS FLOW (AIAG APQP; the PFMEA and control plan follow this sequence)", len(headers))], headers, [5, 7, 26, 12, 26, 26, 26, 24, 6, 16, 8, 7], rows
+
+def special_chars(m):
+    """Special characteristics list (AIAG APQP; IATF 16949 §8.3.3.3): SC/CC from the DFMEA and PFMEA, carried to the control plan and drawings."""
+    rows = []; fm = D.fmea(m)
+    for f in fm:
+        cls = f.get("filter") or ("SC" if f["S"] >= 9 else ("CC" if f["S"] >= 7 and f["kind"] == "process" else ""))
+        if cls not in ("SC", "CC"): continue
+        cp = []
+        if f["kind"] == "process":
+            cp = [f"{m['process_steps'][f['element']].get('seq', '')}.{n}" for n, c in enumerate(_chars(m["process_steps"][f["element"]]), 1) if c.get("sc") in ("SC", "CC")]
+        rows.append([f["id"], cls, "process" if f["kind"] == "process" else "design", f["element"], f["element_name"], f["mode"], f["effect"], f["S"], ", ".join(f["tests"]) or "—", ", ".join(cp) or ("drawing / spec" if f["kind"] != "process" else "—"), ", ".join(f.get("parts", [])[:3])])
+    for p, ps in m.get("process_steps", {}).items():
+        for n, c in enumerate(_chars(ps), 1):
+            if c.get("sc") in ("SC", "CC"): rows.append([f"CP {ps.get('seq', '')}.{n}", c["sc"], "control plan", p, ps["name"], c["name"], c.get("spec", ""), "", c.get("method", ""), f"{ps.get('seq', '')}.{n}", ", ".join(ps.get("parts", []))])
+    headers = ["Source", "Class", "Origin", "Element", "Element name", "Characteristic / failure mode", "Effect or spec", "S", "Verified by", "Control plan line", "Parts"]
+    return [("SPECIAL CHARACTERISTICS (SC safety/regulatory, CC critical fit/function)", len(headers))], headers, [9, 5, 9, 8, 24, 30, 30, 4, 18, 10, 18], rows
+
+def test_log(m):
+    """Test report log: every run with date, unit, station, operator, measured values against limits and the build revision."""
+    rows = []
+    for r, v in sorted(m.get("test_runs", {}).items(), key=lambda kv: (str(kv[1].get("date", "")), kv[0])):
+        t = m["tests"].get(v["test"], {}); lim = v.get("limits") or {}
+        rows.append([r, str(v.get("date", "")), v["test"], t.get("name", ""), v.get("rev") or "", v.get("unit", ""), v.get("station", ""), v.get("operator", ""),
+                     "; ".join(f"{k}={x}" for k, x in (v.get("metrics") or {}).items()), "; ".join(f"{k} {x}" for k, x in lim.items()), v.get("result", ""), v.get("notes", "")])
+    headers = ["Run", "Date", "Test", "Test name", "Build", "Unit", "Station", "Operator", "Measured", "Limits", "Result", "Notes"]
+    return [("TEST REPORT LOG (ISO/IEC/IEEE 29119-3 test log; one row per run)", len(headers))], headers, [7, 9, 7, 24, 5, 10, 16, 11, 22, 14, 6, 26], rows
+
+def reviews(m):
+    """Technical review record (IEEE 15288.2): gate, date, attendees, decision, findings raised and their state."""
+    rows = []
+    for r, v in sorted(m.get("reviews", {}).items(), key=lambda kv: str(kv[1].get("date", ""))):
+        fs = [m.get("findings", {}).get(f, {}) for f in v.get("findings", [])]
+        rows.append([r, v["name"], v.get("gate", ""), str(v.get("date", "")), ", ".join(m.get("teams", {}).get(t, {}).get("name", t) for t in v.get("attendees", [])), v.get("decision", ""),
+                     "; ".join(f"{f} ({m['findings'][f]['severity']}, {m['findings'][f]['status']})" for f in v.get("findings", []) if f in m.get("findings", {})),
+                     sum(1 for x in fs if x.get("status") != "closed"), v.get("notes", "")])
+    headers = ["Review", "Name", "Gate", "Date", "Attendees", "Decision", "Findings raised", "Open", "Notes"]
+    return [("DESIGN REVIEW RECORD (IEEE 15288.2 technical reviews)", len(headers))], headers, [6, 20, 5, 9, 34, 34, 36, 5, 30], rows
+
+FORMS.update({
+    "bom": ("Indented BOM", "Bill of materials from the part tree: level, rev, qty, supplier, cost (EIA-649 configuration item list)", bom),
+    "pfd": ("Process flow", "Operation sequence with inputs, machine, characteristics and PFMEA rows (AIAG APQP process flow)", pfd),
+    "special_chars": ("Special characteristics", "SC/CC from the FMEAs carried to the control plan (AIAG APQP; IATF 16949 §8.3.3.3)", special_chars),
+    "test_log": ("Test report log", "Every test run with unit, station, measured values, limits and result (ISO/IEC/IEEE 29119-3)", test_log),
+    "reviews": ("Design reviews", "Gate reviews with attendees, decisions and findings (IEEE 15288.2)", reviews),
+})
