@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 594" font-family="Helvetica,Arial" font-size="12">
+<rect x="10" y="10" width="820" height="574" fill="#fff" stroke="#222" stroke-width="1.5"/>
+<rect x="120" y="120" width="360" height="220" rx="18" fill="none" stroke="#222" stroke-width="2"/><line x1="120" y1="370" x2="480" y2="370" stroke="#222"/><text x="270" y="390">see CAD</text><text x="120" y="440">Wall 2.5 ±0.15 · PP BJ380MO · trim isolated (AD-03) · cord boss (ECO-004)</text>
+<g transform="translate(530,500)"><rect width="300" height="84" fill="none" stroke="#222"/><line x1="0" y1="28" x2="300" y2="28" stroke="#222"/><line x1="0" y1="56" x2="300" y2="56" stroke="#222"/><line x1="200" y1="28" x2="200" y2="84" stroke="#222"/>
+<text x="8" y="19" font-weight="bold">Housing</text><text x="8" y="47">Part P-ENCL</text><text x="208" y="47">Rev C</text><text x="8" y="75">BrewMaster One · units mm</text><text x="208" y="75">Sheet 1/1</text></g>
+</svg>

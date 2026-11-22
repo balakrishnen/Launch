@@ -225,7 +225,7 @@ def procurement(m):
         best = awarded[0] if awarded else (min(received, key=lambda x: float(x.get("unit_cost_usd") or 1e12)) if received else None)   # the awarded quote is the price; else the cheapest received
         lead = (awarded[0] if awarded else best or {}).get("lead_time_d")
         if lead in (None, ""): lead = (m.get("suppliers", {}).get(v.get("supplier") or "", {}) or {}).get("lead_time_d")
-        first_gate = next(((g, d) for g, d in gates if builds.get(g)), gates[0] if gates else (None, None))
+        first_gate = next(((g, d) for g, d in gates if builds.get(g) and m["gates"][g].get("status") != "passed"), None) or next(((g, d) for g, d in gates if builds.get(g)), gates[0] if gates else (None, None))
         need_by = first_gate[1]; days = _days_to(need_by) if need_by else None
         order_by = None; late = None
         if days is not None and lead not in (None, ""):
@@ -378,9 +378,9 @@ def tooling_rows(m):
     out = []
     for t, v in m.get("tooling", {}).items():
         p = m["parts"].get(v["part"], {}); gates = m["gates"]
-        need = next((g for g, gv in sorted(gates.items(), key=lambda kv: kv[1]["date"]) if (m.get("meta") or {}).get("business", {}).get("builds", {}).get(g)), None)
-        out.append({"id": t, **v, "part_name": p.get("name", ""), "first_build": need, "first_build_date": gates.get(need, {}).get("date", "") if need else "",
-                    "t1_late": bool(v.get("t1")) and need and str(v["t1"]) > str(gates.get(need, {}).get("date", "9999")), "late": not v.get("kickoff") and need and _days_to(gates[need]["date"]) is not None and _days_to(gates[need]["date"]) < 120})
+        need = v.get("build") if v.get("build") in gates else next((g for g, gv in sorted(gates.items(), key=lambda kv: kv[1]["date"]) if (m.get("meta") or {}).get("business", {}).get("builds", {}).get(g)), None)
+        out.append({"id": t, **v, "part_name": p.get("name", ""), "first_build": need, "first_build_date": (next((w.get("start") for w in m.get("work_orders", {}).values() if w.get("build") == need and w.get("start")), None) or gates.get(need, {}).get("date", "")) if need else "",
+                    "t1_late": bool(v.get("t1")) and need and str(v["t1"]) > str(next((w.get("start") for w in m.get("work_orders", {}).values() if w.get("build") == need and w.get("start")), None) or gates.get(need, {}).get("date", "9999")), "late": not v.get("kickoff") and need and _days_to(gates[need]["date"]) is not None and _days_to(gates[need]["date"]) < 120})
     return out
 
 

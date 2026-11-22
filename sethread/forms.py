@@ -32,31 +32,75 @@ def _func_levels(m, f):
     else: focus = f"{f['element']}: {f['element_name']}"
     return higher, focus
 
+def _lower_function(m, f):
+    """Next lower level function or characteristic (AIAG-VDA step 3, column 3): the assessment's char if given, else the
+    characteristics of the lower-level parts that carry the focus function (rating, MPN, material, CTQ from their attributes)."""
+    if f.get("char"): return f["char"]
+    parts = m["parts"]; keep = ("ctq", "mpn", "rating", "power_W", "material", "ul_file")
+    out = []
+    for p in [p for p in f.get("parts", []) if p in parts][:3]:
+        a = parts[p].get("attrs") or {}; ch = [f"{k}={a[k]}" for k in keep if a.get(k) not in (None, "")][:2]
+        out.append(f"{parts[p]['name']}" + (f" ({'; '.join(ch)})" if ch else ""))
+    return "; ".join(out) or "—"
+
+def _who(m, owner):
+    if not owner: return ""
+    t = m.get("teams", {}).get(owner)
+    return f"{t.get('lead') or t['name']} ({t['name']})" if t else owner
+
 def dfmea(m):
     rows = []; fm = D.fmea(m)
     for i, f in enumerate(fm, 1):
         hi, fo, lo = f['higher'], f['focus'], f['lower']; fh, ff = _func_levels(m, f)
         det = "; ".join(f"{t} {m['tests'][t]['name']}" for t in f["tests"] if t in m["tests"]) or "—"
-        rows.append([i, f["id"], "", hi, fo, lo, fh, ff, "—", f["effect"], f["S"], f["mode"], f["cause"], f["controls"], f["O"], det, f["D"], f["AP"],
-                     "SC" if f["S"] >= 9 else "", "", "", "", "", "", "", "", "", "", "", "", f"{f['element']} / {f['guide']}; disciplines: {', '.join(f.get('disciplines', []))}"])
+        acts = f.get("actions") or []
+        pa = [a for a in acts if a.get("type", "prevention") == "prevention"]; da = [a for a in acts if a.get("type") == "detection"]
+        if acts:
+            j = lambda xs, k: "; ".join(str(a.get(k, "")) for a in xs if a.get(k)) 
+            st = sorted({a.get("status", "open") for a in acts}); done = [a for a in acts if a.get("completed")]
+            rv = f.get("revised") or {}
+            rS, rO, rD = rv.get("S", f["S"]), rv.get("O", ""), rv.get("D", "")
+            rap = D.ap(int(rS), int(rO), int(rD)) if rO not in ("", None) and rD not in ("", None) else ""
+            opt = [j(pa, "action") or "—", j(da, "action") or "—", "; ".join(sorted({_who(m, a.get("owner")) for a in acts if a.get("owner")})), max(str(a.get("due", "")) for a in acts),
+                   " / ".join(st), j(acts, "evidence") or "", max(str(a["completed"]) for a in done) if done and len(done) == len(acts) else "", rS if rv else "", rO, rD, rap]
+        elif f["AP"] == "L":
+            opt = ["None required (AP L, current controls adequate)", "None required", "", "", "Not required", "", "", "", "", "", ""]
+        else:
+            opt = ["— action required (AP " + f["AP"] + ")", "", "", "", "Open, no action assigned", "", "", "", "", "", ""]
+        rows.append([i, f["id"], f.get("history") or "Initial issue", hi, fo, lo, fh, ff, _lower_function(m, f), f["effect"], f["S"], f["mode"], f["cause"], f["controls"], f["O"], det, f["D"], f["AP"],
+                     f.get("filter") or ("SC" if f["S"] >= 9 else ("CC" if f["S"] >= 7 else "")), *opt, f"{f['element']} / {f['guide']}; disciplines: {', '.join(f.get('disciplines', []))}"])
     groups = [("", 3), ("STRUCTURE ANALYSIS (STEP 2)", 3), ("FUNCTION ANALYSIS (STEP 3)", 3), ("FAILURE ANALYSIS (STEP 4)", 4), ("RISK ANALYSIS (STEP 5)", 6), ("OPTIMIZATION (STEP 6)", 13)]
     headers = ["Issue #", "FM id", "History / Change Authorization", "1. Next Higher Level", "2. Focus Element", "3. Next Lower Level or Characteristic Type",
                "1. Next Higher Level Function and Requirement", "2. Focus Element Function and Requirement", "3. Next Lower Level Function and Requirement or Characteristic",
                "1. Failure Effects (FE) to the Next Higher Level Element and/or End User", "Severity (S) of FE", "2. Failure Mode (FM) of the Focus Element", "3. Failure Cause (FC) of the Next Lower Element or Characteristic",
                "Current Prevention Control (PC) of FC", "Occurrence (O) of FC", "Current Detection Controls (DC) of FC or FM", "Detection (D) of FC/FM", "DFMEA AP", "Filter Code (Optional)",
                "DFMEA Prevention Action", "DFMEA Detection Action", "Responsible Person's Name", "Target Completion Date", "Status", "Action Taken with Pointer to Evidence", "Completion Date", "Severity (S)", "Occurrence (O)", "Detection (D)", "DFMEA AP", "Remarks"]
-    widths = [5, 8, 8, 10, 14, 16, 26, 24, 10, 30, 7, 28, 30, 28, 7, 28, 7, 7, 6, 18, 18, 14, 12, 10, 18, 12, 7, 7, 7, 7, 24]
+    widths = [5, 8, 8, 10, 14, 16, 26, 24, 18, 30, 7, 28, 30, 28, 7, 28, 7, 7, 6, 24, 22, 16, 12, 12, 26, 12, 7, 7, 7, 7, 24]
     return groups, headers, widths, rows
+
+def _runs(m, tid):
+    return sorted([dict(id=r, **v) for r, v in m.get("test_runs", {}).items() if v.get("test") == tid], key=lambda r: str(r.get("date", "")))
 
 def dvpr(m):
     vm = D.verification_matrix(m); rows = []
     for i, t in enumerate(vm, 1):
         req_txt = "; ".join(f"{r}: {m['requirements'][r]['text']}" for r in t["reqs"] if r in m["requirements"])
-        rows.append([i, t["id"], t["name"], t["method"], req_txt, t["passfail"], t.get("units", ""), "", t.get("samples", ""), t["gate"], "", "", "", t.get("status", "planned"), "", ", ".join(t["fms"]), ", ".join(t["constraints"])])
+        runs = _runs(m, t["id"]); st = t.get("status", "planned")
+        team = m.get("teams", {}).get(t.get("owner_team"), {})
+        resp = (f"{team.get('lead')} ({team['name']})" if team.get("lead") else team.get("name", "")) if team else ""
+        start = t.get("start") or (str(runs[0]["date"]) if runs else "")
+        end = t.get("end") or (str(runs[-1]["date"]) if runs and st in ("passed", "failed", "conditional") else "")
+        npass = sum(1 for r in runs if r.get("result") == "pass"); nfail = sum(1 for r in runs if r.get("result") == "fail")
+        res = t.get("result") or ""
+        if runs:
+            last = runs[-1]; met = "; ".join(f"{k}={v}" for k, v in (last.get("metrics") or {}).items())
+            res = (res + " | " if res else "") + f"{npass} pass / {nfail} fail over {len(runs)} runs" + (f"; last {last['id']}: {met}" if met else "")
+        notes = t.get("notes") or "; ".join(str(r["notes"]) for r in runs if r.get("notes")) or ("Not started" if st == "planned" else "")
+        rows.append([i, t["id"], t["name"], t["method"], req_txt, t["passfail"], t.get("units", ""), resp, t.get("samples", ""), t["gate"], start, end, res, st, notes, ", ".join(t["fms"]), ", ".join(t["constraints"]) or "—"])
     groups = [("TEST PLAN", 10), ("TEST REPORT", 5), ("TRACE", 2)]
     headers = ["Item #", "Test id", "Test Name / Description", "Test Procedure / Specification (standard, severity)", "Design Requirement(s) verified", "Acceptance Criteria", "Units", "Responsibility",
                "Sample Size / Qty", "Test Stage (gate)", "Timing — Start", "Timing — Complete", "Test Results (actual)", "Pass / Fail / Status", "Notes / Deviations", "Failure modes covered", "Constraints evaluated"]
-    widths = [6, 8, 26, 34, 44, 30, 8, 14, 10, 10, 11, 11, 24, 12, 24, 20, 16]
+    widths = [6, 8, 26, 34, 44, 30, 8, 16, 10, 10, 11, 11, 34, 12, 28, 20, 16]
     return groups, headers, widths, rows
 
 def vcrm(m):
@@ -200,7 +244,7 @@ def pugh(m):
         for o in t["options"]:
             s_ = sc.get(o, {}) if isinstance(sc.get(o), dict) else {}
             tot.append(sum((w[i] if i < len(w) else 1) * float(s_.get(c, 0) or 0) for i, c in enumerate(t["criteria"])) if s_ else "")
-        rows.append(tot); rows.append([tid, "Recommendation", t["recommendation"], "", *[("← datum" if t.get("datum") == o else "") for o in t["options"]]]); rows.append(["", "affects " + ", ".join(t.get("affects", [])), "", ""] + [""] * len(t["options"]))
+        rows.append(tot); rows.append([tid, "Recommendation", t.get("recommendation") or t.get("decision") or "— open", "", *[("← datum" if t.get("datum") == o else "") for o in t["options"]]]); rows.append(["", "affects " + ", ".join(t.get("affects", [])), "", ""] + [""] * len(t["options"]))
     maxo = max([len(t["options"]) for t in m["trades"].values()] or [2])
     headers = ["Trade", "Study", "Criterion", "Weight"] + [f"Option {i+1}" for i in range(maxo)]
     rows = [r + [""] * (len(headers) - len(r)) for r in rows]
@@ -275,27 +319,41 @@ MATRIX_PAIRS = [("requirements", "functions"), ("functions", "parts"), ("require
 # ---------------------------------------------------------------------------------------------------------------------
 # Whole-company forms: manufacturing, supply chain, program, quality/field
 
+def _chars(ps):
+    out = []
+    for c in ps.get("characteristics") or []:
+        out.append(c if isinstance(c, dict) else {"name": str(c)})
+    return out
+
 def pfmea(m):
     """AIAG-VDA PFMEA: process steps × process guide words (candidates), rows from fm_assessments with element = process step."""
     fm = [f for f in D.fmea(m) if f["kind"] == "process"]; rows = []
     for i, f in enumerate(fm, 1):
         ps = m["process_steps"][f["element"]]
-        rows.append([i, f["id"], ps["station"], ps["name"], ", ".join(ps.get("characteristics", [])), f["effect"], f["S"], f["mode"], f["cause"], ps.get("controls", "") or f["controls"], f["O"],
-                     "; ".join(f"{t} {m['tests'][t]['name']}" for t in f["tests"] if t in m["tests"]) or (f"EOL {ps['eol_test']}" if ps.get("eol_test") else "—"), f["D"], f["AP"], "SC" if f["S"] >= 9 else "", f["guide"]])
-    groups = [("", 2), ("STRUCTURE / PROCESS STEP", 3), ("FAILURE ANALYSIS", 4), ("RISK ANALYSIS", 6), ("", 1)]
-    headers = ["#", "FM id", "Station / work element", "Process step", "Product / process characteristics", "Failure effect (FE)", "S", "Failure mode (FM)", "Failure cause (FC)", "Prevention control", "O", "Detection control (incl. EOL test)", "D", "AP", "SC", "Guide word"]
-    return groups, headers, [4, 8, 16, 24, 26, 30, 5, 28, 30, 28, 5, 28, 5, 5, 5, 12], rows
+        acts = f.get("actions") or []
+        rows.append([i, f["id"], ps["station"] + (f" / {ps['machine']}" if ps.get("machine") else ""), ps["name"], f.get("char") or ", ".join(c["name"] for c in _chars(ps)), f["effect"], f["S"], f["mode"], f["cause"], f["controls"] or ps.get("controls", ""), f["O"],
+                     "; ".join(f"{t} {m['tests'][t]['name']}" for t in f["tests"] if t in m["tests"]) or (f"EOL {ps['eol_test']}" if ps.get("eol_test") else "—"), f["D"], f["AP"], f.get("filter") or ("SC" if f["S"] >= 9 else ("CC" if f["S"] >= 7 else "")),
+                     "; ".join(a.get("action", "") for a in acts) or ("None required (AP L)" if f["AP"] == "L" else "— action required"), "; ".join(sorted({_who(m, a.get("owner")) for a in acts if a.get("owner")})), " / ".join(sorted({a.get("status", "open") for a in acts})) or ("Not required" if f["AP"] == "L" else "Open")])
+    groups = [("", 2), ("STRUCTURE / PROCESS STEP", 3), ("FAILURE ANALYSIS", 4), ("RISK ANALYSIS", 6), ("OPTIMIZATION", 3)]
+    headers = ["#", "FM id", "Station / machine", "Process step", "Product / process characteristic", "Failure effect (FE)", "S", "Failure mode (FM)", "Failure cause (FC)", "Prevention control", "O", "Detection control (incl. EOL test)", "D", "AP", "SC/CC", "Action", "Responsible", "Status"]
+    return groups, headers, [4, 8, 18, 24, 26, 30, 5, 28, 30, 28, 5, 28, 5, 5, 5, 28, 16, 10], rows
 
 def control_plan(m):
-    rows = []
+    """AIAG APQP control plan (2nd ed. columns): part/process, machine, characteristic (product/process), special class, spec/tolerance,
+    evaluation/measurement technique, sample size and frequency, control method, reaction plan."""
+    rows = []; fm = D.fmea(m); phase = (m.get("meta") or {}).get("stage", "")
     for p, ps in sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("seq", 0)):
-        fms = [f for f in D.fmea(m) if f["element"] == p]
-        chars = ps.get("characteristics") or ["—"]
-        for c in chars:
-            rows.append([ps.get("seq", ""), p, ps["station"], ps["name"], c, "SC" if any(f["S"] >= 9 for f in fms) else "", ", ".join(m["parts"][x]["name"] for x in ps.get("parts", []) if x in m["parts"]),
-                         ps.get("controls", ""), (m["tests"][ps["eol_test"]]["name"] if ps.get("eol_test") in m["tests"] else "—"), (m["tests"][ps["eol_test"]].get("passfail", "") if ps.get("eol_test") in m["tests"] else ""), ps.get("cycle_s", ""), m.get("teams", {}).get(ps.get("team"), {}).get("name", ""), ", ".join(f["id"] for f in fms)])
-    headers = ["Seq", "Step id", "Station", "Process step", "Characteristic", "Special char.", "Parts", "Control method (prevention)", "Measurement / EOL test", "Spec / pass-fail", "Cycle (s)", "Owner team", "PFMEA rows"]
-    return [("CONTROL PLAN (AIAG APQP)", len(headers))], headers, [4, 7, 14, 24, 22, 7, 22, 30, 24, 20, 7, 12, 14], rows
+        fms = [f for f in fm if f["element"] == p]
+        chars = _chars(ps) or [{"name": "—"}]
+        for n, c in enumerate(chars, 1):
+            eol = m["tests"].get(ps.get("eol_test"), {}) if ps.get("eol_test") else {}
+            sc = c.get("sc") or ("SC" if any(f["S"] >= 9 for f in fms) else "")
+            rows.append([f"{ps.get('seq', '')}.{n}", p, ps["name"], ps.get("machine") or ps["station"], c["name"], c.get("kind", "product"), sc, c.get("spec") or eol.get("passfail", ""),
+                         c.get("method") or (eol.get("name", "") if eol else ""), c.get("size", ""), c.get("freq", ""), c.get("control") or ps.get("controls", ""), c.get("reaction", ""),
+                         ps.get("cycle_s", ""), m.get("teams", {}).get(ps.get("team"), {}).get("name", ""), ", ".join(f["id"] for f in fms)])
+    headers = ["Char. no.", "Step id", "Process name / operation", "Machine, device, jig, tools", "Characteristic", "Product / process", "Special char. class", "Product / process spec / tolerance",
+               "Evaluation / measurement technique", "Sample size", "Sample freq.", "Control method", "Reaction plan", "Cycle (s)", "Owner team", "PFMEA rows"]
+    return [(f"CONTROL PLAN (AIAG APQP){' — ' + phase if phase else ''}", len(headers))], headers, [6, 7, 22, 22, 24, 9, 7, 24, 24, 7, 10, 26, 30, 7, 12, 14], rows
 
 def avl(m):
     rows = []
@@ -318,8 +376,8 @@ def risk_register(m):
 def fracas(m):
     rows = []
     for e, ev in sorted(m.get("field_events", {}).items(), key=lambda kv: kv[1]["date"], reverse=True):
-        fm = next((f for f in D.fmea(m) if f["id"] == ev.get("fm")), None)
-        rows.append([e, ev["date"], ev.get("unit", ""), ev["symptom"], ev.get("count", 1), ev.get("severity", ""), ", ".join(m["parts"][p]["name"] for p in ev.get("parts", []) if p in m["parts"]), ev.get("fm", ""), fm["mode"] if fm else "— not tied to a failure mode", fm["AP"] if fm else "", ev.get("disposition", ""), ev.get("eight_d", ""), ev.get("status", "open")])
+        fm = next((f for f in D.fmea(m) if ev.get("fm") and ev.get("fm") in (f["id"], f.get("key"))), None)
+        rows.append([e, ev["date"], ev.get("unit", ""), ev["symptom"], ev.get("count", 1), ev.get("severity", ""), ", ".join(m["parts"][p]["name"] for p in ev.get("parts", []) if p in m["parts"]), (fm["id"] + " (" + ev["fm"] + ")") if fm and fm["id"] != ev.get("fm") else ev.get("fm", ""), fm["mode"] if fm else "— not tied to a failure mode", fm["AP"] if fm else ev.get("ap", ""), ev.get("disposition", ""), ev.get("eight_d", ""), ev.get("status", "open")])
     headers = ["Event", "Date", "Unit / lot", "Symptom", "Count", "Severity", "Parts", "FM id", "Failure mode (DFMEA)", "AP", "Disposition", "8D status", "Status"]
     return [("FRACAS — FIELD FAILURE LOG", len(headers))], headers, [7, 10, 12, 34, 6, 8, 22, 8, 30, 5, 24, 10, 8], rows
 

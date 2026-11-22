@@ -697,16 +697,18 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         if W.single: raise HTTPException(400, "single-project mode")
         if eid in W.ids(): return W.summary(eid)
         root = W.path(eid); os.makedirs(root, exist_ok=True)
-        if os.path.isdir(os.path.join(src, "docs")): shutil.copytree(os.path.join(src, "docs"), os.path.join(root, "docs"), dirs_exist_ok=True)
+        for sub in ("docs", "files"):   # the example's documents and the files its attachments point at
+            if os.path.isdir(os.path.join(src, sub)): shutil.copytree(os.path.join(src, sub), os.path.join(root, sub), dirs_exist_ok=True)
         # build the project model in memory first: the example's model plus its own product-development process (example.yaml:
         # process, process_start, spacing_days), so elements that reference gates (findings, work items, builds) import in one go.
         # The organization's default process is untouched.
         m = Store(src).load(); m["meta"]["created_by"] = user
         ex = yaml.safe_load(open(os.path.join(src, "example.yaml"))) or {}
-        if ex.get("process") and not m.get("gates"):
+        if ex.get("process") and not (m.get("program") or {}).get("pdp"):
             t = pdp.template(ex["process"], root)
             if t:
                 ops = pdp.apply_ops(m, t, ex.get("process_start") or time.strftime("%Y-%m-%d"), int(ex.get("spacing_days", 45)))
+                ops += [{"op": "update", "kind": "deliverables", "id": d, "value": {"waived": w}} for d, w in (ex.get("waivers") or {}).items()]
                 m = Store(src).apply_ops(m, [Op(**o) if isinstance(o, dict) else o for o in ops]); m.setdefault("program", {})["pdp"] = t["name"]
         vis = os.path.join(src, "docs", "product.svg")
         if os.path.isfile(vis):   # the example's product visual becomes the project's

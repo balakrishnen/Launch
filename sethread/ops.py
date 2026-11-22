@@ -67,7 +67,7 @@ def work_orders(m):
     out = []
     for w, v in m.get("work_orders", {}).items():
         units = {u: uv for u, uv in m.get("units", {}).items() if uv.get("work_order") == w}
-        steps = v.get("routing") or sorted(m.get("process_steps", {}), key=lambda s: m["process_steps"][s].get("order", 0))
+        steps = v.get("routing") or sorted(m.get("process_steps", {}), key=lambda s: m["process_steps"][s].get("seq", m["process_steps"][s].get("order", 0)))
         done = [u for u, uv in units.items() if all((uv.get("stations") or {}).get(s, {}).get("result") == "pass" for s in steps)]
         failed = [u for u, uv in units.items() if any((uv.get("stations") or {}).get(s, {}).get("result") == "fail" for s in steps)]
         per_step = {s: {"pass": sum(1 for uv in units.values() if (uv.get("stations") or {}).get(s, {}).get("result") == "pass"), "fail": sum(1 for uv in units.values() if (uv.get("stations") or {}).get(s, {}).get("result") == "fail")} for s in steps}

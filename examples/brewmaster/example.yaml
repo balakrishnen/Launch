@@ -1,26 +1,32 @@
 title: BrewMaster One
 company: Fictional connected-kitchen appliance maker
-url: ""
+url: ''
 process: appliance_npi
 spacing_days: 42
 category: Consumer appliance · connected 10-cup drip coffee maker
-summary: 1,400 W thermoblock drip coffee maker with Wi-Fi/BLE scheduling, descale estimation, keep-warm plate and a controller/radio/HMI platform shared with a kettle and grinder. US + EU, $179.
-why: >
-  The archetypal small-team appliance program: UL 1082 vs EN 60335-2-15, 60730 class-B software for the thermal cutoff,
-  food-contact declarations, EMC with a big resistive heater, RED cybersecurity for the radio, EU networked-standby limits,
-  a contract manufacturer with an end-of-line test budget, and a platform reused across products. The seed leaves the
-  DFMEA, PFMEA, suppliers and the appliance NPI deliverables for the agents and teams to close.
-seeded: 6 stakeholders, 12 needs with MoEs, 10 regulations, 18 requirements, 13 functions, 6 logical components, 23 parts with disciplines, 16 interfaces incl. mains/sensor nets, 7-state machine, 19 tests, 10 teams (brew, thermal & water, controls & connectivity, ID & enclosure + functional), 3 suppliers, 5 process steps
+summary: 1,400 W thermoblock drip coffee maker with Wi-Fi/BLE scheduling, descale estimation, keep-warm plate and a controller/radio/HMI platform shared with a kettle and grinder. US + EU, $179. Passed
+  DVT on 2026-11-13 (conditional); PVT build February 2027.
+why: 'A complete program one week after DVT exit: every artifact a hardware company keeps is filled from the same graph. 183-row AIAG-VDA DFMEA/PFMEA with optimization actions, owners and evidence; a 30-test
+  DVP&R with EVT and DVT results; an AIAG control plan for 10 process steps; 145 serialised EVT/DVT units with station data; tooling through T2 and PPAP; six CAPAs in 8D form; six ECOs; quotes, POs and
+  incoming inspection for 22 suppliers'' parts; four gate reviews with findings; beta-field FRACAS; approved claims. What is still open is what is really open going into PVT.'
+seeded: 7 stakeholders, 12 needs, 10 regulations, 25 requirements, 14 functions, 7 logical components, 23 parts, 16 interfaces with ICD characteristics, 30 tests and 120+ runs, 27 staffed teams, 12 suppliers,
+  10 process steps, 6 tools, 6 CAPAs, 6 ECOs, 145 units, 4 gate reviews
 assess:
-  - Adopt the "Appliance NPI" process (G0 → G1 → EVT → DVT → PVT → MP) under Lifecycle → PDP and look at the gate × team deliverable matrix.
-  - Run the risk agent on the thermal subsystem — dry boil, NTC drift, triac short, TCO nuisance trip should come out High AP with tests, and the 60730 class-B software items should land in the firmware part.
-  - Ask the dfx agent to run Design for Safety, Manufacturing, Service and Testability — the EoL test budget (R-12) and board swap (R-11) are the anchors.
-  - Ask the cad agent to model the brew basket and shower head natively, then check envelope and mates against IF-14/IF-15.
-  - Open Design definition → Electrical: the netlist from the interfaces gives the mains, heater, pump and sensor nets; export the KiCad netlist and the wire list.
-  - Ask the compliance agent to complete the regulation → requirement coverage (standby and RoHS have no requirement yet) and build the certification plan.
+- 'Open Lifecycle → PDP: G0 to DVT are passed; DVT shows the one waived deliverable (CAPA-06) behind the conditional exit, and PVT shows what is left.'
+- 'Open the DFMEA form: every High and Medium AP row has prevention and detection actions, owner, dates, evidence and revised S/O/D/AP.'
+- 'Open the DVP&R: 30 tests with procedures, acceptance criteria, sample sizes, timing and results from EVT and DVT runs; TST-20 life test is the open DVT condition.'
+- 'Open Industrialization → control plan and PFMEA: 10 process steps, characteristics with spec, measurement, sample size, frequency and reaction plan.'
+- 'Open Quality → CAPA and FRACAS: EVT/DVT problems closed through 8D; beta field events tied to failure modes.'
+- 'Ask the program agent: what must close before the PVT build on 2027-02-01?'
 prompts:
-  - Assess every failure-mode candidate of the thermal control and water delivery components; derive causes from the architecture and tie High AP items to tests
-  - Run the Design for Safety and Design for Manufacturing reviews with evidence
-  - Write the missing requirements for the standby and RoHS regulations and plan UL 1082 / EN 60335-2-15 certification
-  - Model the shower head in CAD: 70 mm diameter, 2 mm wall, 19 holes of 1.2 mm in a hex pattern, boss for IF-14
-  - Plan the EVT gate — work items and handoffs for every failing deliverable
+- What must close before the PVT build on 2027-02-01, by team?
+- Which DFMEA actions are still open and which tests verify them?
+- Draft the PVT entry review agenda from the open findings, CAPAs, risks and deliverables
+- Show the impact of ECO-005 on tests, tooling and open purchase orders
+- Why is SUP-03 over the PPM target and what is the plan?
+process_start: '2025-12-01'
+waivers:
+  D-LQ-CAPA:
+    reason: 'Conditional DVT exit (RV-04): CAPA-06 from the DVT build is open with containment in place; closure due 2027-01-31, before the PVT build'
+    by: Maya Torres
+    date: '2026-11-13'

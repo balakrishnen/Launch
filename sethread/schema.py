@@ -46,7 +46,7 @@ KINDS: dict[str, dict[str, Any]] = {
     # at a gate, each with a check the model can evaluate (see pdp.CHECKS) — the "what does my team owe at CDR" layer.
     "phases": dict(req=["name", "order"], opt={"stage": "", "gate": None, "description": ""}, refs={}),
     "deliverables": dict(req=["name", "gate"], opt={"team": None, "team_kind": "", "focus": "", "check": {}, "required": True, "description": "", "artifact": "", "owner": "", "waived": {}}, refs={"gate": "gates", "team": "teams"}),
-    "fm_assessments": dict(req=["element", "guide"], opt={"mode": "", "effect": "", "cause": "", "S": None, "O": None, "D": None, "controls": "", "tests": [], "ncr": ""}, refs={"tests": "tests"}),
+    "fm_assessments": dict(req=["element", "guide"], opt={"mode": "", "effect": "", "cause": "", "S": None, "O": None, "D": None, "controls": "", "tests": [], "ncr": "", "actions": [], "revised": {}, "history": "", "filter": "", "char": ""}, refs={"tests": "tests"}),
     # ---- whole-company layers: teams, manufacturing, supply chain, program, quality/field ----
     # Two kinds of team. subsystem: owns a slice of the architecture (scope = root parts and/or logical components; the closure is computed —
     # subtree, functions, requirements, boundary interfaces, failure modes, tests, MoEs). functional: cuts across all subsystems with a focus
@@ -76,7 +76,7 @@ KINDS: dict[str, dict[str, Any]] = {
     "cad_models": dict(req=["part", "code"], opt={"name": "", "status": "draft", "built": "", "by": "", "volume_mm3": None, "mass_g": None, "bbox_mm": [], "files": {}, "checks": [], "features": [], "notes": "", "error": ""}, refs={"part": "parts"}),
     "quotes": dict(req=["part", "supplier"], opt={"qty": None, "unit_cost_usd": None, "moq": None, "lead_time_d": None, "tooling_usd": None, "nre_usd": None, "valid_until": "", "incoterm": "", "status": "requested", "date": "", "ref": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers"}),
     # supply chain — industrialization: tooling per part with T-sample milestones and PPAP/FAI status
-    "tooling": dict(req=["part", "supplier"], opt={"tool_id": "", "type": "injection mold", "cavities": None, "cost_usd": None, "owner": "customer", "quote": None, "kickoff": "", "t0": "", "t1": "", "t2": "", "status": "quoted", "ppap": "not started", "ppap_level": 3, "fai": "", "capacity_per_week": None, "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "quote": "quotes"}),
+    "tooling": dict(req=["part", "supplier"], opt={"tool_id": "", "type": "injection mold", "cavities": None, "cost_usd": None, "owner": "customer", "quote": None, "kickoff": "", "t0": "", "t1": "", "t2": "", "status": "quoted", "ppap": "not started", "ppap_level": 3, "fai": "", "capacity_per_week": None, "notes": "", "build": None}, refs={"part": "parts", "supplier": "suppliers", "quote": "quotes"}),
     # quality — inspections (incoming / in-process / EoL) feed supplier PPM and launch quality
     "inspections": dict(req=["date", "part", "stage", "qty", "defects"], opt={"supplier": None, "lot": "", "unit": "", "defect_codes": [], "disposition": "", "build": None, "station": "", "by": "", "notes": ""}, refs={"part": "parts", "supplier": "suppliers", "build": "gates"}),
     # quality — CAPA / 8D: the closed loop from a finding, field event or inspection to a verified corrective action

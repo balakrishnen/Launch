@@ -149,7 +149,7 @@ def build(W, user_of=lambda: os.environ.get("USER", "mcp")) -> MCPServer:
         uid = next((u for u, v in m.get("units", {}).items() if v.get("serial") == serial and v.get("work_order") == work_order), None)
         cur = m["units"][uid] if uid else {"serial": serial, "work_order": work_order, "components": {}, "stations": {}, "status": "in progress", "built": time.strftime("%Y-%m-%d")}
         st = dict(cur.get("stations") or {}); st[step] = {"result": result, "date": time.strftime("%Y-%m-%d"), "by": who(), "data": data or {}, "defect_codes": defect_codes or []}
-        routing = wo.get("routing") or sorted(m.get("process_steps", {}), key=lambda x: m["process_steps"][x].get("order", 0))
+        routing = wo.get("routing") or sorted(m.get("process_steps", {}), key=lambda x: m["process_steps"][x].get("seq", m["process_steps"][x].get("order", 0)))
         status = "failed" if any(v.get("result") == "fail" for v in st.values()) else ("complete" if all(st.get(x, {}).get("result") == "pass" for x in routing) else "in progress")
         value = {**cur, "stations": st, "components": {**(cur.get("components") or {}), **(components or {})}, "status": status}; uid2 = uid or f"U-{work_order}-{serial}"
         ops = [Op(op="update" if uid else "add", kind="units", id=uid2, value=value)]

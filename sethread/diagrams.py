@@ -256,7 +256,7 @@ def artifact(m, view, ids: list | None = None) -> dict:
                 for t in (x.get("tests") or [])[:3]: L.append(node(m, t, "tests")); L.append(edge(t, x["id"], "detects", "dashed", "open", "#15803d"))
     elif view == "process":
         prev = None
-        for p, v in sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("order", 0)):
+        for p, v in sorted(m.get("process_steps", {}).items(), key=lambda kv: kv[1].get("seq", kv[1].get("order", 0))):
             L.append(node(m, p, "process_steps", focus=p in ids, extra=[v.get("station", ""), "consumes: " + ", ".join(v.get("parts", [])[:4])]))
             if prev: L.append(edge(prev, p, "", "solid", "normal"))
             prev = p

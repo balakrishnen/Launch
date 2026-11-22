@@ -49,12 +49,13 @@ def element_parts(m, kind, eid):
 
 def fmea(m):
     idx = _assess_index(m); rows, n = [], 0
+    keys = {(a["element"], a["guide"]): k for k, a in m["fm_assessments"].items()}
     for kind, eid, g in candidates(m):
         a = idx.get((eid, g))
         if a is None or a.get("ncr"): continue
         n += 1
-        rows.append(dict(id=f"FM-{n:03d}", kind=kind, element=eid, element_name=element_name(m, kind, eid), guide=g, mode=a["mode"], effect=a["effect"],
-                         cause=a["cause"], S=a["S"], O=a["O"], D=a["D"], AP=ap(a["S"], a["O"], a["D"]), controls=a.get("controls", ""), tests=list(a.get("tests", [])),
+        rows.append(dict(id=f"FM-{n:03d}", key=keys.get((eid, g), ""), kind=kind, element=eid, element_name=element_name(m, kind, eid), guide=g, mode=a["mode"], effect=a["effect"],
+                         cause=a["cause"], S=a["S"], O=a["O"], D=a["D"], AP=ap(a["S"], a["O"], a["D"]), controls=a.get("controls", ""), tests=list(a.get("tests", [])), actions=list(a.get("actions") or []), revised=dict(a.get("revised") or {}), history=a.get("history", ""), filter=a.get("filter", ""), char=a.get("char", ""),
                          reqs=element_reqs(m, kind, eid), parts=element_parts(m, kind, eid), **structure_levels(m, kind, eid),
                          disciplines=sorted({m["parts"][p].get("discipline", "system") for p in element_parts(m, kind, eid) if p in m["parts"]})))
     return rows
