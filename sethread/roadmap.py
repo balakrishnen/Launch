@@ -65,6 +65,12 @@ SEED = [
          notes="Appliance and automotive OEMs keep design data in their own cloud. Package Launch (app, Postgres, agents, MCP) for single-tenant deployment in AWS/Azure/GCP with the customer's IdP and model endpoint.", source='MOVEdot moveOS launch post, 2026-11-17'),
     dict(id='RM-28', title="Knowledge index over the organization's reports, specs and methods", area='model', horizon='next', status='idea', priority=2,
          notes='Agents start from prior test reports, design guides and lessons learned. Index uploaded documents per org and project, cite them as sources on staged patches, and link extracted facts to model elements.', source='MOVEdot moveOS launch post, 2026-11-17'),
+    dict(id='RM-29', title='Query workspace: plain-English and SQL questions across the whole graph, pinned to dashboards', area='platform', horizon='next', status='planned', priority=2,
+         notes="Forms answer the standard questions; teams also ask one-off cross-cutting ones ('which released parts still have open DFMEA actions', 'which requirements changed since PDR and which tests did that touch'). Expose the model as read-only SQL tables (DuckDB over a nightly or per-revision export), let the agent write and run the query with each step visible, chart the result, pin it to a team page, and alert when a pinned query breaks or its answer changes.", source='Violet Labs Data Lab post, 2026-11-22'),
+    dict(id='RM-30', title='Time travel: any artifact or query as of a date, gate baseline or revision', area='model', horizon='next', status='planned', priority=2,
+         notes="Launch already keeps every revision and baselines at gates. Surface it: render any form as of a baseline, diff two baselines (what changed in the DFMEA between PDR and CDR), and allow 'as of' in the query workspace. Gate reviews and audits ask for exactly this.", source='Violet Labs Data Lab post, 2026-11-22'),
+    dict(id='RM-31', title='Ingest from incumbent PLM/ERP/MES into the graph (read-side connectors)', area='integrations', horizon='later', status='idea', priority=3,
+         notes="For companies that keep Teamcenter, Arena or an ERP, sync parts, BOMs, change orders and PO lines into the graph on a schedule, mapped to Launch kinds, so Launch's forms and checks run on their real data without replacing those tools first.", source='Violet Labs Data Lab post, 2026-11-22'),
 ]
 
 def path(data_root): return os.path.join(data_root, ".org", "roadmap.yaml")
