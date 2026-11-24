@@ -71,6 +71,15 @@ SEED = [
          notes="Launch already keeps every revision and baselines at gates. Surface it: render any form as of a baseline, diff two baselines (what changed in the DFMEA between PDR and CDR), and allow 'as of' in the query workspace. Gate reviews and audits ask for exactly this.", source='Violet Labs Data Lab post, 2026-11-22'),
     dict(id='RM-31', title='Ingest from incumbent PLM/ERP/MES into the graph (read-side connectors)', area='integrations', horizon='later', status='idea', priority=3,
          notes="For companies that keep Teamcenter, Arena or an ERP, sync parts, BOMs, change orders and PO lines into the graph on a schedule, mapped to Launch kinds, so Launch's forms and checks run on their real data without replacing those tools first.", source='Violet Labs Data Lab post, 2026-11-22'),
+    dict(id='RM-32', title='Launch-Bench: score agents on billable deliverables from the example programs', area='agents & skills', horizon='next', status='idea', priority=2,
+         notes="PLE-style tasks built from BrewMaster, Sabi and the other examples (write the PVT PFMEA, close CAPA-06 with an 8D, draft the PVT entry review, size EoL fixtures for 150k/yr). Each task has a weighted rubric of binary, evidence-bound checks plus executable graders that run the Launch validators. Run per model and per skill on every release so skill changes are measured, not guessed. Keep a private held-out set.", source="PLE: Physical-Engineering's Last Exam (Google Cloud AI Research, arXiv 2610.30537), 2026-11-23"),
+    dict(id='RM-33', title='Hard-constraint gate on every agent deliverable before it is accepted', area='agents & skills', horizon='now', status='idea', priority=1,
+         notes="PLE found Opus 5.5 meets about 91% of constraints on average but only 41% of deliverables meet every hard constraint. Before a patch or form from an agent is accepted, run the deterministic checks (schema, trace, S≥9 needs a test, AP H needs an action, control-plan SC lines need a reaction plan, cost under target). Any hard failure blocks acceptance and goes back to the agent with the failing rows, instead of relying on the agent's own claim that it is done.", source="PLE: Physical-Engineering's Last Exam (Google Cloud AI Research, arXiv 2610.30537), 2026-11-23"),
+    dict(id='RM-34', title='Applied-clause list: every requirement and deliverable cites the standard clause and value it used', area='model', horizon='next', status='idea', priority=2,
+         notes="PLE solvers must list the requirements they applied (clause + value) and graders check them against the source documents. In Launch: regulation links carry clause (e.g. IEC 60335-1 cl. 11, 60 K) and limit; agents must fill them; a checker compares the value against the regulations library so a wrong limit is caught rather than silently traced.", source="PLE: Physical-Engineering's Last Exam (Google Cloud AI Research, arXiv 2610.30537), 2026-11-23"),
+    dict(id='RM-35', title='Economic objective in trades and deliverables: compliant is not enough', area='engineering', horizon='later', status='idea', priority=3,
+         notes="PLE scores designs that pass every check but cost 20% more than a certified bound lower. Add an objective (cost, mass, cycle time) with a known bound to trade studies, BOM and EoL station sizing, and show the gap to the bound next to the pass/fail result.", source="PLE: Physical-Engineering's Last Exam (Google Cloud AI Research, arXiv 2610.30537), 2026-11-23"),
+
 ]
 
 def path(data_root): return os.path.join(data_root, ".org", "roadmap.yaml")
@@ -79,7 +88,10 @@ def load(data_root: str) -> dict:
     p = path(data_root)
     if os.path.exists(p): d = yaml.safe_load(open(p)) or {}
     else: d = {"items": [dict(x, created=time.strftime("%Y-%m-%d")) for x in SEED], "seeded": time.strftime("%Y-%m-%d")}
-    d.setdefault("items", []); d["statuses"] = STATUSES; d["horizons"] = HORIZONS; d["areas"] = AREAS
+    d.setdefault("items", [])
+    have = {x.get("id") for x in d["items"]}   # seed items added in later releases join an existing roadmap; edits to existing ones are kept
+    d["items"] += [dict(x, created=time.strftime("%Y-%m-%d")) for x in SEED if x["id"] not in have]
+    d["statuses"] = STATUSES; d["horizons"] = HORIZONS; d["areas"] = AREAS
     return d
 
 def save(data_root: str, items: list[dict], by: str) -> dict:
