@@ -208,6 +208,7 @@ scenarios:
     concurrent:
     - F-07
     - F-14
+    kind: nominal
   SC-02:
     uc: UC-02
     name: App schedule 07:00, notify when done
@@ -218,12 +219,14 @@ scenarios:
     - F-02
     - F-03
     - F-08
+    kind: nominal
   SC-03:
     uc: UC-03
     name: Warm for 120 min then off
     steps:
     - F-05
     - F-12
+    kind: nominal
   SC-04:
     uc: UC-04
     name: Prompt, run descale cycle
@@ -232,12 +235,14 @@ scenarios:
     - F-11
     - F-02
     - F-01
+    kind: nominal
   SC-05:
     uc: UC-05
     name: Fault code → board swap → self-test
     steps:
     - F-11
     - F-13
+    kind: nominal
   SC-06:
     uc: UC-06
     name: Hipot, ground bond, brew, flow cal
@@ -246,6 +251,7 @@ scenarios:
     - F-01
     - F-02
     - F-06
+    kind: nominal
   SC-07:
     uc: UC-07
     name: Offline brew and schedule from the dial
@@ -254,6 +260,141 @@ scenarios:
     - F-08
     - F-01
     - F-02
+    kind: alternate
+    response: 'Router down: dial and on-machine schedule work; app commands queue until reconnect (TST-16, 23/23 functions)'
+  SC-08:
+    uc: UC-01
+    name: 'Dry boil: reservoir reads water but is empty'
+    steps:
+    - F-06
+    - F-07
+    - F-11
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-01-unintended
+    - FA-F-06-unintended
+    response: 'Flow = 0 for 3 s while heating, or level and flow disagree: triac off within 5 s (TST-03 worst 3.4 s), E03 on HMI and app alert; stays in fault until refilled and power-cycled'
+    ends_in: S-FAULT
+  SC-09:
+    uc: UC-01
+    name: NTC opens during brew
+    steps:
+    - F-07
+    - F-11
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-07-wrong_timing
+    response: 'NTC input reads above 3.2 V: heater off in 0.3 s, E02 on HMI and app; service replaces the thermoblock (UC-05)'
+    ends_in: S-FAULT
+  SC-10:
+    uc: UC-01
+    name: 'Software protection fails: TCO trips'
+    steps:
+    - F-07
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-07-loss
+    response: 'TCO opens at 192 °C rating (TST-04: 9.1 s, block 196 to 198 °C); heater circuit permanently open, display stays on with E05; warranty replacement of the thermoblock assembly'
+    ends_in: S-FAULT
+  SC-11:
+    uc: UC-01
+    name: Carafe removed mid-brew
+    steps:
+    - F-04
+    - F-02
+    - F-12
+    concurrent: []
+    kind: alternate
+    triggers:
+    - FA-F-04-unintended
+    response: 'Carafe switch opens: pump pauses, drip-stop closes (≤ 2 g over 60 s, TST-19); brew resumes within 2 s of return, aborted if absent for more than 5 min'
+    ends_in: S-BREW
+  SC-12:
+    uc: UC-01
+    name: Water spilled on the top cover while brewing
+    steps:
+    - F-14
+    - F-11
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-14-unintended
+    response: Drip ledge and labyrinth carry water away from HMI and mains wiring; no function lost, insulation stays above limit (TST-25, 310 MΩ)
+    ends_in: S-BREW
+  SC-13:
+    uc: UC-01
+    name: Housing cracked in transit, user tries to brew
+    steps:
+    - F-14
+    - F-12
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-14-loss
+    response: Cord anchorage holds and live parts stay behind inner barriers (ISTA 3A, TST-21); quick-start card tells the user not to use a damaged unit; retailer replacement
+    ends_in: S-OFF
+  SC-14:
+    uc: UC-02
+    name: Power cut before the scheduled brew
+    steps:
+    - F-08
+    - F-11
+    concurrent: []
+    kind: alternate
+    triggers: []
+    response: Schedule kept in flash and RTC re-synced on reconnect; if power returns more than 30 min after the scheduled time the brew is skipped and the app is told
+    ends_in: S-IDLE
+  SC-15:
+    uc: UC-03
+    name: Carafe lifted and replaced during keep-warm
+    steps:
+    - F-05
+    - F-12
+    concurrent: []
+    kind: alternate
+    triggers:
+    - FA-F-05-degraded
+    response: Keep-warm state retained for up to 30 s carafe absence (FW 2.3, CAPA-04); plate off if absent longer
+    ends_in: S-WARM
+  SC-16:
+    uc: UC-04
+    name: Reservoir runs dry during descale
+    steps:
+    - F-09
+    - F-06
+    - F-11
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-06-loss
+    response: Descale pauses with heater off, prompts refill on HMI and app, resumes at the interrupted step
+    ends_in: S-DESCALE
+  SC-17:
+    uc: UC-05
+    name: Replacement main board fails self-test
+    steps:
+    - F-13
+    - F-11
+    concurrent: []
+    kind: exception
+    triggers: []
+    response: Self-test reports the failing channel; technician returns the board (RMA) and the unit is not handed back to the user
+    ends_in: S-FAULT
+  SC-18:
+    uc: UC-06
+    name: End-of-line tester stops catching hipot failures
+    steps:
+    - F-13
+    concurrent: []
+    kind: exception
+    triggers:
+    - FA-F-13-unintended
+    - FA-F-13-loss
+    response: Shift-start known-bad sample (5 MΩ leak) must fail; if it passes the line stops and units since the last good check are quarantined; MES blocks pack-out without an EoL pass record
+    ends_in: S-OFF
 regulations:
   REG-UL1082:
     name: UL 1082 — Household electric coffee makers

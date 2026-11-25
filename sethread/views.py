@@ -174,11 +174,13 @@ def v04_requirements(m, out):
 def v05_action_flows(m, out):
     PER = 7; gap = 0.26; bh = 0.8; rowh = 1.2
     rows_of = {sid: max(1, math.ceil(len(s["steps"]) / PER)) for sid, s in m["scenarios"].items()}
-    H = max(5, 1.4 + sum(0.9 + rowh * r + (0.3 if s.get("concurrent") else 0) for (sid, s), r in zip(m["scenarios"].items(), rows_of.values())))
+    note = lambda s: bool(s.get("concurrent") or s.get("triggers") or s.get("response"))
+    H = max(5, 1.4 + sum(0.9 + rowh * r + (0.42 if note(s) else 0) for (sid, s), r in zip(m["scenarios"].items(), rows_of.values())))
     f, ax = fig(13, H); title(ax, "OOSEM 3 — Action flow view: scenarios decomposed into functions (red = safety decision)", h=H); y = H - 1.55
     for sid, s in m["scenarios"].items():
         uc = m["use_cases"].get(s["uc"], {}).get("name", s["uc"])
-        fit(ax, 0.4, y + 0.6, f"{s['name']}  ({sid}, {uc})", 12.2, 9.4, fontweight="bold", color=INK); ax.add_patch(Circle((0.7, y), 0.1, color=INK))
+        kind = s.get("kind", "nominal"); tag = "" if kind == "nominal" else f"[{kind}]  "
+        fit(ax, 0.4, y + 0.6, f"{tag}{s['name']}  ({sid}, {uc})", 12.2, 9.4, fontweight="bold", color=(CRIT if kind == "exception" else INK)); ax.add_patch(Circle((0.7, y), 0.1, color=INK))
         steps = s["steps"]; k = len(steps); w = (11.4 - gap * PER) / PER if k > PER else min(1.6, (11.4 - gap * k) / max(1, k))
         x = 1.05; prev = None
         for i, st in enumerate(steps):
@@ -195,10 +197,14 @@ def v05_action_flows(m, out):
             if i < k - 1 and (i + 1) % PER: arrow(ax, (x + w, y), (x + w + gap, y), color=INK, lw=1.1)
             prev = (x, y); x += w + gap
         ax.add_patch(Circle((x + 0.05, y), 0.1, fc="white", ec=INK, lw=1.4)); ax.add_patch(Circle((x + 0.05, y), 0.05, color=INK))
-        if s.get("concurrent"):
-            txt = "concurrent: " + "; ".join(f"{c} {m['functions'][c]['name']}" for c in s["concurrent"] if c in m["functions"])
-            for j, ln in enumerate(wrap(txt, 160)[:2]): fit(ax, 1.05, y - 0.62 - 0.17 * j, ln, 11.6, 7, color=QUIET)
-            y -= 0.3
+        if s.get("ends_in"): fit(ax, x + 0.25, y, f"ends in {s['ends_in']} {m.get('states', {}).get(s['ends_in'], {}).get('name', '')}".strip(), max(1.0, 12.6 - x), 7.4, va="center", color=QUIET)
+        if note(s):
+            parts = []
+            if s.get("triggers"): parts.append("trigger: " + ", ".join(s["triggers"]))
+            if s.get("response"): parts.append("response: " + s["response"])
+            if s.get("concurrent"): parts.append("concurrent: " + "; ".join(f"{c} {m['functions'][c]['name']}" for c in s["concurrent"] if c in m["functions"]))
+            for j, ln in enumerate(wrap("   ".join(parts), 170)[:3]): fit(ax, 1.05, y - 0.62 - 0.16 * j, ln, 11.6, 7, color=QUIET)
+            y -= 0.42
         y -= 0.9 + rowh
     save(f, "V05_action_flows", out)
 

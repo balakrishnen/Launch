@@ -94,6 +94,10 @@ SEED += [dict(id=i, name=n, url=u, category=c, stance=st, what=w, relevance=r, r
     ("LS-26", "MecAgent", "", "partner candidate", "partner", "CAD-side copilot for mechanical design.", "Same seat as Leo AI; candidate for the CAD-side agent connector.", ["RM-42"]),
     ("LS-27", "CopperPilot", "", "partner candidate", "partner", "Electronics-side (EDA) copilot.", "EDA counterpart to the CAD-side connector; Launch sends the electrical brief and records results.", ["RM-11"]),
 ]]
+SEED += [dict(id="LS-28", name="MBSE Simplified / SSA (Doug Rosenberg, Pain-Free MBSE)", url="https://ssa-inc.com/pain-free-mbse/", category="person", stance="learn",
+    what="Systems Strategies & Analysis runs MBSE Simplified; Doug Rosenberg (Parallel Agile founder, ICONIX) teaches a 4-day live 'Pain-Free MBSE' course: 'Rigor without the Mortis', lunar lander from requirements to parametric simulation in SysML (Cameo + SysML v2 appendix). $1,995 incl. book; next run Dec 7 to 10, 2026. Pain points named: overloaded activity diagrams, use cases that cover only nominal scenarios.",
+    relevance="Same thesis as Launch (keep MBSE rigor, remove modelling toil) but taught to humans rather than automated. His 'sunny day only' use-case pain point became Launch's off-nominal coverage check (scenario kind, triggers, response, end state). Possible channel: training partners and course examples run in Launch.",
+    roadmap=[], first_seen="2026-11-25", last_seen="2026-11-25", sources=["https://ssa-inc.com/pain-free-mbse/"])]
 
 FIELDS = ("id", "name", "url", "category", "stance", "what", "relevance", "roadmap", "first_seen", "last_seen", "sources", "notes")
 

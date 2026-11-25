@@ -144,11 +144,26 @@ def trace(m):
     for r, rv in m.get("risks", {}).items(): E += [(r, "threatens", x) for x in rv.get("links", [])]
     return E
 
+REVIEW_KEYS = ("use_cases_without_off_nominal", "severe_failure_modes_without_exception_scenario")   # review prompts shown in the report; they do not make the trace unclean
+
 def coverage_report(m):
     fm = fmea(m); rep = {}
     rep["requirements_without_tests"] = [r for r, v in m["requirements"].items() if not v["tests"]]
     rep["requirements_not_realized_by_function"] = [r for r, v in m["requirements"].items() if v["type"] != "REGU" and not any(r in f["reqs"] for f in m["functions"].values())]
     rep["functions_without_allocation"] = [f for f, v in m["functions"].items() if not v["alloc"]]
+    # off-nominal coverage (OOSEM/ISO 29148: use cases must cover alternate and exception flows, not only the sunny day).
+    # A use case whose scenarios exercise a function with a severity >= 7 failure mode needs at least one alternate or exception
+    # scenario; every credible severity >= 9 failure mode of a function used in a scenario needs an exception scenario that
+    # states the system response (detect, react, end state).
+    scen = m.get("scenarios", {}); sev = {}
+    for f in fm:
+        if f["kind"] == "function": sev.setdefault(f["element"], []).append(f)
+    uses = lambda s: set(s.get("steps", [])) | set(s.get("concurrent", []))
+    rep["use_cases_without_off_nominal"] = [u for u in m.get("use_cases", {}) if any(f["S"] >= 7 for s in scen.values() if s["uc"] == u for e in uses(s) for f in sev.get(e, []))
+                                            and not any(s.get("kind", "nominal") != "nominal" for s in scen.values() if s["uc"] == u)]
+    used = set().union(*[uses(s) for s in scen.values()]) if scen else set()
+    covered = {t for s in scen.values() if s.get("kind") == "exception" for t in s.get("triggers", [])}
+    rep["severe_failure_modes_without_exception_scenario"] = [f["key"] or f["id"] for f in fm if f["kind"] == "function" and f["S"] >= 9 and f["element"] in used and (f["key"] or f["id"]) not in covered]
     rep["functions_not_in_logical_component"] = [f for f in m["functions"] if not any(f in lc["funcs"] for lc in m["logical_components"].values())]
     rep["functions_in_multiple_logical_components"] = [f for f in m["functions"] if sum(f in lc["funcs"] for lc in m["logical_components"].values()) > 1]
     rep["functions_not_in_scenario"] = [f for f in m["functions"] if not any(f in s["steps"] or f in s["concurrent"] for s in m["scenarios"].values())]
@@ -173,7 +188,7 @@ def coverage_report(m):
                          safety_class=sum(f["S"] >= 8 for f in fm), tests=len(m["tests"]), requirements=len(m["requirements"]), functions=len(m["functions"]),
                          parts=len(m["parts"]), logical_components=len(m["logical_components"]), interfaces=len(m["interfaces"]))
     PROGRAM_KEYS = ("open_findings_critical", "pending_handoffs", "buy_parts_without_supplier", "field_events_without_fm", "process_steps_without_pfmea", "unassessed_process_candidates")
-    rep["clean"] = bool(m["requirements"]) and bool(m["tests"]) and all(not v for k, v in rep.items() if k not in ("counts", "clean") + PROGRAM_KEYS)   # SE trace only; program readiness is lifecycle.gate_readiness
+    rep["clean"] = bool(m["requirements"]) and bool(m["tests"]) and all(not v for k, v in rep.items() if k not in ("counts", "clean") + PROGRAM_KEYS + REVIEW_KEYS)   # SE trace only; program readiness is lifecycle.gate_readiness
     return rep
 
 def gaps_as_tasks(m):
