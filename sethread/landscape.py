@@ -85,6 +85,15 @@ SEED += [
          relevance="Material-model depth is where AI-native solvers will be tested; a possible source of material behaviour models for simulation briefs.",
          roadmap=["RM-37"], first_seen="2026-11-25", last_seen="2026-11-25", sources=["Comment on Leo AI post 2026-11-25"]),
 ]
+SEED += [dict(id=i, name=n, url=u, category=c, stance=st, what=w, relevance=r, roadmap=rm, first_seen="2026-11-10", last_seen="2026-11-10", sources=[u] if u else []) for i, n, u, c, st, w, r, rm in [
+    ("LS-21", "Flow Engineering", "https://www.flowengineering.com/", "competitor", "compete", "Requirements and systems engineering tool for hardware teams with live engineering values.", "Named benchmark: Launch targets 10x better by deriving the full artifact set and gates from the model.", []),
+    ("LS-22", "Dalus", "https://www.dalus.io/", "competitor", "compete", "AI-native MBSE / systems design platform.", "Direct comparison point for agentic MBSE.", ["RM-13"]),
+    ("LS-23", "Trace.Space", "", "competitor", "compete", "AI requirements and traceability platform for hardware.", "Overlaps Launch's requirements and trace views.", ["RM-06"]),
+    ("LS-24", "Syndeia (Intercax)", "", "adjacent", "integrate", "Digital-thread integration across MBSE, PLM, ALM and simulation tools.", "Integration-layer alternative; Launch keeps the thread in its own graph and connects via OSLC/MCP.", ["RM-06", "RM-31"]),
+    ("LS-25", "Nominal", "https://nominal.io/", "adjacent", "watch", "Test and operations data platform for hardware (aerospace, defense).", "Adjacent to TestRUNS/Kanalysis rather than Launch; test evidence would flow into Launch's runs.", ["RM-03"]),
+    ("LS-26", "MecAgent", "", "partner candidate", "partner", "CAD-side copilot for mechanical design.", "Same seat as Leo AI; candidate for the CAD-side agent connector.", ["RM-42"]),
+    ("LS-27", "CopperPilot", "", "partner candidate", "partner", "Electronics-side (EDA) copilot.", "EDA counterpart to the CAD-side connector; Launch sends the electrical brief and records results.", ["RM-11"]),
+]]
 
 FIELDS = ("id", "name", "url", "category", "stance", "what", "relevance", "roadmap", "first_seen", "last_seen", "sources", "notes")
 
