@@ -89,6 +89,13 @@ SEED = [
     dict(id='RM-39', title='Agent-built engineering tools: small interactive calculators bound to the model', area='agents & skills', horizon='later', status='idea', priority=3,
          notes="Neural Concept's agent built a propeller app that re-solves in about 60 ms so the engineer explores in real time. In Launch: the agent generates a calculator page (EoL fixture count vs demand, thermoblock sizing, tolerance stack) that reads its inputs from the model, checks results against requirements and writes the chosen point back as a patch with its evidence.", source='Neural Concept, Agentic engineering design: turbomachinery case studies, 2026-11-25'),
 
+    dict(id='RM-40', title='Geometry design review: run DfM, tolerance and ICD checks on attached STEP files, ranked by severity', area='engineering', horizon='later', status='idea', priority=2,
+         notes="Leo's Inspector reviews an assembly or STEP file for geometry, interfaces, tolerances, GD&T and company standards and ranks issues by severity. In Launch the same review gains the model: check wall thickness and draft against the part's CTQ and process (e.g. P-ENCL 2.5 ±0.15 mm molded PP), mating features against the ICD tolerances (IF-15 rail gap), and file each issue as a finding on the part with severity, so it reaches the gate review instead of a CAD comment.", source='Leo AI (getleo.ai), 2026-11-25'),
+    dict(id='RM-41', title='Part reuse search: suggest existing parts from past programs and vendor catalogs before a new part is added', area='model', horizon='later', status='idea', priority=3,
+         notes="When a part is added or a function is allocated, search the organization's other programs (same attrs, qualified supplier, PPAP history, field PPM) and vendor catalogs, and show reuse candidates with their evidence. A reused part brings its test history and FMEA rows with it, which is worth more than the CAD.", source='Leo AI (getleo.ai), 2026-11-25'),
+    dict(id='RM-42', title='CAD-side agent connector (Leo AI, Onshape/Fusion agents) over MCP', area='integrations', horizon='later', status='idea', priority=3,
+         notes="Launch should not build CAD generation. Treat CAD-side agents as peers: Launch sends the brief (requirements, CTQs, ICD characteristics, envelope) and receives geometry, mass properties and design-review issues back as a patch with evidence. Complements RM-01 (simulation brief) and RM-11 (vendor APIs behind the CAD stubs). Leo is positioned as a mechanical design copilot with PLM read access, so it is more likely a partner than a competitor.", source='Leo AI (getleo.ai), 2026-11-25'),
+
 ]
 
 def path(data_root): return os.path.join(data_root, ".org", "roadmap.yaml")
