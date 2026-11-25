@@ -9,7 +9,7 @@ def get(p):
     except Exception as e: return None
 from sethread import schema
 from sethread.web.server import STAGE_OF
-D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates'), "roadmap": get('/api/roadmap')}
+D = {"projects": {}, "list": get('/api/projects'), "examples": get('/api/examples') or [], "org": get('/api/org'), "org_templates": get('/api/org/templates'), "roadmap": get('/api/roadmap'), "landscape": get('/api/landscape')}
 # product visuals: inline the svg so the static review needs no file route
 def _img(pid, image):
     if not image or not image.endswith('.svg'): return None

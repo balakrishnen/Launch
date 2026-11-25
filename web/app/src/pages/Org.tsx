@@ -7,7 +7,7 @@ import { Building2, GitBranch, Users, UserPlus, Plug, Shield, Save, Map } from '
 import { api } from '../api'
 
 type Col = { key: string; name: string; type?: 'text' | 'number' | 'list' | 'bool' | 'select'; options?: string[]; width?: number }
-const TABS = ['Process', 'Structure', 'Teams', 'Members', 'Tools', 'Policy', 'Roadmap']
+const TABS = ['Process', 'Structure', 'Teams', 'Members', 'Tools', 'Policy', 'Roadmap', 'Landscape']
 
 export function Org() {
   const nav = useNavigate()
@@ -28,7 +28,7 @@ export function Org() {
     <div className="row between" style={{ marginBottom: 6 }}><div><div className="row" style={{ gap: 8 }}><Building2 size={18} /><h1 style={{ margin: 0 }}>{o.name}</h1><span className="pill">{o.me?.role}</span></div><div className="muted small">Defined once, inherited by every project. {o.me?.email} · <a href="#" onClick={e => { e.preventDefault(); nav('/') }}>projects</a></div></div>
       <div className="row">{dirty && <span className="pill warn">unsaved</span>}<button className="btn primary" disabled={!canEdit || !dirty} onClick={save}><Save size={14} />Save</button></div></div>
     {!canEdit && <div className="card small" style={{ margin: '8px 0', borderColor: '#f5d78e' }}>You can view the organization; admins and program managers edit it. The first users before any member is listed are admins — add yourself under Members.</div>}
-    <div className="sectabs">{TABS.filter(t => t !== 'Roadmap' || o.me?.role === 'admin').map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div>
+    <div className="sectabs">{TABS.filter(t => !['Roadmap', 'Landscape'].includes(t) || o.me?.role === 'admin').map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div>
 
     {tab === 'Process' && <div className="stack" style={{ gap: 14 }}>
       <div className="card"><div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}><span className="small" style={{ fontWeight: 600 }}>Process variants</span>{o.processes.map((p: any) => <button key={p.id} className="chip" style={(pv || o.default_process) === p.id ? { borderColor: 'var(--accent)', color: 'var(--accent-ink)', background: 'var(--accent-soft)' } : {}} onClick={() => setPv(p.id)}>{p.name || p.id}{p.id === o.default_process ? ' · default' : ''}</button>)}<button className="btn sm" onClick={addVariant}>+ Variant</button>{pv && pv !== o.default_process && <><button className="btn sm" onClick={() => { set('default_process', pv) }}>Make default</button><button className="btn sm" onClick={delVariant}>Delete</button></>}<span className="muted small">A multi-product company keeps several (platform, derivative, accessory…); a project picks one and tailors it.</span></div>
@@ -44,6 +44,7 @@ export function Org() {
 
     {tab === 'Structure' && <StructureTab o={o} set={set} />}
     {tab === 'Roadmap' && o.me?.role === 'admin' && <RoadmapTab toast={toast} />}
+    {tab === 'Landscape' && o.me?.role === 'admin' && <LandscapeTab toast={toast} />}
     {tab === 'Teams' && <div className="card" style={{ marginBottom: 10 }}><h4>Departments</h4><div className="muted small" style={{ margin: '4px 0 8px' }}>A team's focus places it in a department. Quality does both halves — design quality and manufacturing quality; regulatory compliance and the design studio sit in Engineering; supply chain is sourcing, procurement, industrialization and logistics.</div>
       <div className="grid3" style={{ gap: 10 }}>{Object.entries((o.departments || {}) as Record<string, string[]>).map(([d, fs]) => <div key={d}><b className="small">{d}</b><div className="row" style={{ flexWrap: 'wrap', gap: 4, marginTop: 4 }}>{fs.map(f => <span key={f} className="pill" style={{ fontWeight: 400 }}>{f.replace(/_/g, ' ')}{o.teams.some((t: any) => t.focus === f) ? '' : ' · none'}</span>)}</div></div>)}</div></div>}
     {tab === 'Teams' && <Table title="Team catalog" icon={<Users size={14} />} rows={o.teams} onChange={rows => set('teams', rows)} idPrefix="TM-" cols={[{ key: 'id', name: 'id' }, { key: 'name', name: 'name', width: 200 }, { key: 'kind', name: 'kind', type: 'select', options: ['functional', 'subsystem'] }, { key: 'unit', name: 'unit (org structure)', type: 'select', options: ['', ...(o.structure || []).map((u: any) => u.id)] }, { key: 'focus', name: 'view override (built-in)', type: 'select', options: ['', ...o.focus_options] }, { key: 'discipline', name: 'discipline' }, { key: 'lead', name: 'lead (email)' }, { key: 'parts', name: 'scope root parts (subsystem; per project)', type: 'list' }]}
@@ -152,6 +153,54 @@ function RoadmapTab({ toast }: { toast: (m: string) => void }) {
           <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>Owner<input className="field" value={cur.owner || ''} onChange={e => upd(cur.id, { owner: e.target.value })} /></label><label className="small" style={{ flex: 1 }}>Due<input className="field" type="date" value={cur.due || ''} onChange={e => upd(cur.id, { due: e.target.value })} /></label></div>
           <label className="small">Notes<textarea className="field" rows={6} value={cur.notes || ''} onChange={e => upd(cur.id, { notes: e.target.value })} /></label>
           <label className="small">Source<input className="field" value={cur.source || ''} onChange={e => upd(cur.id, { source: e.target.value })} /></label>
+        </div></div>}
+    </div>
+  </div>
+}
+
+// Market landscape: every company, paper, person and event reviewed while building Launch, with the stance we take and the
+// roadmap items it produced. Edited inline, saved as a whole (own file, like the roadmap).
+function LandscapeTab({ toast }: { toast: (m: string) => void }) {
+  const [d, setD] = useState<any>(null); const [dirty, setDirty] = useState(false); const [sel, setSel] = useState<string | null>(null); const [q, setQ] = useState(''); const [cat, setCat] = useState('')
+  useEffect(() => { api.get('/landscape').then(setD).catch(e => toast(e.message)) }, [])
+  if (!d) return <div className="empty">Loading landscape…</div>
+  const items: any[] = d.items || []
+  const setItems = (n: any[]) => { setD({ ...d, items: n }); setDirty(true) }
+  const upd = (id: string, patch: any) => setItems(items.map(i => i.id === id ? { ...i, ...patch } : i))
+  const today = new Date().toISOString().slice(0, 10)
+  const add = () => { let n = items.length + 1, id = `LS-${String(n).padStart(2, '0')}`; while (items.some(i => i.id === id)) id = `LS-${String(++n).padStart(2, '0')}`; setItems([...items, { id, name: 'New entry', url: '', category: 'adjacent', stance: 'watch', what: '', relevance: '', roadmap: [], first_seen: today, last_seen: today, sources: [] }]); setSel(id) }
+  const del = (id: string) => { setItems(items.filter(i => i.id !== id)); if (sel === id) setSel(null) }
+  const save = async () => { try { const r = await api.post('/landscape', { items }); setD(r); setDirty(false); toast('Landscape saved') } catch (e: any) { toast(e.message) } }
+  const ql = q.toLowerCase()
+  const vis = items.filter(i => (!cat || i.category === cat) && (!ql || [i.name, i.what, i.relevance, (i.roadmap || []).join(' ')].join(' ').toLowerCase().includes(ql)))
+    .sort((a, b) => String(b.last_seen || '').localeCompare(String(a.last_seen || '')) || a.id.localeCompare(b.id))
+  const cur = items.find(i => i.id === sel)
+  const pill = (s: string) => s === 'compete' ? 'pill warn' : s === 'partner' || s === 'integrate' ? 'pill good' : s === 'learn' ? 'pill accent' : 'pill'
+  const list = (v: any) => Array.isArray(v) ? v.join(', ') : (v || '')
+  const split = (v: string) => v.split(',').map(x => x.trim()).filter(Boolean)
+  return <div className="stack" style={{ gap: 12 }}>
+    <div className="row between" style={{ flexWrap: 'wrap', gap: 8 }}><div><h4>Market landscape</h4><div className="muted small">Companies, research, people and events reviewed while building Launch: what they do, why it matters, our stance and the roadmap items they produced. {items.length} entries{d.updated ? ` · last saved ${d.updated} by ${d.updated_by}` : ''}</div></div>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}><input className="field" placeholder="Search name, notes, RM-…" value={q} onChange={e => setQ(e.target.value)} style={{ width: 220 }} />
+        <select className="field" style={{ width: 180 }} value={cat} onChange={e => setCat(e.target.value)}><option value="">All categories</option>{d.categories.map((c: string) => <option key={c}>{c}</option>)}</select>
+        <button className="btn sm" onClick={add}>+ Entry</button>{dirty && <span className="pill warn">unsaved</span>}<button className="btn primary" disabled={!dirty} onClick={save}><Save size={14} />Save</button></div></div>
+    <div className="row" style={{ gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div className="card" style={{ padding: 0, overflow: 'auto', flex: '1 1 640px', minWidth: 0 }}><table className="dt"><thead><tr><th style={{ width: 56 }}>id</th><th>Name</th><th>Category</th><th>Stance</th><th>Roadmap</th><th style={{ width: 86 }}>Last seen</th><th /></tr></thead><tbody>
+        {vis.map(i => <tr key={i.id} className="clickable" style={sel === i.id ? { background: 'var(--surface-3)' } : {}} onClick={() => setSel(i.id)}><td className="mono small muted" style={{ whiteSpace: 'nowrap' }}>{i.id}</td>
+          <td><b>{i.name}</b>{sel !== i.id && i.relevance && <div className="muted small" style={{ maxWidth: 460, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.relevance}</div>}</td>
+          <td className="small">{i.category}</td><td><span className={pill(i.stance)}>{i.stance}</span></td><td className="mono small" style={{ maxWidth: 130 }}>{(i.roadmap || []).map((r: string) => <span key={r} style={{ whiteSpace: 'nowrap', marginRight: 6, display: 'inline-block' }}>{r}</span>)}</td><td className="small" style={{ whiteSpace: 'nowrap' }}>{i.last_seen}</td>
+          <td className="rowtool" style={{ cursor: 'pointer', color: 'var(--ink-3)' }} onClick={e => { e.stopPropagation(); del(i.id) }} title="remove">✕</td></tr>)}</tbody></table></div>
+      {cur && <div className="card" style={{ flex: '0 1 380px', minWidth: 280 }}><div className="row between"><h4 style={{ margin: 0 }}>{cur.id}</h4>{cur.url && <a className="small" href={cur.url} target="_blank" rel="noreferrer">open site</a>}</div>
+        <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+          <label className="small">Name<input className="field" value={cur.name} onChange={e => upd(cur.id, { name: e.target.value })} /></label>
+          <label className="small">URL<input className="field" value={cur.url || ''} onChange={e => upd(cur.id, { url: e.target.value })} /></label>
+          <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>Category<select className="field" value={cur.category} onChange={e => upd(cur.id, { category: e.target.value })}>{d.categories.map((x: string) => <option key={x}>{x}</option>)}</select></label>
+            <label className="small" style={{ flex: 1 }}>Stance<select className="field" value={cur.stance} onChange={e => upd(cur.id, { stance: e.target.value })}>{d.stances.map((x: string) => <option key={x}>{x}</option>)}</select></label></div>
+          <label className="small">What it is<textarea className="field" rows={5} value={cur.what || ''} onChange={e => upd(cur.id, { what: e.target.value })} /></label>
+          <label className="small">Why it matters to Launch<textarea className="field" rows={4} value={cur.relevance || ''} onChange={e => upd(cur.id, { relevance: e.target.value })} /></label>
+          <label className="small">Roadmap items<input className="field" value={list(cur.roadmap)} onChange={e => upd(cur.id, { roadmap: split(e.target.value) })} /></label>
+          <div className="row" style={{ gap: 8 }}><label className="small" style={{ flex: 1 }}>First seen<input className="field" type="date" value={cur.first_seen || ''} onChange={e => upd(cur.id, { first_seen: e.target.value })} /></label><label className="small" style={{ flex: 1 }}>Last seen<input className="field" type="date" value={cur.last_seen || ''} onChange={e => upd(cur.id, { last_seen: e.target.value })} /></label></div>
+          <label className="small">Sources<input className="field" value={list(cur.sources)} onChange={e => upd(cur.id, { sources: split(e.target.value) })} /></label>
+          <label className="small">Notes<textarea className="field" rows={3} value={cur.notes || ''} onChange={e => upd(cur.id, { notes: e.target.value })} /></label>
         </div></div>}
     </div>
   </div>
