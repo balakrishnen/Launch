@@ -913,7 +913,9 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
             for ws in wb.worksheets:
                 rows = [[("" if c is None else c) for c in r] for r in ws.iter_rows(values_only=True)]
                 rows = [r for r in rows if any(str(x).strip() for x in r)]
-                if rows: sheets.append({"name": ws.title, "headers": [str(h) for h in rows[0]], "rows": [[_cell(x) for x in r] for r in rows[1:]]})
+                if rows:   # skip title rows above the real header row
+                    from ..sheet_assess import _header_row
+                    hi = _header_row(rows); sheets.append({"name": ws.title, "headers": [str(h) for h in rows[hi]], "rows": [[_cell(x) for x in r] for r in rows[hi + 1:]]})
         else:
             import csv, io
             txt = data.decode("utf-8-sig", errors="replace"); dialect = csv.excel_tab if "\t" in txt.splitlines()[0] else csv.excel
@@ -936,6 +938,11 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         ops, notes = IMP.syseng_toolkit(sheets, m)
         r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Import {len(ops)} requirements from {body.get('file', 'the syseng-toolkit template')}" + (f"; notes: {'; '.join(notes[:8])}" if notes else ""), apply=bool(body.get("apply"))), user)
         return {**r, "notes": notes, "count": len(ops)}
+    @app.post("/api/sheet/assess")
+    async def sheet_assess(file: UploadFile = File(...), user: str = U):
+        """Read a customer's workbook: what each sheet is, how it maps to Launch, what Launch does not model yet, and what Launch adds."""
+        from .. import sheet_assess as SA
+        return SA.assess(await file.read(), file.filename or "sheet")
     @app.post("/api/p/{pid}/sheet/commit")
     def sheet_commit(pid: str, body: SheetCommit, user: str = U):
         """Rows → elements of a kind (mapping: field → column header) or → a new table. Becomes a human patch (applied or staged)."""

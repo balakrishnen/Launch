@@ -1,11 +1,11 @@
 // Office replacement: Tables (spreadsheets with formulas, inside the model), Notes (specs, minutes, decision logs) and
 // Import (bring an existing .xlsx/.csv in as elements or as a table — the migration path off Excel).
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { marked } from 'marked'
 import { Plus, Table2, FileText, Upload, Sparkles } from 'lucide-react'
 import { useProject } from '../state'
-import { P, KIND_LABEL } from '../api'
+import { api, P, KIND_LABEL } from '../api'
 import { Sheet, type Col } from '../components/Sheet'
 import { IdLink } from '../components/common'
 
@@ -94,9 +94,9 @@ export function NotePage() {
 // ---------------------------------------------------------------- Import a spreadsheet
 export function ImportSheet() {
   const { pid, toast } = useProject(); const nav = useNavigate()
-  const [prev, setPrev] = useState<any>(null); const [si, setSi] = useState(0); const [kind, setKind] = useState('tables'); const [map, setMap] = useState<Record<string, string>>({}); const [idCol, setIdCol] = useState(''); const [prefix, setPrefix] = useState(''); const [tname, setTname] = useState(''); const [busy, setBusy] = useState(false)
+  const [prev, setPrev] = useState<any>(null); const [asmt, setAsmt] = useState<any>(null); const [si, setSi] = useState(0); const [kind, setKind] = useState('tables'); const [map, setMap] = useState<Record<string, string>>({}); const [idCol, setIdCol] = useState(''); const [prefix, setPrefix] = useState(''); const [tname, setTname] = useState(''); const [busy, setBusy] = useState(false)
   const sheet = prev?.sheets?.[si]
-  const up = async (f: File | undefined) => { if (!f) return; setBusy(true); try { const p = await P(pid).upload('/sheet/preview', f); setPrev(p); setSi(0); const g = p.sheets[0]?.guess || 'tables'; setKind(g); setTname(p.sheets[0]?.name || ''); auto(g, p.sheets[0]?.headers || [], p.kinds) } catch (e: any) { toast(e.message) } setBusy(false) }
+  const up = async (f: File | undefined) => { if (!f) return; setBusy(true); setAsmt(null); api.upload('/sheet/assess', f).then(setAsmt).catch(() => {}); try { const p = await P(pid).upload('/sheet/preview', f); setPrev(p); setSi(0); const g = p.sheets[0]?.guess || 'tables'; setKind(g); setTname(p.sheets[0]?.name || ''); auto(g, p.sheets[0]?.headers || [], p.kinds) } catch (e: any) { toast(e.message) } setBusy(false) }
   const auto = (k: string, headers: string[], kinds: any) => { if (k === 'tables' || !kinds?.[k]) { setMap({}); return } const fields = [...kinds[k].req, ...Object.keys(kinds[k].opt)]; const m: Record<string, string> = {}; for (const f of fields) { const h = headers.find(h => h.toLowerCase().replace(/[^a-z0-9]/g, '') === f.toLowerCase().replace(/[^a-z0-9]/g, '') || h.toLowerCase().includes(f.toLowerCase())); if (h) m[f] = h } setMap(m); setIdCol(headers.find(h => /^id$|identifier|^key$/i.test(h)) || '') }
   const commit = async (apply: boolean) => { setBusy(true); try { const r = await P(pid).post('/sheet/commit', { file: prev.file, sheet: sheet.name, headers: sheet.headers, rows: sheet.rows, kind, mapping: map, id_column: idCol, id_prefix: prefix, table_name: tname, apply }); toast(apply ? `Imported — ${r.patch_id}` : `Staged ${r.patch_id} for review`); nav(kind === 'tables' ? `/p/${pid}/tables` : `/p/${pid}/collection/${kind}`) } catch (e: any) { toast(e.message) } setBusy(false) }
   const known = async (apply: boolean) => { setBusy(true); try { const r = await P(pid).post('/sheet/import-known', { file: prev.file, sheets: prev.sheets, apply }); toast(`${apply ? 'Imported' : 'Staged'} ${r.count} requirements${r.notes?.length ? ` (${r.notes.length} notes)` : ''}`); nav(`/p/${pid}/form/reqspec`) } catch (e: any) { toast(e.message) } setBusy(false) }
@@ -104,6 +104,7 @@ export function ImportSheet() {
   return <div>
     <h2>Import a spreadsheet</h2><div className="muted small" style={{ marginBottom: 12 }}>Bring the last Excel or Google Sheet in once — as elements of a collection (requirements, parts, tests, work items…) or as a table. After that it lives here.</div>
     <div className="card" style={{ marginBottom: 14 }}><label className="btn primary" style={{ display: 'inline-flex' }}><Upload size={14} />{busy ? 'Working…' : 'Choose .xlsx / .csv / .tsv'}<input type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" style={{ display: 'none' }} onChange={e => up(e.target.files?.[0])} /></label>{prev && <span className="muted small" style={{ marginLeft: 10 }}>{prev.file} · {prev.sheets.length} sheet(s)</span>}</div>
+    {asmt && <WorkbookAssessment a={asmt} />}
     {prev?.recognized && <div className="card" style={{ marginBottom: 14, borderColor: 'var(--accent)' }}><h4 style={{ margin: 0 }}>Recognized: {prev.recognized.label}</h4>
       <div className="muted small" style={{ margin: '4px 0 8px' }}>{prev.recognized.requirements} requirements with parent flow-down, related links, priority, status and owner{prev.recognized.change_log ? ', plus the change log as each requirement\'s revision history' : ''}. Imported in one step; no column mapping needed.</div>
       <div className="row" style={{ gap: 6 }}><button className="btn sm" disabled={busy} onClick={() => known(false)}>Stage for review</button><button className="btn sm primary" disabled={busy} onClick={() => known(true)}>Import {prev.recognized.requirements} requirements</button></div></div>}
@@ -117,5 +118,25 @@ export function ImportSheet() {
       <div className="tablewrap" style={{ maxHeight: 360 }}><table className="dt"><thead><tr>{sheet.headers.map((h: string) => <th key={h}>{h}</th>)}</tr></thead><tbody>{sheet.rows.slice(0, 50).map((r: any[], i: number) => <tr key={i}>{sheet.headers.map((_: string, j: number) => <td key={j}>{String(r[j] ?? '')}</td>)}</tr>)}</tbody></table></div>
       <div className="row" style={{ marginTop: 10 }}><button className="btn sm" disabled={busy} onClick={() => commit(false)}>Stage for review</button><button className="btn sm primary" disabled={busy} onClick={() => commit(true)}>Import {sheet.rows.length} rows</button></div>
     </>}
+  </div>
+}
+
+
+// What a customer's workbook is doing, sheet by sheet, and what Launch gives them instead. Read-only: nothing goes back to a sheet.
+function WorkbookAssessment({ a }: { a: any }) {
+  const [open, setOpen] = useState<string | null>(null); const s = a.summary
+  return <div className="card" style={{ marginBottom: 14 }}>
+    <h4 style={{ margin: 0 }}>What this workbook is doing</h4>
+    <div className="muted small" style={{ margin: '4px 0 10px' }}>{s.sheets} sheet(s), {s.rows} rows, {s.formulas} formulas. Recognized {s.recognized}: {s.artifacts.join(', ') || 'none'}.{s.unmapped_columns.length ? ` Columns Launch does not model yet: ${s.unmapped_columns.join(', ')}.` : ''}</div>
+    <div className="tablewrap"><table className="dt"><thead><tr><th>Sheet</th><th>Rows</th><th>What it is</th><th>In Launch</th><th>Manual machinery</th><th>Not modelled yet</th></tr></thead><tbody>
+      {a.sheets.map((x: any) => <Fragment key={x.sheet}><tr className="clickable" onClick={() => setOpen(open === x.sheet ? null : x.sheet)}>
+        <td><b>{x.sheet}</b></td><td className="small">{x.rows}</td>
+        <td>{x.artifact}{x.form && <span className="muted small"> ({Math.round(x.confidence * 100)}%)</span>}{x.also_looks_like?.length ? <div className="muted small">also like {x.also_looks_like.join(', ')}</div> : null}</td>
+        <td className="small">{x.where}</td><td className="small">{x.manual_machinery.join('; ') || '-'}</td><td className="small">{x.unmapped.join(', ') || '-'}</td></tr>
+        {open === x.sheet && <tr><td colSpan={6} style={{ background: 'var(--surface-2)' }}><div className="row" style={{ gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 260 }}><div className="small"><b>Column → Launch field</b></div>{x.mapped.length ? x.mapped.map((c: any) => <div key={c.column} className="small mono">{c.column} → {c.launch_field}</div>) : <div className="muted small">none</div>}</div>
+          <div style={{ flex: 1, minWidth: 260 }}><div className="small"><b>What Launch adds</b></div><ul className="small" style={{ margin: '4px 0', paddingLeft: 18 }}>{x.launch_adds.map((t: string) => <li key={t}>{t}</li>)}</ul>
+            {x.sample_formulas?.length ? <><div className="small"><b>Their formulas</b></div>{x.sample_formulas.map((f: string) => <div key={f} className="mono small muted">{f}</div>)}</> : null}</div></div></td></tr>}
+      </Fragment>)}</tbody></table></div>
   </div>
 }

@@ -23,3 +23,13 @@ def test_import_and_suspect_links():
     assert any(u == "REQ-001" and d == "REQ-002" for u, d, _ in D.suspect_links(m))
     m = st.apply_ops(m, [Op(op="update", kind="requirements", id="REQ-002", value={"reviewed": "2999-01-01"})])
     assert not any(d == "REQ-002" for _, d, _ in D.suspect_links(m))
+
+def test_workbook_assessment():
+    import openpyxl, io
+    from sethread import sheet_assess as SA
+    wb = openpyxl.Workbook(); ws = wb.active; ws.title = "DFMEA"; ws.append(["Blender DFMEA"])
+    ws.append(["Item", "Potential Failure Mode", "Potential Effect(s)", "Severity", "Potential Cause(s)", "Occurrence", "Current Detection Controls", "Detection", "RPN"])
+    ws.append(["Motor", "Overheats", "Burn smell", 8, "Blocked vent", 3, "Thermal test", 4, "=D3*F3*H3"])
+    b = io.BytesIO(); wb.save(b); a = SA.assess(b.getvalue(), "w.xlsx")
+    s = a["sheets"][0]; assert s["form"] == "dfmea" and s["formulas"] == 1
+    assert {m["column"]: m["launch_field"] for m in s["mapped"]}["Current Detection Controls"] == "tests"
