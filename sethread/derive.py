@@ -144,6 +144,32 @@ def trace(m):
     for r, rv in m.get("risks", {}).items(): E += [(r, "threatens", x) for x in rv.get("links", [])]
     return E
 
+def _cycle(reqs, r):
+    seen = set(); x = reqs[r].get("parent")
+    while x:
+        if x == r or x in seen: return True
+        seen.add(x); x = reqs.get(x, {}).get("parent")
+    return False
+
+def suspect_links(m):
+    """Downstream links made suspect by an upstream change: (upstream, downstream, why)."""
+    out = []; reqs = m["requirements"]; needs = m.get("needs", {})
+    last_run = {}
+    for r in m.get("test_runs", {}).values():
+        last_run[r["test"]] = max(last_run.get(r["test"], ""), str(r.get("date", "")))
+    ok = lambda r: max(str(r.get("reviewed") or ""), str(r.get("changed") or ""))
+    for rid, r in reqs.items():
+        ch = str(r.get("changed") or "")
+        if ch:
+            for t in r.get("tests", []):
+                if t in last_run and last_run[t] < ch: out.append((rid, t, f"{rid} changed {ch} after {t} last ran {last_run[t]}: re-run"))
+            for cid, c in reqs.items():
+                if c.get("parent") == rid and ok(c) < ch: out.append((rid, cid, f"parent {rid} changed {ch}: review child {cid}"))
+        for n in r.get("from_", []):
+            nch = str(needs.get(n, {}).get("changed") or "")
+            if nch and ok(r) < nch: out.append((n, rid, f"need {n} changed {nch}: review {rid}"))
+    return out
+
 REVIEW_KEYS = ("use_cases_without_off_nominal", "severe_failure_modes_without_exception_scenario")   # review prompts shown in the report; they do not make the trace unclean
 
 def coverage_report(m):
@@ -151,6 +177,12 @@ def coverage_report(m):
     rep["requirements_without_tests"] = [r for r, v in m["requirements"].items() if not v["tests"]]
     rep["requirements_not_realized_by_function"] = [r for r, v in m["requirements"].items() if v["type"] != "REGU" and not any(r in f["reqs"] for f in m["functions"].values())]
     rep["functions_without_allocation"] = [f for f, v in m["functions"].items() if not v["alloc"]]
+    # change propagation (suspect links): a requirement changed after its test last ran, after its child was last reviewed,
+    # or a need changed after the requirements derived from it were last reviewed. Clears when the test re-runs or the
+    # requirement is reviewed (requirements.reviewed = date) or changed itself.
+    rep["suspect_links"] = suspect_links(m)
+    reqs = m["requirements"]
+    rep["requirements_parent_cycle"] = [r for r in reqs if _cycle(reqs, r)]
     # off-nominal coverage (OOSEM/ISO 29148: use cases must cover alternate and exception flows, not only the sunny day).
     # A use case whose scenarios exercise a function with a severity >= 7 failure mode needs at least one alternate or exception
     # scenario; every credible severity >= 9 failure mode of a function used in a scenario needs an exception scenario that

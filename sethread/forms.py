@@ -130,14 +130,33 @@ def vcrm(m):
     return groups, headers, widths, rows
 
 def req_spec(m):
-    dm = D.discipline_matrix(m); rows = []
-    for rid, r in m["requirements"].items():
-        src = r.get("from_", []) + r.get("regs", [])
-        rationale = "; ".join((m["needs"].get(s, {}).get("text") or m["regulations"].get(s, {}).get("trigger") or s) for s in src)
-        rows.append([rid, r["type"], r["text"], r.get("attr", ""), rationale, ", ".join(src), r["verify"], ", ".join(r["tests"]), ", ".join(dm.get(rid, [])), r.get("uc", ""), "approved" if r.get("status") is None else r["status"]])
-    groups = [("REQUIREMENTS SPECIFICATION (ISO/IEC/IEEE 29148 attributes)", 11)]
-    headers = ["Id", "Type", "Statement", "Attribute / measurable condition", "Rationale (source need / regulation)", "Source ids", "Verification method", "Verified by", "Disciplines", "Use case", "Status"]
-    widths = [8, 8, 60, 22, 44, 14, 10, 16, 18, 8, 9]
+    dm = D.discipline_matrix(m); rows = []; reqs = m["requirements"]
+    kids = {}
+    for rid, r in reqs.items():
+        if r.get("parent"): kids.setdefault(r["parent"], []).append(rid)
+    sus = {}
+    for up, down, why in D.suspect_links(m):
+        for x in (up, down):
+            if x in reqs: sus.setdefault(x, []).append(why)
+    def depth(rid, d=0):
+        p = reqs[rid].get("parent"); return d if not p or p not in reqs or d > 20 else depth(p, d + 1)
+    order = []
+    def walk(rid):   # parent-first, children indented under their parent (flow-down tree)
+        if rid in order: return
+        order.append(rid)
+        for c in kids.get(rid, []): walk(c)
+    for rid, r in reqs.items():
+        if not r.get("parent") or r["parent"] not in reqs: walk(rid)
+    for rid in reqs: walk(rid)
+    for rid in order:
+        r = reqs[rid]; src = r.get("from_", []) + r.get("regs", [])
+        rationale = (r.get("attrs") or {}).get("rationale") or "; ".join((m["needs"].get(s, {}).get("text") or m["regulations"].get(s, {}).get("trigger") or s) for s in src)
+        rows.append([("· " * depth(rid)) + rid, r["type"], r["text"], r.get("attr", ""), rationale, ", ".join(src), r.get("parent") or "", ", ".join(kids.get(rid, [])),
+                     r.get("priority", ""), r["verify"], ", ".join(r["tests"]), ", ".join(dm.get(rid, [])), ", ".join(r.get("uc") or []) if isinstance(r.get("uc"), list) else (r.get("uc") or ""),
+                     "approved" if r.get("status") is None else r["status"], f"{r.get('rev', 1)}" + (f" ({r['changed']})" if r.get("changed") else ""), "; ".join(sus.get(rid, []))])
+    groups = [("REQUIREMENTS SPECIFICATION (ISO/IEC/IEEE 29148 attributes; flow-down tree)", 16)]
+    headers = ["Id", "Type", "Statement", "Attribute / measurable condition", "Rationale (source need / regulation)", "Source ids", "Parent", "Children", "Priority", "Verification method", "Verified by", "Disciplines", "Use case", "Status", "Rev (changed)", "Suspect links"]
+    widths = [9, 7, 52, 20, 36, 12, 8, 12, 7, 10, 14, 14, 8, 9, 9, 26]
     return groups, headers, widths, rows
 
 def hazards(m):
@@ -197,7 +216,7 @@ def form(m, name):
         out["editable"] = {headers.index(h): fld for h, fld in [("Failure effect (FE)", "effect"), ("S", "S"), ("Failure mode (FM)", "mode"), ("Failure cause (FC)", "cause"), ("O", "O"), ("D", "D")]}
         out["rating_tables"] = RATING_TABLES; out["merge_cols"] = [2, 3, 4]; out["row_elements"] = [f["element"] for f in fm]
     if name == "reqspec":
-        out["row_keys"] = list(m["requirements"]); out["kind"] = "requirements"
+        out["row_keys"] = [str(r[0]).lstrip("· ") for r in rows]; out["kind"] = "requirements"
         out["editable"] = {headers.index("Statement"): "text", headers.index("Attribute / measurable condition"): "attr", headers.index("Type"): "type", headers.index("Verification method"): "verify"}
     return out
 

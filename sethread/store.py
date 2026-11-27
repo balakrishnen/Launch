@@ -15,6 +15,8 @@ from typing import Any
 import yaml
 from . import schema
 
+SUBSTANCE = {"requirements": ("text", "attr", "attrs", "verify", "parent"), "needs": ("text",)}   # fields whose change propagates review
+
 @dataclass
 class Op:
     op: str            # add | update | remove
@@ -77,7 +79,10 @@ class Store:
                 coll[o.id] = dict(o.value or {})
             elif o.op == "update":
                 if o.id not in coll: raise ValueError(f"{o.kind}.{o.id} does not exist (use add)")
-                coll[o.id].update(o.value or {})
+                before = dict(coll[o.id]); coll[o.id].update(o.value or {})
+                if o.kind in SUBSTANCE and any(k in (o.value or {}) and (o.value or {})[k] != before.get(k) for k in SUBSTANCE[o.kind]):
+                    # a substantive change makes everything downstream suspect until it is re-verified or reviewed
+                    coll[o.id]["rev"] = int(before.get("rev") or 1) + 1; coll[o.id]["changed"] = time.strftime("%Y-%m-%d")
             elif o.op == "remove":
                 coll.pop(o.id, None)
             else:

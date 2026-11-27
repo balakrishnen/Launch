@@ -920,7 +920,22 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
             rows = [r for r in csv.reader(io.StringIO(txt), dialect) if any(x.strip() for x in r)]
             if rows: sheets.append({"name": name, "headers": rows[0], "rows": rows[1:]})
         for sh in sheets: sh["guess"] = _guess_kind(sh["headers"])
-        return {"file": name, "sheets": sheets, "kinds": {k: {"req": v["req"], "opt": list(v["opt"]), "refs": v["refs"]} for k, v in schema.KINDS.items()}}
+        from .. import importers as IMP
+        return {"file": name, "recognized": IMP.detect(sheets), "sheets": sheets, "kinds": {k: {"req": v["req"], "opt": list(v["opt"]), "refs": v["refs"]} for k, v in schema.KINDS.items()}}
+    @app.post("/api/p/{pid}/requirements/{rid}/reviewed")
+    def requirement_reviewed(pid: str, rid: str, user: str = U):
+        """Clear suspect links into a requirement after a human reviewed it against its changed parent or source need."""
+        import time as _t
+        return human_patch(pid, HumanPatch(ops=[{"op": "update", "kind": "requirements", "id": rid, "value": {"reviewed": _t.strftime("%Y-%m-%d")}}], rationale=f"{rid} reviewed after upstream change", apply=True), user)
+    @app.post("/api/p/{pid}/sheet/import-known")
+    def sheet_import_known(pid: str, body: dict, user: str = U):
+        """A recognized template (e.g. syseng-toolkit requirements) imported whole: flow-down, links, status, change history."""
+        from .. import importers as IMP
+        S = W.get(pid); m = S.store.load(); sheets = body.get("sheets") or []
+        if (IMP.detect(sheets) or {}).get("format") != "syseng-toolkit": raise HTTPException(400, "not a recognized template")
+        ops, notes = IMP.syseng_toolkit(sheets, m)
+        r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Import {len(ops)} requirements from {body.get('file', 'the syseng-toolkit template')}" + (f"; notes: {'; '.join(notes[:8])}" if notes else ""), apply=bool(body.get("apply"))), user)
+        return {**r, "notes": notes, "count": len(ops)}
     @app.post("/api/p/{pid}/sheet/commit")
     def sheet_commit(pid: str, body: SheetCommit, user: str = U):
         """Rows → elements of a kind (mapping: field → column header) or → a new table. Becomes a human patch (applied or staged)."""
