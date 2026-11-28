@@ -59,6 +59,7 @@ export function FormPage() {
     <div className="row between" style={{ marginBottom: 4 }}><div><h2>{form.title} <span className="pill">{form.rows.length}</span></h2><div className="muted small">{form.standard} · generated from the model · {form.editable ? 'click a cell to edit; edits become a logged patch' : 'read-only view'}</div></div>
       <div className="row">{form.rating_tables && <button className="btn sm" onClick={() => setShowRatings(v => !v)}>Rating tables</button>}<button className="btn sm" onClick={() => send(ask[name] || `Improve the ${form.title}`)}>▶ Ask the agent</button></div></div>
     <FormDiagram name={name} ids={form.rows.map((r: any[]) => String(r[0])).filter((x: string) => /^[A-Z]{1,6}-?[A-Za-z0-9]/.test(x))} />
+    {(form as any).figures?.length ? <Figures pid={pid} figs={(form as any).figures} /> : null}
     {showRatings && form.rating_tables && <div className="card" style={{ margin: '8px 0' }}><div className="row" style={{ gap: 28, alignItems: 'flex-start' }}>{Object.entries(form.rating_tables).map(([t, rows]) => <div key={t}><h4>{t}</h4>{rows.map(([n, d]) => <div key={n} className="small"><b style={{ display: 'inline-block', width: 22 }}>{n}</b>{d}</div>)}</div>)}</div></div>}
     {form.rows.length ? <Grid form={form} onSaved={load} /> : <div className="empty">Nothing to show yet. <button className="chip" onClick={() => send(ask[name] || '')}>ask the agent</button></div>}
   </div>
@@ -101,4 +102,15 @@ export function Sysml() {
   useEffect(() => { P(pid).get('/artifacts').then(async (a: any) => setFiles(await Promise.all(a.sysml.map(async (f: string) => [f, await fetch(P(pid).out(`sysml/${f}`)).then(r => r.text())])))) }, [pid, project?.meta?.rev])
   if (!files.length) return <div className="empty">Not built yet — click <b>Build artifacts</b>.</div>
   return <div><h2 style={{ marginBottom: 10 }}>SysML v2 — textual notation</h2>{files.map(([f, t]) => <div key={f} id={f} className="card" style={{ marginBottom: 10 }}><h4>{f}</h4><pre className="diff" style={{ maxHeight: 420 }}>{t}</pre></div>)}</div>
+}
+
+
+// Standard-notation drawings that belong to a form (e.g. IEC 61025 fault trees): one at a time, scrollable at full size
+function Figures({ pid, figs }: { pid: string; figs: { title: string; url: string }[] }) {
+  const [i, setI] = useState(0); const f = figs[Math.min(i, figs.length - 1)]
+  return <div className="card" style={{ margin: '8px 0 12px', padding: 10 }}>
+    <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>{figs.map((x, j) => <button key={x.url} className="chip" style={j === i ? sel : {}} onClick={() => setI(j)}>{x.title}</button>)}
+      <a className="small" style={{ marginLeft: 'auto' }} href={`/api/p/${pid}${f.url}`} target="_blank" rel="noreferrer">open full size</a></div>
+    <div style={{ overflow: 'auto', maxHeight: 620, background: '#fff', borderRadius: 8 }}><img src={`/api/p/${pid}${f.url}`} alt={f.title} style={{ maxWidth: 'none', height: 560 }} /></div>
+  </div>
 }

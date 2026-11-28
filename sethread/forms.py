@@ -215,6 +215,8 @@ def form(m, name):
         out["row_keys"] = [idx.get((f["element"], f["guide"])) for f in fm]; out["kind"] = "fm_assessments"
         out["editable"] = {headers.index(h): fld for h, fld in [("Failure effect (FE)", "effect"), ("S", "S"), ("Failure mode (FM)", "mode"), ("Failure cause (FC)", "cause"), ("O", "O"), ("D", "D")]}
         out["rating_tables"] = RATING_TABLES; out["merge_cols"] = [2, 3, 4]; out["row_elements"] = [f["element"] for f in fm]
+    if name in ("fta", "fta_cutsets"):
+        out["figures"] = [{"title": f"{k} {t['name']}", "url": f"/fta/{k}.svg"} for k, t in fault_trees(m).items()]
     if name == "reqspec":
         out["row_keys"] = [str(r[0]).lstrip("· ") for r in rows]; out["kind"] = "requirements"
         out["editable"] = {headers.index("Statement"): "text", headers.index("Attribute / measurable condition"): "attr", headers.index("Type"): "type", headers.index("Verification method"): "verify"}
@@ -288,27 +290,63 @@ def pugh(m):
         out.append(r)
     return [("PUGH / WEIGHTED DECISION MATRIX", len(headers))], headers, [7, 26, 20, 7] + [22] * maxo, out
 
+# AIAG DFMEA occurrence → probability over the product life (classic AIAG table), used only to seed draft trees
+O_Q = {10: 1e-1, 9: 5e-2, 8: 2e-2, 7: 1e-2, 6: 2e-3, 5: 5e-4, 4: 1e-4, 3: 1e-5, 2: 1e-6, 1: 1e-7}
+
+def fault_trees(m):
+    """Authored trees (kind fault_trees) plus, for every safety-decision function without one, a draft derived from the
+    DFMEA: OR of its severity >= 9 failure modes (function, interfaces and transitions feeding it) as basic events with
+    probabilities from their occurrence ratings. Drafts are marked so engineers replace them with the real gate logic."""
+    trees = {k: dict(v, id=k) for k, v in (m.get("fault_trees") or {}).items()}
+    covered = {v.get("function") for v in trees.values()} | {f for v in trees.values() for f in v.get("functions") or []}
+    fm = D.fmea(m); n = len(trees)
+    for f, fv in m["functions"].items():
+        if not fv.get("safety_decision") or f in covered: continue
+        feeds = {f} | {i for i, iv in m["interfaces"].items() if f in iv.get("funcs", [])} | {t for t, tv in m["transitions"].items() if tv.get("func") == f}
+        rows = [x for x in fm if x["element"] in feeds and x["S"] >= 9]
+        if not rows: continue
+        n += 1; tid = f"FT-D{n:02d}"; ev = {"TOP": {"type": "top", "gate": "OR", "text": f"Hazard from {f} {fv['name']} ({fv['safety_decision']})", "children": []}}
+        for x in rows:
+            k = x["key"] or x["id"]; ev["TOP"]["children"].append(k)
+            ev[k] = {"type": "basic", "text": x["mode"] + ": " + x["cause"], "fm": k, "q": O_Q.get(int(x["O"]), 1e-3), "basis": f"draft: AIAG occurrence {x['O']}"}
+        trees[tid] = {"id": tid, "name": f"Draft: {fv['name']}", "top": "TOP", "events": ev, "function": f, "status": "draft (derived from DFMEA)", "hazard": fv["safety_decision"]}
+    return trees
+
 def fta(m):
-    """Fault trees: top event per safety-decision function; intermediate = High/Medium-AP failure modes; basic events = causes."""
-    fm = D.fmea(m); rows = []
-    tops = [(f, fv) for f, fv in m["functions"].items() if fv.get("safety_decision")]
-    for n, (f, fv) in enumerate(tops, 1):
-        rows.append([f"FT-{n:02d}", "TOP", f"Unsafe outcome of {f} {fv['name']}", fv["safety_decision"], "OR", "", "", "", ""])
-        for x in [x for x in fm if x["element"] == f]:
-            rows.append([f"FT-{n:02d}", "  INTERMEDIATE", x["id"] + " " + x["mode"], x["effect"], "OR", x["S"], x["O"], x["AP"], ", ".join(x["tests"])])
-            for c in [c.strip() for c in x["cause"].replace(";", ",").split(",") if c.strip()]:
-                rows.append([f"FT-{n:02d}", "    BASIC", c, "", "", "", "", "", x["controls"]])
-        # interfaces and transitions that feed this function
-        for iid, iv in m["interfaces"].items():
-            if f in iv["funcs"]:
-                for x in [x for x in fm if x["element"] == iid]:
-                    rows.append([f"FT-{n:02d}", "  INTERMEDIATE", f"{x['id']} {iid}: {x['mode']}", x["effect"], "OR", x["S"], x["O"], x["AP"], ", ".join(x["tests"])])
-        for tid, tv in m["transitions"].items():
-            if tv.get("func") == f:
-                for x in [x for x in fm if x["element"] == tid]:
-                    rows.append([f"FT-{n:02d}", "  INTERMEDIATE", f"{x['id']} {tid}: {x['mode']}", x["effect"], "OR", x["S"], x["O"], x["AP"], ", ".join(x["tests"])])
-    headers = ["Tree", "Level", "Event", "Consequence / condition", "Gate", "S", "O", "AP", "Barriers (controls) / verification"]
-    return [("FAULT TREE (tabular) — top events from safety decisions", len(headers))], headers, [7, 14, 40, 36, 6, 4, 4, 5, 36], rows
+    """IEC 61025 event table: every event of every tree with its symbol, gate logic, probability, basis and trace."""
+    from . import fta as FT
+    trees = fault_trees(m); rows = []
+    for tid, t in trees.items():
+        a = FT.analyse(t, trees)
+        if a.get("errors"): rows.append([tid, "", "ERROR", "; ".join(a["errors"]), "", "", "", "", "", "", "", ""]); continue
+        def walk(k, d):
+            e = t["events"][k]; ty = e.get("type"); g = e.get("gate", "")
+            sym = {"top": "rectangle (top)", "intermediate": "rectangle", "basic": "circle", "undeveloped": "diamond", "house": "house", "transfer": "triangle"}.get(ty, ty)
+            gate = (f"{e.get('k')}/{len(e['children'])} VOTE" if g == "VOTE" else g) if ty in ("top", "intermediate") else ""
+            qv = f"{a['q'][k]:.2e}" if k in a["q"] else ""
+            rows.append([tid, ("· " * d) + k, sym, e.get("text", ""), gate, ", ".join(e.get("children") or []) if gate else "", qv, e.get("basis", "") or (f"λ {e['lambda_fit']} FIT × {e.get('hours')} h" if e.get("lambda_fit") is not None else ""),
+                         e.get("fm", ""), e.get("part", ""), f"{a['fv'][k]:.1%}" if k in a["fv"] else "", f"{a['birnbaum'][k]:.2e}" if k in a["birnbaum"] else ""])
+            if ty in ("top", "intermediate"):
+                for c in e["children"]: walk(c, d + 1)
+        walk(t["top"], 0)
+    headers = ["Tree", "Event", "Symbol (IEC 61025)", "Event description", "Gate", "Inputs", "q (probability)", "Basis", "FMEA row", "Part", "Fussell-Vesely", "Birnbaum"]
+    return [("FAULT TREE EVENT TABLE (IEC 61025:2006)", len(headers))], headers, [7, 16, 12, 40, 8, 18, 9, 22, 16, 8, 8, 8], rows
+
+def fta_cutsets(m):
+    """IEC 61025 §7 qualitative and quantitative results: minimal cut sets ranked by probability, order, contribution,
+    single points of failure and common-cause warnings."""
+    from . import fta as FT
+    trees = fault_trees(m); rows = []
+    for tid, t in trees.items():
+        a = FT.analyse(t, trees)
+        if a.get("errors"): continue
+        ccf = {x for _, sh in a["ccf"] for x in sh}
+        rows.append([tid, "TOP", t["name"], "", f"{a['top_mcub']:.2e}", "100%", f"rare-event {a['top_rare']:.2e}; " + ", ".join(f"{v} of order {k}" for k, v in a["orders"].items()), "; ".join(f"{g}: {', '.join(sh)} under every input" for g, sh in a["ccf"]) or ""])
+        for i, (c, qc) in enumerate(a["cut_sets"], 1):
+            txt = " AND ".join(f"{x} ({a['leaves'][x].get('text', '')[:48]})" for x in c)
+            rows.append([tid, i, txt, len(c), f"{qc:.2e}", f"{(qc / a['top_mcub'] if a['top_mcub'] else 0):.1%}", "single point of failure" if len(c) == 1 else "", "common cause: " + ", ".join(sorted(set(c) & ccf)) if set(c) & ccf else ""])
+    headers = ["Tree", "Rank", "Minimal cut set", "Order", "q (cut set)", "Share of top", "Finding", "Common cause"]
+    return [("MINIMAL CUT SETS AND TOP-EVENT PROBABILITY (IEC 61025 §7)", len(headers))], headers, [7, 5, 70, 5, 9, 8, 20, 24], rows
 
 def drbfm(m):
     """Design Review Based on Failure Mode: for each architecture decision (a change), what changed, concerns, affected
@@ -341,7 +379,8 @@ FORMS.update({
     "n2l": ("N² diagram — logical", "Interface N² matrix over logical components", n2_logical),
     "icd": ("Interface Control Document index", "One row per interface: sides, items, characteristics, trace (MIL-STD-961/NASA ICD outline)", icd),
     "pugh": ("Trade studies — Pugh / weighted matrix", "Decision matrix per trade study (Pugh 1981; INCOSE SEH §4.3)", pugh),
-    "fta": ("Fault trees (tabular)", "Top events from safety decisions; intermediate events from FMEA; basic events from causes (IEC 61025)", fta),
+    "fta": ("Fault trees", "IEC 61025:2006 symbols and event table; gate logic, probabilities and trace to the DFMEA", fta),
+    "fta_cutsets": ("FTA minimal cut sets", "Minimal cut sets, top-event probability, single points of failure, common cause (IEC 61025 §7)", fta_cutsets),
     "drbfm": ("DRBFM", "Design Review Based on Failure Mode — change-focused review of each architecture decision (Toyota GD³)", drbfm),
 })
 

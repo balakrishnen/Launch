@@ -18496,3 +18496,224 @@ cdas:
       kind: test_run
       test: TST-19
       key: drip_g
+fault_trees:
+  FT-01:
+    name: 'Fire or burn: thermoblock overheats'
+    hazard: Thermoblock above 230 °C, ignition of nearby plastics or burns (UL 1082 §42, IEC 60335-1 cl. 19)
+    function: F-07
+    functions:
+    - F-01
+    - F-07
+    mission: 10 years, 1,825 h heater-on
+    status: reviewed at DVT
+    owner_team: TM-SAFE
+    top: TOP
+    notes: 'The TCO is the only layer independent of the triac and firmware: triac short AND TCO failure is a 2nd-order cut set. A relay in the heater line was rejected on cost at G0 (FD-01).'
+    events:
+      TOP:
+        type: top
+        gate: OR
+        text: Thermoblock exceeds 230 °C with heater energised
+        children:
+        - G-DRY
+        - G-RUN
+      G-DRY:
+        type: intermediate
+        gate: AND
+        text: Dry boil not stopped
+        children:
+        - H-EMPTY
+        - G-SWDRY
+        - G-TCO
+      H-EMPTY:
+        type: house
+        text: Brew started or continued with an empty reservoir
+        q: 0.5
+        basis: user condition, assumed likely at least once in product life
+      G-SWDRY:
+        type: intermediate
+        gate: OR
+        text: Software dry-boil protection does not de-energise the heater
+        children:
+        - G-SENSE
+        - BE-CLASSB
+        - BE-TRIAC
+      G-SENSE:
+        type: intermediate
+        gate: AND
+        text: Dry condition not sensed (level and flow both wrong)
+        children:
+        - BE-LEVEL
+        - BE-FLOW
+      BE-LEVEL:
+        type: basic
+        text: Level sensor reports water (residue on window)
+        fm: FA-F-06-unintended
+        part: P-LEVEL
+        q: 0.001
+        basis: per life; TST-20 no false level at 2,950 cycles
+      BE-FLOW:
+        type: basic
+        text: Flow meter reports flow with none (stuck rotor)
+        part: P-FLOW
+        lambda_fit: 50
+        hours: 1825
+        basis: SN 29500 Hall sensor, 50 FIT
+      BE-CLASSB:
+        type: basic
+        text: Class B fault in MCU not detected (RAM/ROM/CPU)
+        fm: FA-F-07-loss
+        part: P-MCU
+        q: 0.0001
+        basis: IEC 60730-1 Annex H diagnostic coverage, TST-28
+      BE-TRIAC:
+        type: basic
+        text: Triac fails short (heater cannot be switched off)
+        fm: FA-IF-02-leakage_crosstalk
+        part: P-TRIAC
+        lambda_fit: 20
+        hours: 1825
+        basis: SN 29500 thyristor 20 FIT, short-circuit mode
+      G-TCO:
+        type: intermediate
+        gate: OR
+        text: TCO does not open the heater circuit
+        children:
+        - BE-TCOFAIL
+        - BE-TCOPART
+        - BE-TCOCLAMP
+      BE-TCOFAIL:
+        type: basic
+        text: TCO fails closed on demand
+        part: P-TCO
+        q: 0.001
+        basis: per demand, supplier UL file E-TCO-55821 life test
+      BE-TCOPART:
+        type: basic
+        text: Wrong TCO rating fitted at supplier
+        fm: FA-IF-04-mismatch
+        part: P-TCO
+        q: 1.0e-05
+        basis: MPN scan + oil-bath sampling per lot
+      BE-TCOCLAMP:
+        type: basic
+        text: TCO not clamped to the block (trips late)
+        fm: FA-PS-07-omitted
+        part: P-TCO
+        q: 1.0e-05
+        basis: fixture poka-yoke (PVT), TST-04 audit per lot
+      G-RUN:
+        type: intermediate
+        gate: AND
+        text: Temperature runaway with water present
+        children:
+        - G-CTRL
+        - G-TCO
+      G-CTRL:
+        type: intermediate
+        gate: OR
+        text: Control keeps the heater on above setpoint
+        children:
+        - BE-TRIAC
+        - BE-NTC
+        - BE-SETPT
+      BE-NTC:
+        type: basic
+        text: NTC open not detected (reads cold)
+        fm: FA-F-07-wrong_timing
+        part: P-NTC
+        q: 1.0e-05
+        basis: open-circuit detect by pull-up, TST-03 NTC-open case
+      BE-SETPT:
+        type: basic
+        text: Setpoint corrupted in RAM, not caught
+        fm: FA-F-01-wrong_value
+        part: P-FW
+        q: 1.0e-06
+        basis: range check + class B RAM test
+  FT-02:
+    name: Electric shock from accessible metal
+    hazard: Touch current through the stainless trim (IEC 60335-1 cl. 8, 27; UL 1082)
+    function: F-14
+    mission: 10 years in use
+    status: reviewed at DVT
+    owner_team: TM-SAFE
+    top: TOP
+    notes: 'Class I: shock needs basic insulation to fail AND protective earth to be ineffective. Earth continuity is checked 100 % at EoL (ground bond 25 A).'
+    events:
+      TOP:
+        type: top
+        gate: INHIBIT
+        text: User receives a shock from the trim
+        children:
+        - G-LIVE
+        - H-TOUCH
+      H-TOUCH:
+        type: house
+        text: User touches the trim while the fault is present
+        q: 1.0
+        basis: 'conservative: always'
+      G-LIVE:
+        type: intermediate
+        gate: AND
+        text: Trim becomes live and stays live
+        children:
+        - G-INS
+        - G-PE
+      G-INS:
+        type: intermediate
+        gate: OR
+        text: Basic insulation fails to the chassis
+        children:
+        - BE-SPILL
+        - BE-CREEP
+        - BE-NICK
+      BE-SPILL:
+        type: basic
+        text: Water reaches live parts
+        fm: FA-F-14-unintended
+        part: P-ENCL
+        q: 0.0001
+        basis: TST-25 spillage pass; drip ledge
+      BE-CREEP:
+        type: basic
+        text: Creepage breakdown on the main board
+        fm: FA-IF-01-leakage_crosstalk
+        part: P-MAIN
+        q: 1.0e-05
+        basis: 4.0 mm creepage, hipot 100 % at EoL
+      BE-NICK:
+        type: basic
+        text: Heater lead insulation nicked in assembly
+        fm: FA-PS-07-damage
+        part: P-TB
+        q: 1.0e-05
+        basis: fixture radius R0.5, hipot 100 %
+      G-PE:
+        type: intermediate
+        gate: OR
+        text: Protective earth ineffective
+        children:
+        - BE-SCREW
+        - BE-CRIMP
+        - U-CORD
+      BE-SCREW:
+        type: basic
+        text: Earth screw not driven
+        fm: FA-PS-04-omitted
+        part: P-ENCL
+        q: 1.0e-06
+        basis: screw counter + ground bond 100 % at EoL
+      BE-CRIMP:
+        type: basic
+        text: Earth crimp opens in service
+        fm: FA-IF-01-degraded
+        part: P-CORD
+        lambda_fit: 2
+        hours: 87600
+        basis: SN 29500 crimp 2 FIT over 10 years powered
+      U-CORD:
+        type: undeveloped
+        text: PE conductor broken in cord or wall outlet unearthed
+        q: 0.001
+        basis: outside the product; not developed (installation)

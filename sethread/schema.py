@@ -25,6 +25,8 @@ KINDS: dict[str, dict[str, Any]] = {
     "needs": dict(req=["stk", "text", "moe"], opt={"program": False}, refs={"stk": "stakeholders", "moe": "moes"}),
     "actors": dict(req=["name"], opt={}, refs={}),
     "use_cases": dict(req=["name", "actors"], opt={"includes": [], "needs": []}, refs={"actors": "actors", "includes": "use_cases", "needs": "needs"}),
+    "fault_trees": dict(req=["name", "top", "events"], opt={"hazard": "", "function": None, "functions": [], "mission": "", "status": "draft", "owner_team": None, "notes": ""},
+                        refs={"function": "functions", "functions": "functions", "owner_team": "teams"}),
     "scenarios": dict(req=["uc", "name", "steps"], opt={"concurrent": [], "kind": "nominal", "triggers": [], "response": "", "ends_in": None},
                       refs={"uc": "use_cases", "steps": "functions", "concurrent": "functions", "triggers": "fm_assessments", "ends_in": "states"}),
     "regulations": dict(req=["name", "market", "trigger", "standard"], opt={}, refs={}),

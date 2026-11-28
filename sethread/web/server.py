@@ -938,6 +938,13 @@ def create_app(root: str | None = None, model: str | None = None, data_root: str
         ops, notes = IMP.syseng_toolkit(sheets, m)
         r = human_patch(pid, HumanPatch(ops=ops, rationale=f"Import {len(ops)} requirements from {body.get('file', 'the syseng-toolkit template')}" + (f"; notes: {'; '.join(notes[:8])}" if notes else ""), apply=bool(body.get("apply"))), user)
         return {**r, "notes": notes, "count": len(ops)}
+    @app.get("/api/p/{pid}/fta/{tid}.svg")
+    def fta_svg(pid: str, tid: str, user: str = U):
+        """A fault tree drawn with IEC 61025 symbols."""
+        from .. import fta as FT, forms as F
+        S = W.get(pid); trees = F.fault_trees(S.store.load())
+        if tid not in trees: raise HTTPException(404, "no such fault tree")
+        return Response(FT.svg(trees[tid], None, trees), media_type="image/svg+xml")
     @app.post("/api/sheet/assess")
     async def sheet_assess(file: UploadFile = File(...), user: str = U):
         """Read a customer's workbook: what each sheet is, how it maps to Launch, what Launch does not model yet, and what Launch adds."""
